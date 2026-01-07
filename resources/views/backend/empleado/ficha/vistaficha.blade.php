@@ -76,17 +76,24 @@
                     <div class="col-md-8">
                         <div class="form-group">
                             <label>Nombre del empleado</label>
-                            <input type="text" class="form-control" value="{{ $nombre }}">
+                            <input type="text" maxlength="100" id="nombre" class="form-control" value="{{ $nombre }}">
+                            <small id="error-nombre" class="text-danger d-none">
+                                Este campo es obligatorio
+                            </small>
                         </div>
                     </div>
 
                     <div class="col-md-4">
                         <div class="form-group">
                             <label>DUI / NIT</label>
-                            <input type="text" class="form-control">
+                            <input type="text" maxlength="50" id="dui" class="form-control">
+                            <small id="error-dui" class="text-danger d-none">
+                                Este campo es obligatorio
+                            </small>
                         </div>
                     </div>
                 </div>
+
 
 
                 <div class="row">
@@ -94,6 +101,7 @@
                         <div class="form-group">
                             <label>Distrito</label>
                             <select width="100%"  class="form-control" id="select-distrito">
+                                <option value="0">Seleccionar Opción</option>
                                 @foreach($arrayDistritos as $sel)
                                     <option value="{{ $sel->id }}">{{ $sel->nombre }}</option>
                                 @endforeach
@@ -105,6 +113,7 @@
                         <div class="form-group">
                             <label>Unidad</label>
                             <select width="100%"  class="form-control" id="select-unidad">
+                                <option value="0">Seleccionar Opción</option>
                                 @foreach($arrayUnidades as $sel)
                                     <option value="{{ $sel->id }}">{{ $sel->nombre }}</option>
                                 @endforeach
@@ -116,20 +125,20 @@
                         <div class="form-group">
                             <label>Cargo</label>
                             <select width="100%" class="form-control" id="select-cargo">
+                                <option value="0">Seleccionar Opción</option>
                                 @foreach($arrayCargos as $sel)
                                     <option value="{{ $sel->id }}">{{ $sel->nombre }}</option>
                                 @endforeach
                             </select>
                         </div>
                     </div>
-
                 </div>
 
                 <div class="row">
                     <div class="col-md-2">
                         <div class="form-group">
                             <label>Fecha de ingreso</label>
-                            <input type="date" class="form-control">
+                            <input type="date" class="form-control" id="fecha-ingreso">
                         </div>
                     </div>
 
@@ -141,6 +150,9 @@
                                 class="form-control"
                                 inputmode="decimal"
                                 placeholder="0.00"
+                                id="salario"
+                                min="0.00"
+                                max="50000"
                                 oninput="this.value = this.value.replace(/[^0-9.]/g, '')"
                             >
                         </div>
@@ -156,62 +168,65 @@
                     <div class="col-md-2">
                         <div class="form-group">
                             <label>Fecha nacimiento</label>
-                            <input type="date" class="form-control">
+                            <input type="date" class="form-control" id="fecha-nacimiento">
                         </div>
                     </div>
 
                     <div class="col-md-4">
                         <div class="form-group">
                             <label>Lugar de Nacimiento</label>
-                            <input type="text" class="form-control">
+                            <input type="text" maxlength="100" class="form-control" id="lugar-nacimiento">
                         </div>
                     </div>
 
                 </div>
 
+
+
                 <div class="row">
-                    <div class="form-group">
-                        <label>Nivel académico</label>
-                        <select name="nivel_academico" id="nivel_academico" class="form-control">
-                            <option value="0">Seleccione</option>
-                            <option value="1">Parvularia</option>
-                            <option value="2">Educación Básica</option>
-                            <option value="3">Bachillerato</option>
-                            <option value="4">Técnico</option>
-                            <option value="6">Universitario</option>
-                            <option value="7">Postgrado</option>
-                            <option value="8">Otro</option>
-                        </select>
+
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Nivel Académico</label>
+                            <select width="100%"  class="form-control" id="select-nivel" name="nivel_academico">
+                                <option value="0">Seleccionar Opción</option>
+                                @foreach($arrayNiveles as $sel)
+                                    <option value="{{ $sel->id }}">{{ $sel->nombre }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
 
-                    <div class="form-group d-none" id="otro_nivel">
-                        <label>Especifique nivel académico</label>
-                        <input type="text" class="form-control" name="nivel_academico_otro">
+                    <div class="col-md-4 d-none" id="nivel-7">
+                        <div class="form-group">
+                            <label>Especifique nivel académico</label>
+                            <input type="text" maxlength="100" class="form-control" name="nivel_otro" id="otro-nivel">
+                        </div>
                     </div>
 
                     <div class="col-md-4">
                         <div class="form-group">
                             <label>Profesión</label>
-                            <input type="text" class="form-control" name="profesion">
+                            <input type="text" maxlength="100" id="profesion" class="form-control">
                         </div>
                     </div>
                 </div>
 
                 <div class="form-group">
                     <label>Dirección actual</label>
-                    <input type="text" class="form-control" name="direccion_actual">
+                    <input type="text" class="form-control" maxlength="100" id="direccion-actual">
                 </div>
 
                 <div class="row">
                     <div class="col-md-4">
                         <div class="form-group">
                             <label>Estado civil</label>
-                            <select class="form-control" name="estado_civil">
-                                <option value="">Seleccione</option>
-                                <option>Soltero</option>
-                                <option>Casado</option>
-                                <option>Divorciado</option>
-                                <option>Viudo</option>
+                            <select class="form-control" name="estado_civil" id="select-civil">
+                                <option value="0">Seleccione</option>
+                                <option value="1">Soltero</option>
+                                <option value="2">Casado</option>
+                                <option value="3">Divorciado</option>
+                                <option value="4">Viudo</option>
                             </select>
                         </div>
                     </div>
@@ -219,7 +234,7 @@
                     <div class="col-md-4">
                         <div class="form-group">
                             <label>Celular</label>
-                            <input type="text" class="form-control" name="celular">
+                            <input type="text" maxlength="20" id="celular" class="form-control" name="celular">
                         </div>
                     </div>
                 </div>
@@ -228,30 +243,34 @@
                     <div class="col-md-8">
                         <div class="form-group">
                             <label>En caso de emergencia llamar a</label>
-                            <input type="text" class="form-control" name="contacto_emergencia">
+                            <input type="text" class="form-control" id="emergencia-llamar" maxlength="50" name="contacto_emergencia">
                         </div>
                     </div>
 
                     <div class="col-md-4">
                         <div class="form-group">
                             <label>Celular emergencia</label>
-                            <input type="text" class="form-control" name="celular_emergencia">
+                            <input type="text" class="form-control" id="celular-emergencia" maxlength="20" name="celular_emergencia">
                         </div>
                     </div>
                 </div>
 
             </div>
 
-            <div class="card-footer text-right">
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save"></i> Guardar
-                </button>
+            <div class="card-footer">
+                <div class="text-right">
+                    <button type="button" onclick="guardarFicha()" class="btn btn-primary mr-2">
+                        <i class="fas fa-save"></i> Guardar
+                    </button>
+
+                    <button type="button" class="btn btn-success">
+                        <i class="fas fa-print"></i> Imprimir PDF
+                    </button>
+                </div>
             </div>
+
         </form>
     </div>
-
-
-
 
 
 
@@ -275,12 +294,16 @@
     <script src="{{ asset('js/theme.js') }}"></script>
 
 
-
     <script>
 
-        document.getElementById('nivel_academico').addEventListener('change', function () {
-            document.getElementById('otro_nivel')
-                .classList.toggle('d-none', this.value !== 'Otro');
+        document.getElementById('select-nivel').addEventListener('change', function () {
+
+            const contenedor = document.getElementById('nivel-7');
+
+            if (!contenedor) return;
+
+            contenedor.classList.toggle('d-none', this.value !== '7');
+
         });
 
         $('#select-unidad').select2({
@@ -304,6 +327,58 @@
     </script>
 
 
+    <script>
+
+        function mostrarError(id, mensaje) {
+            const el = document.getElementById(id);
+
+            if (!el) {
+                console.warn(`Elemento no encontrado: ${id}`);
+                return;
+            }
+
+            el.innerText = mensaje;
+            el.classList.remove('d-none');
+        }
+
+        function ocultarError(id) {
+            const el = document.getElementById(id);
+
+            if (!el) return; // ⬅️ evita el error
+
+            el.innerText = '';
+            el.classList.add('d-none');
+        }
+
+        function guardarFicha(){
+
+            limpiarErrores();
+
+            var nombre = document.getElementById('nombre').value;
+            var dui = document.getElementById('dui').value;
+
+            if (nombre.trim() === '') {
+                mostrarError('error-nombre', 'El nombre es obligatorio');
+                valido = false;
+            } else {
+                ocultarError('error-nombre');
+            }
+
+            if (dui.trim() === '') {
+                mostrarError('error-dui', 'El dui es obligatorio');
+                valido = false;
+            } else {
+                ocultarError('error-dui');
+            }
+        }
+
+        function limpiarErrores() {
+            ocultarError('error-nombre');
+            ocultarError('error-usuario');
+            ocultarError('error-password');
+        }
+
+    </script>
 
 
 

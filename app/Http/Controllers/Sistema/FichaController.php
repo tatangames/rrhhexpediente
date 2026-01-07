@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Sistema;
 use App\Http\Controllers\Controller;
 use App\Models\Cargo;
 use App\Models\Distrito;
+use App\Models\NivelAcademico;
 use App\Models\Unidad;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -29,11 +30,12 @@ class FichaController extends Controller
         $arrayDistritos = Distrito::orderBy('nombre', 'ASC')->get();
         $arrayCargos = Cargo::orderBy('nombre', 'ASC')->get();
         $arrayUnidades = Unidad::orderBy('nombre', 'ASC')->get();
+        $arrayNiveles = NivelAcademico::orderBy('nombre', 'ASC')->get();
 
 
 
         return view('backend.empleado.ficha.vistaficha', compact('temaPredeterminado', 'nombre',
-        'arrayDistritos', 'arrayCargos', 'arrayUnidades'));
+        'arrayDistritos', 'arrayCargos', 'arrayUnidades', 'arrayNiveles'));
     }
 
 
