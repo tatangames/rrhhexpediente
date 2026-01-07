@@ -324,8 +324,36 @@ return [
             ],
         ],
 
+        [
+            'text'  => 'Nuevo Cargo',
+            'icon'  => 'fas fa-file-alt',
+            'route' => 'admin.cargo.index',
+            'can'   => 'admin.sidebar.roles.y.permisos',
+        ],
+
+        [
+            'text'  => 'Nueva Unidad',
+            'icon'  => 'fas fa-file-alt',
+            'route' => 'admin.unidad.index',
+            'can'   => 'admin.sidebar.roles.y.permisos',
+        ],
+
+        [
+            'text'  => 'Nivel Académico',
+            'icon'  => 'fas fa-file-alt',
+            'route' => 'admin.nivelacademico.index',
+            'can'   => 'admin.sidebar.roles.y.permisos',
+        ],
 
 
+
+
+        [
+            'text'  => 'Ficha',
+            'icon'  => 'fas fa-file-alt',
+            'route' => 'empleado.ficha.index',
+            'can'   => 'empleado.sidebar.dashboard',
+        ],
 
 
 

@@ -4,8 +4,50 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Spatie\Permission\Traits\HasRoles;
 
-class Administrador extends Model
+class Administrador extends Authenticatable
 {
-    use HasFactory;
+    use HasFactory, Notifiable;
+    use HasRoles;
+
+    protected $table = 'administrador';
+    public $timestamps = false;
+
+    protected $guard_name = 'admin';
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected $fillable = [
+        'nombre',
+        'usuario',
+        'password',
+        'activo',
+        'tema',
+    ];
+
+    /**
+     * The attributes that should be hidden for arrays.
+     *
+     * @var array
+     */
+    /* protected $hidden = [
+         'password',
+         'remember_token',
+     ];*/
+
+    /**
+     * The attributes that should be cast to native types.
+     *
+     * @var array
+     */
+    /*protected $casts = [
+        'email_verified_at' => 'datetime',
+    ];*/
+
+
 }

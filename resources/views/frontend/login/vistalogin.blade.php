@@ -4,7 +4,7 @@
 @include('backend.urlglobal')
 
 <head>
-    <title>BITACORAS</title>
+    <title>INICIO DE SESION</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="{{ asset('css/login/bootstrap.min.css') }}">
@@ -83,6 +83,23 @@
             display: block;
         }
 
+        .btn-register-gray {
+            border-radius: 999px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            padding: 12px 26px;
+            background-color: #6c757d;
+            color: #fff;
+            transition: all 0.25s ease;
+        }
+
+        .btn-register-gray:hover {
+            background-color: #6c757d; /* gris bootstrap */
+            color: #fff;
+            box-shadow: 0 8px 18px rgba(108,117,125,.25);
+            transform: translateY(-1px);
+        }
+
     </style>
 </head>
 
@@ -99,8 +116,8 @@
                         <img src="{{ asset('images/logo.png') }}" class="login-logo" alt="Santa Ana Norte">
 
 
-                        <!-- TÍTULO BITACORAS -->
-                        <h4 class="login-title">BITACORAS</h4>
+                        <!-- TÍTULO EXPEDIENTE -->
+                        <h4 class="login-title">EXPEDIENTE</h4>
                         <form class="login-form">
                             <div>
                                 <label class="font-500">Usuario</label>
@@ -112,10 +129,20 @@
                                        id="password" maxlength="100" type="password">
 
                                 <input type="button"
-                                       value="ACCEDER"
+                                       value="INICIAR SESIÓN"
                                        style="margin-top: 20px"
                                        onclick="login()"
                                        class="btn btn-primary btn-lg w-100 shadow-lg">
+
+                                <div class="text-center mt-4">
+                                    <span class="d-block mb-2 text-muted">¿No tienes cuenta?</span>
+
+                                    <a href="{{ route('login.registro.admin') }}"
+                                       class="btn btn-outline-secondary btn-lg w-100 btn-register-gray">
+                                        CREAR CUENTA
+                                    </a>
+                                </div>
+
                             </div>
                         </form>
                     </div>
