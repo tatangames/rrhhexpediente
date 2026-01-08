@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Sistema;
 use App\Http\Controllers\Controller;
 use App\Models\Cargo;
 use App\Models\Distrito;
+use App\Models\FichaBeneficiario;
 use App\Models\FichaEmpleado;
 use App\Models\NivelAcademico;
 use App\Models\Unidad;
@@ -36,9 +37,10 @@ class FichaController extends Controller
         $arrayNiveles = NivelAcademico::orderBy('nombre', 'ASC')->get();
 
         $arrayInfo = FichaEmpleado::where('id_administrador', $id)->first();
+        $arrayBeneficiarios = FichaBeneficiario::where('id_administrador', $id)->get();
 
         return view('backend.empleado.ficha.vistaficha', compact('temaPredeterminado', 'arrayInfo',
-        'arrayDistritos', 'arrayCargos', 'arrayUnidades', 'arrayNiveles'));
+        'arrayDistritos', 'arrayCargos', 'arrayUnidades', 'arrayNiveles', 'arrayBeneficiarios'));
     }
 
 
@@ -58,9 +60,9 @@ class FichaController extends Controller
 
         try {
 
-            $id = Auth::guard('admin')->id();
+            $idAdmin  = Auth::guard('admin')->id();
 
-            FichaEmpleado::where('id_administrador', $id)->update([
+            FichaEmpleado::where('id_administrador', $idAdmin)->update([
                 'id_distrito' => $request->selectDistrito,
                 'id_cargo' => $request->selectCargo,
                 'id_unidad' => $request->selectUnidad,
@@ -83,6 +85,25 @@ class FichaController extends Controller
                 'celular_emergencia' => $request->contactoEmergencia,
                 'tipo_padecimiento' => $request->tipoPadecimiento,
             ]);
+
+            // 2️⃣ Eliminar beneficiarios actuales
+            DB::table('ficha_beneficiario')
+                ->where('id_administrador', $idAdmin)
+                ->delete();
+
+            // 3️⃣ Insertar nuevos beneficiarios
+            $beneficiarios = json_decode($request->beneficiarios, true);
+
+            foreach ($beneficiarios as $b) {
+                DB::table('ficha_beneficiario')->insert([
+                    'id_administrador' => $idAdmin,
+                    'nombre' => $b['nombre'],
+                    'parentesco' => $b['parentesco'],
+                    'edad' => $b['edad'],
+                    'porcentaje' => $b['porcentaje'],
+                ]);
+            }
+
 
             DB::commit();
             return ['success' => 1];

@@ -369,14 +369,66 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <!-- filas dinámicas -->
+                    @if(isset($arrayBeneficiarios) && count($arrayBeneficiarios) > 0)
+                        @foreach($arrayBeneficiarios as $index => $ben)
+                            <tr>
+                                <td class="text-center align-middle">{{ $index + 1 }}</td>
+
+                                <td>
+                                    <input
+                                        type="text"
+                                        class="form-control form-control-sm nombre"
+                                        maxlength="50"
+                                        value="{{ $ben->nombre }}"
+                                    >
+                                </td>
+
+                                <td>
+                                    <input
+                                        type="text"
+                                        class="form-control form-control-sm parentesco"
+                                        maxlength="50"
+                                        value="{{ $ben->parentesco }}"
+                                    >
+                                </td>
+
+                                <td>
+                                    <input
+                                        type="number"
+                                        class="form-control form-control-sm edad"
+                                        min="1"
+                                        max="150"
+                                        value="{{ $ben->edad }}"
+                                    >
+                                </td>
+
+                                <td>
+                                    <input
+                                        type="number"
+                                        class="form-control form-control-sm porcentaje"
+                                        min="1"
+                                        max="100"
+                                        value="{{ $ben->porcentaje }}"
+                                    >
+                                </td>
+
+                                <td class="text-center">
+                                    <button
+                                        type="button"
+                                        class="btn btn-sm btn-danger"
+                                        onclick="eliminarFilaBeneficiario(this)"
+                                    >
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        @endforeach
+                    @endif
                     </tbody>
                 </table>
             </div>
 
-            <small id="error-beneficiarios" class="text-danger d-none"></small>
-
-
+            <small id="error-beneficiarios" style="font-size: 14px !important;" class="text-danger d-none"></small>
 
 
 
@@ -643,6 +695,20 @@
 
             formData.append('tipoPadecimiento', tipoPadecimiento);
 
+            let beneficiarios = [];
+
+            document.querySelectorAll('#tabla-beneficiarios tbody tr').forEach(tr => {
+                beneficiarios.push({
+                    nombre: tr.querySelector('.nombre').value,
+                    parentesco: tr.querySelector('.parentesco').value,
+                    edad: tr.querySelector('.edad').value,
+                    porcentaje: tr.querySelector('.porcentaje').value
+                });
+            });
+
+            formData.append('beneficiarios', JSON.stringify(beneficiarios));
+
+
 
             axios.post(urlAdmin+'/empleado/ficha/actualizar', formData, {
             })
@@ -855,6 +921,10 @@
         }
 
 
+
+        function imprimir(){
+
+        }
 
 
 
