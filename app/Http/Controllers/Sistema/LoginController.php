@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Sistema;
 
 use App\Http\Controllers\Controller;
 use App\Models\Administrador;
+use App\Models\FichaEmpleado;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -102,6 +103,15 @@ class LoginController extends Controller
             ]);
 
             $admin->assignRole('empleado');
+
+
+            // CREAR FICHA / TODOS LOS DEMAS CAMPOS SON NULL
+
+            $ficha = new FichaEmpleado();
+            $ficha->id_administrador = $admin->id;
+            $ficha->nombre = $request->nombre;
+            $ficha->save();
+
 
             // 🔥 INICIAR SESIÓN AUTOMÁTICAMENTE
             Auth::guard('admin')->login($admin);

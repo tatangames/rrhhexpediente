@@ -267,7 +267,6 @@
 
         openLoading();
 
-
         let formData = new FormData();
         formData.append('nombre', nombre);
         formData.append('usuario', usuario);

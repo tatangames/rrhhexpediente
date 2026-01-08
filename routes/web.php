@@ -98,5 +98,7 @@ Route::post('/admin/nivelacademico/editar', [ConfiguracionController::class,'act
 
 
 Route::get('/empleado/ficha/index', [FichaController::class,'vistaFichaForm'])->name('empleado.ficha.index');
+Route::post('/empleado/ficha/actualizar', [FichaController::class,'actualizarFicha']);
+
 
 
