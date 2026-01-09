@@ -359,10 +359,11 @@
             <hr>
             <h5 class="text-center font-weight-bold mt-4">DATOS BENEFICIARIOS</h5>
 
-            <div class="mb-2 text-right">
+            <div class="mb-2 text-left" style="margin: 10px">
                 <button type="button" class="btn btn-sm btn-primary" onclick="agregarFilaBeneficiario()">
                     <i class="fas fa-plus"></i> Agregar beneficiario
                 </button>
+                <p style="color: red">La suma TOTAL del PORCENTAJE (%) debe ser 100</p>
             </div>
 
             <div class="table-responsive">
