@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Sistema;
 use App\Http\Controllers\Controller;
 use App\Models\Cargo;
 use App\Models\Distrito;
+use App\Models\FichaEmpleado;
 use App\Models\NivelAcademico;
 use App\Models\Unidad;
 use Illuminate\Http\Request;
@@ -192,7 +193,6 @@ class ConfiguracionController extends Controller
 
     public function indexNivelAcademico()
     {
-
         $temaPredeterminado =  $this->getTemaPredeterminado();
         return view('backend.admin.configuracion.nivelacademico.vistaacademico', compact('temaPredeterminado'));
     }
@@ -267,6 +267,21 @@ class ConfiguracionController extends Controller
 
         return ['success' => 1];
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 }

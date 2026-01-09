@@ -76,6 +76,7 @@ class LoginController extends Controller
     {
         $regla = [
             'nombre'   => 'required',
+            'dui'   => 'required',
             'usuario'  => 'required',
             'password' => 'required',
         ];
@@ -88,6 +89,11 @@ class LoginController extends Controller
 
         if (Administrador::where('usuario', $request->usuario)->exists()) {
             return ['success' => 1]; // usuario ya existe
+        }
+
+
+        if (Administrador::where('dui', $request->dui)->exists()) {
+            return ['success' => 2]; // dui ya existe
         }
 
         DB::beginTransaction();
@@ -120,7 +126,7 @@ class LoginController extends Controller
             DB::commit();
 
             return [
-                'success' => 2,
+                'success' => 3,
                 'ruta' => route('admin.panel')
             ];
 

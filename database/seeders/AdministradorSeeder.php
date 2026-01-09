@@ -20,14 +20,7 @@ class AdministradorSeeder extends Seeder
             'usuario' => 'admin',
             'activo' => true,
             'tema' => 0,
+            'dui' => '',
         ])->assignRole('admin');
-
-        Administrador::create([
-            'nombre' => 'Jonathan Rigoberto Moran Quijada',
-            'password' => Hash::make('1234'),
-            'usuario' => 'tatan',
-            'activo' => true,
-            'tema' => 0,
-        ])->assignRole('empleado');
     }
 }

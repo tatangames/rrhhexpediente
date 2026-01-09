@@ -56,6 +56,23 @@ return [
             'throw' => false,
         ],
 
+        /*
+       |--------------------------------------------------------------------------
+       | DISK EXPEDIENTES
+       |--------------------------------------------------------------------------
+       */
+        'expedientes' => [
+            'driver' => 'local',
+            'root' => storage_path('app/public/expedientes'),
+            'url' => env('APP_URL') . '/storage/expedientes',
+            'visibility' => 'public',
+            'throw' => false,
+        ],
+
+        'links' => [
+            public_path('storage') => storage_path('app/public'),
+        ],
+
     ],
 
     /*

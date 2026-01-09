@@ -16,8 +16,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
-class FichaController extends Controller
+
+class RRHHController extends Controller
 {
 
     public function __construct(){
@@ -28,99 +28,45 @@ class FichaController extends Controller
         return Auth::guard('admin')->user()->tema;
     }
 
-    public function vistaFichaForm(){
-        $temaPredeterminado = $this->getTemaPredeterminado();
 
-        $id = Auth::guard('admin')->id();
+
+    // ********************* EMPLEADOS ************************************
+
+    public function indexListadoEmpleados()
+    {
+        $temaPredeterminado =  $this->getTemaPredeterminado();
+        return view('backend.admin.rrhh.empleados.vistalistaempleados', compact('temaPredeterminado'));
+    }
+
+
+    public function tablaListadoEmpleados()
+    {
+        $arrayEmpleado = FichaEmpleado::with(['cargo', 'unidad', 'distrito'])
+            ->orderBy('nombre', 'ASC')
+            ->get();
+
+        return view('backend.admin.rrhh.empleados.tablalistaempleados', compact('arrayEmpleado'));
+    }
+
+    public function indexVistaFichaEditar($idadmin)
+    {
+        $temaPredeterminado = $this->getTemaPredeterminado();
 
         $arrayDistritos = Distrito::orderBy('nombre', 'ASC')->get();
         $arrayCargos = Cargo::orderBy('nombre', 'ASC')->get();
         $arrayUnidades = Unidad::orderBy('nombre', 'ASC')->get();
         $arrayNiveles = NivelAcademico::orderBy('nombre', 'ASC')->get();
 
-        $arrayInfo = FichaEmpleado::where('id_administrador', $id)->first();
-        $arrayBeneficiarios = FichaBeneficiario::where('id_administrador', $id)->get();
+        $arrayInfo = FichaEmpleado::where('id_administrador', $idadmin)->first();
+        $arrayBeneficiarios = FichaBeneficiario::where('id_administrador', $idadmin)->get();
 
-        return view('backend.empleado.ficha.vistaficha', compact('temaPredeterminado', 'arrayInfo',
-        'arrayDistritos', 'arrayCargos', 'arrayUnidades', 'arrayNiveles', 'arrayBeneficiarios'));
+        return view('backend.admin.rrhh.empleados.ficha.vistafichaeditar', compact('temaPredeterminado', 'arrayInfo',
+            'arrayDistritos', 'arrayCargos', 'arrayUnidades', 'arrayNiveles', 'arrayBeneficiarios'));
     }
 
 
-    public function actualizarFicha(Request $request)
+    public function descargarPdfFicha($idAdmin)
     {
-        $regla = array(
-            'nombre' => 'required'
-        );
-
-        $validar = Validator::make($request->all(), $regla);
-
-        if ($validar->fails()) {
-            return ['success' => 0];
-        }
-
-        DB::beginTransaction();
-
-        try {
-
-            $idAdmin  = Auth::guard('admin')->id();
-
-            FichaEmpleado::where('id_administrador', $idAdmin)->update([
-                'id_distrito' => $request->selectDistrito,
-                'id_cargo' => $request->selectCargo,
-                'id_unidad' => $request->selectUnidad,
-                'id_nivelacademico' => $request->selectAcademico,
-
-                'nombre' => $request->nombre,
-                'dui' => $request->dui,
-                'fecha_ingreso' => $request->fechaIngreso,
-                'salario_actual' => $request->salario,
-
-                'fecha_nacimiento' => $request->fechaNacimiento,
-                'lugar_nacimiento' => $request->lugarNacimiento,
-                'otro_nivelacademico' => $request->otroNivel,
-                'profesion' => $request->profesion,
-                'direccion' => $request->direccionActual,
-
-                'estado_civil' => $request->selectCivil,
-                'celular' => $request->celular,
-                'caso_emergencia' => $request->casoEmergencia,
-                'celular_emergencia' => $request->contactoEmergencia,
-                'tipo_padecimiento' => $request->tipoPadecimiento,
-            ]);
-
-            // 2️⃣ Eliminar beneficiarios actuales
-            DB::table('ficha_beneficiario')
-                ->where('id_administrador', $idAdmin)
-                ->delete();
-
-            // 3️⃣ Insertar nuevos beneficiarios
-            $beneficiarios = json_decode($request->beneficiarios, true);
-
-            foreach ($beneficiarios as $b) {
-                DB::table('ficha_beneficiario')->insert([
-                    'id_administrador' => $idAdmin,
-                    'nombre' => $b['nombre'],
-                    'parentesco' => $b['parentesco'],
-                    'edad' => $b['edad'],
-                    'porcentaje' => $b['porcentaje'],
-                ]);
-            }
-
-
-            DB::commit();
-            return ['success' => 1];
-
-        } catch (\Throwable $e) {
-            DB::rollback();
-            Log::error('Actualizar Ficha: '.$e->getMessage());
-
-            return ['success' => 99];
-        }
-    }
-
-    public function pdfFicha()
-    {
-        $idAdmin = Auth::guard('admin')->id();
 
         $infoFicha = FichaEmpleado::where('id_administrador', $idAdmin)->first();
         $arrayBeneficiarios = FichaBeneficiario::where('id_administrador', $idAdmin)->get();
@@ -327,120 +273,36 @@ class FichaController extends Controller
     </div>
     ";
 
-       // $mpdf->setFooter('Página {PAGENO} de {nb}');
+        // $mpdf->setFooter('Página {PAGENO} de {nb}');
         $mpdf->WriteHTML($html);
         $mpdf->Output();
     }
 
 
 
-
-
-
-
-    //****************************** EXPEDIENTE **************************************
-
-    public function vistaExpedienteForm()
+    public function indexListadoDocumentos($idadmin)
     {
         $temaPredeterminado = $this->getTemaPredeterminado();
 
-        $id = Auth::guard('admin')->id();
-
-        $documentos = Media::where('id_administrador', $id)
+        $documentos = Media::where('id_administrador', $idadmin)
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('backend.empleado.expediente.vistaexpediente', compact('temaPredeterminado', 'documentos'));
+        return view('backend.admin.rrhh.empleados.expdiente.vistadocumentos', compact('temaPredeterminado', 'documentos',
+        'idadmin'));
     }
 
 
-    public function upload(Request $request)
+    public function descargarDocumento($id)
     {
-        $request->validate([
-            'files.*' => 'required|file|max:307200',
-        ]);
-
-        $adminId = Auth::guard('admin')->id();
-        $guardados = [];
-
-        foreach ($request->file('files') as $file) {
-
-            $nombreOriginal = $file->getClientOriginalName();
-            $extension = $file->getClientOriginalExtension();
-
-            $nombreFinal = time().'_'.Str::random(10).'.'.$extension;
-
-            $ruta = $file->storeAs(
-                '/',
-                $nombreFinal,
-                'expedientes'
-            );
-
-            $media = Media::create([
-                'nombre_original'   => $nombreOriginal,
-                'archivo'           => $nombreFinal,
-                'ruta'              => $ruta,
-                'disk'              => 'expedientes',
-                'size'              => $file->getSize(),
-                'id_administrador'  => $adminId,
-            ]);
-
-            $guardados[] = [
-                'id' => $media->id,
-                'nombre' => $nombreOriginal,
-                'url' => Storage::disk('expedientes')->url($ruta),
-            ];
-        }
-
-        return response()->json([
-            'success' => true,
-            'files' => $guardados
-        ]);
-    }
-
-
-    public function destroy($id)
-    {
-        $adminId = Auth::guard('admin')->id();
-
-        $media = Media::where('id', $id)
-            ->where('id_administrador', $adminId)
-            ->firstOrFail();
-
-        if ($media->id_administrador !== $adminId) {
-            abort(403, 'No autorizado');
-        }
-
-        // Borra archivo físico
-        if (Storage::disk($media->disk)->exists($media->ruta)) {
-            Storage::disk($media->disk)->delete($media->ruta);
-        }
-
-        // Borra registro BD
-        $media->delete();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Documento eliminado correctamente'
-        ]);
-    }
-
-
-    public function download($id)
-    {
-        $adminId = Auth::guard('admin')->id();
-
-        $media = Media::where('id', $id)
-            ->where('id_administrador', $adminId)
-            ->firstOrFail();
-
-        if ($media->id_administrador !== $adminId) {
-            abort(403, 'No autorizado');
-        }
+        $media = Media::where('id', $id)->firstOrFail();
 
         return Storage::disk($media->disk)
             ->download($media->ruta, $media->nombre_original);
     }
+
+
+
 
 
 

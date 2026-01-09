@@ -325,24 +325,31 @@ return [
         ],
 
         [
+            'text'  => 'Empleados',
+            'icon'  => 'fas fa-file-alt',
+            'route' => 'admin.empleados.index',
+            'can'   => 'rrhh.sidebar.dashboard',
+        ],
+
+        [
             'text'  => 'Nuevo Cargo',
             'icon'  => 'fas fa-file-alt',
             'route' => 'admin.cargo.index',
-            'can'   => 'admin.sidebar.roles.y.permisos',
+            'can'   => 'rrhh.sidebar.dashboard',
         ],
 
         [
             'text'  => 'Nueva Unidad',
             'icon'  => 'fas fa-file-alt',
             'route' => 'admin.unidad.index',
-            'can'   => 'admin.sidebar.roles.y.permisos',
+            'can'   => 'rrhh.sidebar.dashboard',
         ],
 
         [
             'text'  => 'Nivel Académico',
             'icon'  => 'fas fa-file-alt',
             'route' => 'admin.nivelacademico.index',
-            'can'   => 'admin.sidebar.roles.y.permisos',
+            'can'   => 'rrhh.sidebar.dashboard',
         ],
 
 
@@ -352,6 +359,13 @@ return [
             'text'  => 'Ficha',
             'icon'  => 'fas fa-file-alt',
             'route' => 'empleado.ficha.index',
+            'can'   => 'empleado.sidebar.dashboard',
+        ],
+
+        [
+            'text'  => 'Expediente',
+            'icon'  => 'fas fa-file-alt',
+            'route' => 'empleado.expediente.index',
             'can'   => 'empleado.sidebar.dashboard',
         ],
 

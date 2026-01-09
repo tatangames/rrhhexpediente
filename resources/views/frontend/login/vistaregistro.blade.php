@@ -127,6 +127,16 @@
                                        required>
                                 <small id="error-nombre" class="text-danger d-none"></small>
 
+                                <label class="font-500">DUI</label>
+                                <input class="form-control form-control-lg mb-3"
+                                       id="dui"
+                                       type="number"
+                                       placeholder="Ingrese su DUI (sin guion)"
+                                       maxlength="9"
+                                       required
+                                       oninput="this.value = this.value.slice(0,9)">
+                                <small id="error-dui" class="text-danger d-none"></small>
+
                                 <!-- USUARIO -->
                                 <label class="font-500">Usuario</label>
                                 <input class="form-control form-control-lg mb-3"
@@ -230,6 +240,7 @@
         limpiarErrores();
 
         var nombre = document.getElementById('nombre').value;
+        var dui = document.getElementById('dui').value;
         var usuario = document.getElementById('usuario').value;
         var password = document.getElementById('password').value;
 
@@ -240,6 +251,18 @@
             valido = false;
         } else {
             ocultarError('error-nombre');
+        }
+
+        if (dui.trim() === '') {
+            mostrarError('error-dui', 'El DUI es obligatorio');
+            valido = false;
+        }
+        else if (!/^\d{9}$/.test(dui)) {
+            mostrarError('error-dui', 'El DUI debe contener exactamente 9 números');
+            valido = false;
+        }
+        else {
+            ocultarError('error-dui');
         }
 
         if (usuario.trim() === '') {
@@ -269,6 +292,7 @@
 
         let formData = new FormData();
         formData.append('nombre', nombre);
+        formData.append('dui', dui);
         formData.append('usuario', usuario);
         formData.append('password', password);
 
@@ -307,7 +331,25 @@
                 }
             })
 
-        } else if (response.data.success === 2) {
+        }else if (response.data.success === 2) {
+            // dui repetido
+            mostrarError('error-dui', 'DUI repetido');
+
+            Swal.fire({
+                title: 'Error',
+                text: 'El DUI ya se encuentra registrado',
+                icon: 'info',
+                showCancelButton: false,
+                confirmButtonColor: '#007bff',
+                allowOutsideClick: false,
+                confirmButtonText: 'OK',
+            }).then((result) => {
+                if (result.isConfirmed) {
+
+                }
+            })
+
+        } else if (response.data.success === 3) {
             window.location = response.data.ruta;
         } else {
             toastr.error('Error al registrar');

@@ -8,6 +8,7 @@ use App\Http\Controllers\Sistema\PerfilController;
 use App\Http\Controllers\Sistema\PermisoController;
 use App\Http\Controllers\Sistema\FichaController;
 use App\Http\Controllers\Sistema\ConfiguracionController;
+use App\Http\Controllers\Sistema\RRHHController;
 
 /*
 |--------------------------------------------------------------------------
@@ -83,6 +84,19 @@ Route::post('/admin/nivelacademico/nuevo', [ConfiguracionController::class,'nuev
 Route::post('/admin/nivelacademico/informacion', [ConfiguracionController::class,'informacionNivelAcademico']);
 Route::post('/admin/nivelacademico/editar', [ConfiguracionController::class,'actualizarNivelAcademico']);
 
+// === LISTA DE EMPLEADOS ===
+Route::get('/admin/empleados/listado/index', [RRHHController::class,'indexListadoEmpleados'])->name('admin.empleados.index');
+Route::get('/admin/empleados/listado/tabla', [RRHHController::class,'tablaListadoEmpleados']);
+
+// Vista para editar Ficha
+Route::get('/admin/empleados/ficha/vista/{idadmin}', [RRHHController::class,'indexVistaFichaEditar']);
+// descargar PDF
+Route::get('/admin/empleados/reporte/pdf/{idadmin}', [RRHHController::class,'descargarPdfFicha']);
+// vista de documentos
+Route::get('/admin/empleados/documentos/listado/{idadmin}', [RRHHController::class,'indexListadoDocumentos']);
+// descargar documento
+Route::get('/admin/empleado/documento/download/{id}', [RRHHController::class, 'descargarDocumento'])
+    ->name('admin.media.download');
 
 
 
@@ -90,15 +104,23 @@ Route::post('/admin/nivelacademico/editar', [ConfiguracionController::class,'act
 
 
 
-
-
-
-
-
-
-
+// FICHA EMPLEADO
 Route::get('/empleado/ficha/index', [FichaController::class,'vistaFichaForm'])->name('empleado.ficha.index');
 Route::post('/empleado/ficha/actualizar', [FichaController::class,'actualizarFicha']);
+Route::get('/empleado/reporte/pdf', [FichaController::class,'pdfFicha']);
+
+// EXPEDIENTE EMPLEADO
+Route::get('/empleado/expediente/index', [FichaController::class,'vistaExpedienteForm'])->name('empleado.expediente.index');
+// subir documentos
+Route::post('/empleado/media/upload', [FichaController::class, 'upload'])->name('empleado.media.upload');
+// borrar documento
+Route::post('/empleado/eliminar/media/{id}', [FichaController::class, 'destroy'])->name('empleado.media.destroy');
+// descargar documento
+Route::get('/empleado/media/download/{id}', [FichaController::class, 'download'])->name('empleado.media.download');
+
+
+
+
 
 
 

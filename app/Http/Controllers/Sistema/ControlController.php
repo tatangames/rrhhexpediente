@@ -20,6 +20,10 @@ class ControlController extends Controller
             return redirect()->route('admin.roles.index');
         }
 
+        if ($user->hasRole('rrhh')) {
+            return redirect()->route('admin.empleados.index');
+        }
+
         if ($user->hasRole('empleado')) {
             return redirect()->route('empleado.ficha.index');
         }
