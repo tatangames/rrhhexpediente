@@ -293,6 +293,7 @@
                                 <option value="2" {{ $arrayInfo['estado_civil'] == 2 ? 'selected' : '' }}>Casado</option>
                                 <option value="3" {{ $arrayInfo['estado_civil'] == 3 ? 'selected' : '' }}>Divorciado</option>
                                 <option value="4" {{ $arrayInfo['estado_civil'] == 4 ? 'selected' : '' }}>Viudo</option>
+                                <option value="5" {{ $arrayInfo['estado_civil'] == 5 ? 'selected' : '' }}>Acompañado</option>
                             </select>
                             <small id="error-civil" class="text-danger d-none">
                             </small>

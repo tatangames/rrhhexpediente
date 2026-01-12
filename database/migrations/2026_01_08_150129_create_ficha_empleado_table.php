@@ -35,6 +35,7 @@ return new class extends Migration
             // 2: casdo
             // 3: divorciado
             // 4: viudo
+            // 5: Acompañado
 
             $table->integer('estado_civil')->default(1)->nullable();
             $table->string('celular', 20)->nullable();

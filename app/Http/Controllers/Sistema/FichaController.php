@@ -162,6 +162,7 @@ class FichaController extends Controller
             2 => 'Casado',
             3 => 'Divorciado',
             4 => 'Viudo',
+            5 => 'Acompañado',
             default => '',
         };
 
