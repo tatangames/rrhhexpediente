@@ -296,7 +296,7 @@
         formData.append('usuario', usuario);
         formData.append('password', password);
 
-        axios.post(urlAdmin+'registro/empleado', formData, {
+        axios.post(urlAdmin+'/registro/empleado', formData, {
         })
             .then((response) => {
                 closeLoading();
