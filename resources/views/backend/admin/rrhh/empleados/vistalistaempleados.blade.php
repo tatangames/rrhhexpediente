@@ -87,6 +87,57 @@
         </div>
     </section>
 
+
+
+    <div class="modal fade" id="modalEditar">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Editar Usuario</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="formulario-editar">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-12">
+
+                                    <div class="form-group">
+                                        <label>Nombre Completo</label>
+                                        <input type="hidden" id="id-editar">
+                                        <input type="text" maxlength="100" disabled autocomplete="off" class="form-control" id="nombre-editar">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Usuario</label>
+                                        <input type="text" maxlength="50" autocomplete="off" class="form-control" id="usuario-editar">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>DUI</label>
+                                        <input type="text" maxlength="9" autocomplete="off" class="form-control" id="dui-editar">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Contraseña</label>
+                                        <input type="text" maxlength="16" autocomplete="off" class="form-control" id="password-editar" placeholder="Contraseña">
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary" onclick="actualizar()">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 @stop
 
 
@@ -187,6 +238,103 @@
 
         function infoDocumentos(idadmin){
             window.open("{{ URL::to('/admin/empleados/documentos/listado') }}/" + idadmin);
+        }
+
+
+
+        function infoUsuario(id){
+            openLoading();
+            document.getElementById("formulario-editar").reset();
+
+            axios.post(urlAdmin+'/admin/permisos/info-usuario',{
+                'id': id
+            })
+                .then((response) => {
+                    closeLoading();
+
+                    if(response.data.success === 1){
+                        $('#modalEditar').modal('show');
+                        $('#id-editar').val(response.data.info.id);
+                        $('#nombre-editar').val(response.data.info.nombre);
+                        $('#usuario-editar').val(response.data.info.usuario);
+                        $('#dui-editar').val(response.data.info.dui);
+
+                    }else{
+                        toastr.error('Información no encontrado.');
+                    }
+                })
+                .catch((error) => {
+                    closeLoading()
+                    console.log(error);
+                    toastr.error('Información no encontrado..');
+                });
+        }
+
+
+        function actualizar(){
+            var id = document.getElementById('id-editar').value;
+            var usuario = document.getElementById('usuario-editar').value;
+            var password = document.getElementById('password-editar').value;
+            var dui = document.getElementById('dui-editar').value;
+
+            if(usuario === ''){
+                toastr.error('Usuario es requerido');
+                return;
+            }
+
+            if(usuario.length > 50){
+                toastr.error('Máximo 50 caracteres para Usuario');
+                return;
+            }
+
+            if(password.length > 0){
+                if(password.length < 4){
+                    toastr.error('Mínimo 4 caracteres para contraseña');
+                    return;
+                }
+
+                if(password.length > 16){
+                    toastr.error('Máximo 16 caracteres para contraseña');
+                    return;
+                }
+            }
+
+            if(dui === ''){
+                toastr.error('DUI es requerido');
+                return;
+            }
+
+            openLoading()
+            var formData = new FormData();
+            formData.append('id', id);
+            formData.append('usuario', usuario);
+            formData.append('password', password);
+            formData.append('dui', dui);
+
+            axios.post(urlAdmin+'/admin/editar/empleado', formData, {
+            })
+                .then((response) => {
+                    closeLoading()
+
+                    if (response.data.success === 1) {
+                        toastr.error('El Usuario ya existe');
+                    }
+                    else if(response.data.success === 2){
+                        toastr.error('Usuario ya esta registrado');
+                    }
+                    else if(response.data.success === 3){
+                        toastr.success('Actualizado');
+                        $('#modalEditar').modal('hide');
+                        recargar();
+                    }
+                    else {
+                        toastr.error('Error al actualizar');
+                    }
+                })
+                .catch((error) => {
+                    closeLoading();
+                    toastr.error('Error al actualizar');
+                });
         }
 
 

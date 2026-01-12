@@ -28,6 +28,7 @@ class Administrador extends Authenticatable
         'password',
         'activo',
         'tema',
+        'dui'
     ];
 
     /**

@@ -105,6 +105,7 @@ class LoginController extends Controller
                 'usuario'  => $request->usuario,
                 'password' => Hash::make($request->password),
                 'activo'   => true,
+                'dui'      => $request->dui,
                 'tema'     => 0,
             ]);
 
@@ -116,6 +117,7 @@ class LoginController extends Controller
             $ficha = new FichaEmpleado();
             $ficha->id_administrador = $admin->id;
             $ficha->nombre = $request->nombre;
+            $ficha->dui = $request->dui;
             $ficha->save();
 
 

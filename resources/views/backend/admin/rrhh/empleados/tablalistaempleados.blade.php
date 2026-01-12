@@ -31,6 +31,11 @@
                         class="btn btn-info btn-xs" style="margin: 2px" onclick="infoDocumentos({{ $dato->id_administrador }})">
                     <i class="fas fa-edit" title="Documentos"></i> Documentos</button>
 
+                <button type="button"
+                        class="btn btn-warning btn-xs" style="margin: 2px" onclick="infoUsuario({{ $dato->id_administrador }})">
+                    <i class="fas fa-edit" title="Info"></i> Info</button>
+
+
             </td>
         </tr>
     @endforeach

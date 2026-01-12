@@ -305,7 +305,7 @@ return [
             'topnav_right' => false,
         ],
 
-        // Sidebar items:
+        // ADMINISTRADOR
         [
             'text'    => 'Roles y Permisos',
             'icon'    => 'fas fa-pen-alt',
@@ -331,26 +331,40 @@ return [
             'can'   => 'rrhh.sidebar.dashboard',
         ],
 
-        [
-            'text'  => 'Nuevo Cargo',
-            'icon'  => 'fas fa-file-alt',
-            'route' => 'admin.cargo.index',
-            'can'   => 'rrhh.sidebar.dashboard',
-        ],
+
+
 
         [
-            'text'  => 'Nueva Unidad',
-            'icon'  => 'fas fa-file-alt',
-            'route' => 'admin.unidad.index',
-            'can'   => 'rrhh.sidebar.dashboard',
+            'text'    => 'Configuración',
+            'icon'    => 'fas fa-pen-alt',
+            'can'     => 'rrhh.sidebar.dashboard',
+            'submenu' => [
+                [
+                    'text'  => 'Nuevo Cargo',
+                    'icon'  => 'fas fa-file-alt',
+                    'route' => 'admin.cargo.index',
+                    'can'   => 'rrhh.sidebar.dashboard',
+                ],
+
+                [
+                    'text'  => 'Nueva Unidad',
+                    'icon'  => 'fas fa-file-alt',
+                    'route' => 'admin.unidad.index',
+                    'can'   => 'rrhh.sidebar.dashboard',
+                ],
+
+                [
+                    'text'  => 'Nivel Académico',
+                    'icon'  => 'fas fa-file-alt',
+                    'route' => 'admin.nivelacademico.index',
+                    'can'   => 'rrhh.sidebar.dashboard',
+                ],
+            ],
         ],
 
-        [
-            'text'  => 'Nivel Académico',
-            'icon'  => 'fas fa-file-alt',
-            'route' => 'admin.nivelacademico.index',
-            'can'   => 'rrhh.sidebar.dashboard',
-        ],
+
+
+
 
 
 

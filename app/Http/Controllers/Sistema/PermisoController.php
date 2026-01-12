@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Sistema;
 
 use App\Http\Controllers\Controller;
 use App\Models\Administrador;
+use App\Models\FichaEmpleado;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -118,6 +119,47 @@ class PermisoController extends Controller
             return ['success' => 3];
         }
     }
+
+
+    public function editarUsuarioPorRRHH(Request $request)
+    {
+        if(Administrador::where('id', $request->id)->first()){
+
+            // usuario no este igual a otro
+            if(Administrador::where('usuario', $request->usuario)
+                ->where('id', '!=', $request->id)->first()){
+                return ['success' => 1];
+            }
+
+
+            // NO USUARIO REPETIDO
+            if(Administrador::where('dui', $request->dui)
+                ->where('id', '!=', $request->id)->first()){
+                return ['success' => 2];
+            }
+
+
+            $usuario = Administrador::find($request->id);
+            $usuario->usuario = $request->usuario;
+            $usuario->dui = $request->dui;
+            if($request->password != null){
+                $usuario->password = bcrypt($request->password);
+            }
+            $usuario->save();
+
+            FichaEmpleado::where('id_administrador', $request->id)->update([
+                'dui' => $request->dui,
+            ]);
+
+
+            return ['success' => 3];
+        }else{
+            return ['success' => 3];
+        }
+    }
+
+
+
 
     public function nuevoRol(Request $request){
 

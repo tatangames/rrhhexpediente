@@ -54,6 +54,11 @@ Route::post('/admin/permisos/nuevo-rol', [PermisoController::class, 'nuevoRol'])
 Route::post('/admin/permisos/extra-nuevo', [PermisoController::class, 'nuevoPermisoExtra']);
 Route::post('/admin/permisos/extra-borrar', [PermisoController::class, 'borrarPermisoGlobal']);
 
+// actualizar empleado por RRHH
+Route::post('/admin/editar/empleado', [PermisoController::class, 'editarUsuarioPorRRHH']);
+
+
+
 // --- PERFIL ---
 Route::get('/admin/editar-perfil/index', [PerfilController::class,'indexEditarPerfil'])->name('admin.perfil');
 Route::post('/admin/editar-perfil/actualizar', [PerfilController::class, 'editarUsuario']);
