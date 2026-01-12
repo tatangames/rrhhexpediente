@@ -1,6 +1,6 @@
 <!-- URL GLOBAL PETICIONES POST -->
 <script type="text/javascript">
-    var urlAdmin = "";
+    var urlAdmin = "/thexpediente.com";
 </script>
 
 <!-- ICONO GLOBAL DE LAS PESTAÑAS -->
