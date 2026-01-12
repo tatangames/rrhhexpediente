@@ -14,6 +14,8 @@ return new class extends Migration
         Schema::create('unidad', function (Blueprint $table) {
             $table->id();
             $table->string('nombre', 100);
+
+            $table->boolean('visible')->default(true);
         });
     }
 

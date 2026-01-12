@@ -14,6 +14,9 @@ return new class extends Migration
         Schema::create('cargo', function (Blueprint $table) {
             $table->id();
             $table->string('nombre', 100);
+
+            $table->boolean('visible')->default(true);
+
         });
     }
 

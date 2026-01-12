@@ -2,6 +2,7 @@
     <thead>
     <tr>
         <th style="width: 25%">Nombre</th>
+        <th style="width: 10%">Visible</th>
         <th style="width: 8%">Opciones</th>
     </tr>
     </thead>
@@ -9,6 +10,11 @@
     @foreach($listado as $dato)
         <tr>
             <td>{{ $dato->nombre }}</td>
+            <td>
+                @if($dato->visible == 0)
+                    NO VISIBLE
+                @endif
+            </td>
             <td>
                 <button type="button"
                         class="btn btn-info btn-xs" onclick="informacion({{ $dato->id }})">

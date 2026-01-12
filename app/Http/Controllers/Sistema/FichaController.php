@@ -34,8 +34,8 @@ class FichaController extends Controller
         $id = Auth::guard('admin')->id();
 
         $arrayDistritos = Distrito::orderBy('nombre', 'ASC')->get();
-        $arrayCargos = Cargo::orderBy('nombre', 'ASC')->get();
-        $arrayUnidades = Unidad::orderBy('nombre', 'ASC')->get();
+        $arrayCargos = Cargo::where('visible',1)->orderBy('nombre', 'ASC')->get();
+        $arrayUnidades = Unidad::where('visible',1)->orderBy('nombre', 'ASC')->get();
         $arrayNiveles = NivelAcademico::orderBy('nombre', 'ASC')->get();
 
         $arrayInfo = FichaEmpleado::where('id_administrador', $id)->first();

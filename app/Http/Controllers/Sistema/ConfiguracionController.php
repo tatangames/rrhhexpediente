@@ -53,6 +53,7 @@ class ConfiguracionController extends Controller
         try {
             $dato = new Cargo();
             $dato->nombre = $request->nombre;
+            $dato->visible = 1;
             $dato->save();
 
             DB::commit();
@@ -85,7 +86,8 @@ class ConfiguracionController extends Controller
     {
         $regla = array(
             'id' => 'required',
-            'nombre' => 'required'
+            'nombre' => 'required',
+            'visible' => 'required'
         );
 
         $validar = Validator::make($request->all(), $regla);
@@ -96,6 +98,7 @@ class ConfiguracionController extends Controller
 
         Cargo::where('id', $request->id)->update([
             'nombre' => $request->nombre,
+            'visible' => $request->visible
         ]);
 
         return ['success' => 1];
@@ -137,6 +140,7 @@ class ConfiguracionController extends Controller
         try {
             $dato = new Unidad();
             $dato->nombre = $request->nombre;
+            $dato->visible = 1;
             $dato->save();
 
             DB::commit();
@@ -169,7 +173,8 @@ class ConfiguracionController extends Controller
     {
         $regla = array(
             'id' => 'required',
-            'nombre' => 'required'
+            'nombre' => 'required',
+            'visible' => 'required'
         );
 
         $validar = Validator::make($request->all(), $regla);
@@ -179,7 +184,8 @@ class ConfiguracionController extends Controller
         }
 
         Unidad::where('id', $request->id)->update([
-            'nombre' => $request->nombre
+            'nombre' => $request->nombre,
+            'visible' => $request->visible
         ]);
 
         return ['success' => 1];

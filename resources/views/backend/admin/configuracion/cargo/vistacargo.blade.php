@@ -16,7 +16,7 @@
     <link href="{{ asset('css/toastr.min.css') }}" type="text/css" rel="stylesheet"/>
     <link href="{{ asset('css/select2.min.css') }}" type="text/css" rel="stylesheet">
     <link href="{{ asset('css/select2-bootstrap-5-theme.min.css') }}" type="text/css" rel="stylesheet">
-
+    <link href="{{ asset('css/estiloToggle.css') }}" type="text/css" rel="stylesheet" />
     <li class="nav-item dropdown">
         <a class="nav-link" data-toggle="dropdown" href="#" title="Tema">
             <i id="theme-icon" class="fas fa-sun"></i>
@@ -152,6 +152,17 @@
                                         <label>Cargo</label>
                                         <input type="text" maxlength="100" class="form-control" id="cargo-editar"
                                                autocomplete="off">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>VISIBLE</label><br>
+                                        <label class="switch" style="margin-top:10px">
+                                            <input type="checkbox" id="check-visible">
+                                            <div class="slider round">
+                                                <span class="on">SI</span>
+                                                <span class="off">NO</span>
+                                            </div>
+                                        </label>
                                     </div>
 
                                 </div>
@@ -305,6 +316,12 @@
                         $('#id-editar').val(id);
                         $('#cargo-editar').val(response.data.info.nombre);
 
+                        if(response.data.info.visible === 0){
+                            $("#check-visible").prop("checked", false);
+                        }else{
+                            $("#check-visible").prop("checked", true);
+                        }
+
                     } else {
                         toastr.error('Información no encontrada');
                     }
@@ -319,6 +336,9 @@
             var id = document.getElementById('id-editar').value;
             var nombre = document.getElementById('cargo-editar').value;
 
+            var checkbox = document.getElementById('check-visible');
+            var valorCheckbox = checkbox.checked ? 1 : 0;
+
             if (nombre === '') {
                 toastr.error('Nombre es requerido');
                 return;
@@ -328,6 +348,7 @@
             var formData = new FormData();
             formData.append('id', id);
             formData.append('nombre', nombre);
+            formData.append('visible', valorCheckbox);
 
             axios.post(urlAdmin + '/admin/cargo/editar', formData, {})
                 .then((response) => {
