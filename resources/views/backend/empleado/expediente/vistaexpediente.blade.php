@@ -238,7 +238,7 @@
                 cancelButtonText: 'Cancelar'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    axios.delete('{{ url('/empleado/eliminar/media') }}/' + id)
+                    axios.post('{{ url('/empleado/eliminar/media') }}/' + id)
                         .then(response => {
                             toastr.success(response.data.message);
                             setTimeout(() => location.reload(), 600);
