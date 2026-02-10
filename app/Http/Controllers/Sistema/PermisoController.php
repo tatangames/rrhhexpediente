@@ -201,4 +201,45 @@ class PermisoController extends Controller
 
         return ['success' => 1];
     }
+
+
+
+    // =============== GENERAR PERMISO ==========================================================
+
+
+
+    public function indexGenerarPermiso()
+    {
+
+        return "edfdf";
+
+        $temaPredeterminado = $this->getTemaPredeterminado();
+
+        return view('backend.permisos.generar.generarpermiso', compact('temaPredeterminado'));
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }

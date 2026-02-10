@@ -362,13 +362,6 @@ return [
             ],
         ],
 
-
-
-
-
-
-
-
         [
             'text'  => 'Ficha',
             'icon'  => 'fas fa-file-alt',
@@ -382,6 +375,58 @@ return [
             'route' => 'empleado.expediente.index',
             'can'   => 'empleado.sidebar.dashboard',
         ],
+
+
+
+
+
+
+
+
+
+        [
+            'text'  => 'Permisos',
+            'icon'  => 'fas fa-file-alt',
+            'route' => 'generar.permiso.index',
+            'can'   => 'sidebar.permisos',
+        ],
+
+
+        [
+            'text'    => 'Configuración',
+            'icon'    => 'fas fa-pen-alt',
+            'can'     => 'sidebar.permisos',
+            'submenu' => [
+                [
+                    'text'  => 'Tipo de Permiso',
+                    'icon'  => 'fas fa-file-alt',
+                    'route' => 'permisos.tipopermiso.index',
+                    'can'   => 'sidebar.permisos',
+                ],
+                [
+                    'text'  => 'Riesgos',
+                    'icon'  => 'fas fa-file-alt',
+                    'route' => 'permisos.riesgos.index',
+                    'can'   => 'sidebar.permisos',
+                ],
+                [
+                    'text'  => 'Tipo incapacidad',
+                    'icon'  => 'fas fa-file-alt',
+                    'route' => 'tipoincapacidad.index',
+                    'can'   => 'sidebar.permisos',
+                ],
+                [
+                    'text'  => 'Empleados',
+                    'icon'  => 'fas fa-file-alt',
+                    'route' => 'permiso.empleados.index',
+                    'can'   => 'sidebar.permisos',
+                ],
+            ],
+        ],
+
+
+
+
 
 
 

@@ -28,6 +28,12 @@ class ControlController extends Controller
             return redirect()->route('empleado.ficha.index');
         }
 
+        if ($user->hasRole('permisos')) {
+            return redirect()->route('permisos.tipopermiso.index');
+        }
+
+
+
         return redirect()->route('no.permisos.index');
     }
 

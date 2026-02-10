@@ -11,11 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('cargo', function (Blueprint $table) {
+        Schema::create('tipo_incapacidad', function (Blueprint $table) {
             $table->id();
             $table->string('nombre', 100);
-
-            $table->boolean('visible')->default(true);
         });
     }
 
@@ -24,6 +22,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('cargo');
+        Schema::dropIfExists('tipo_incapacidad');
     }
 };

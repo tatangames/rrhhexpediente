@@ -10,16 +10,11 @@ use App\Http\Controllers\Sistema\FichaController;
 use App\Http\Controllers\Sistema\ConfiguracionController;
 use App\Http\Controllers\Sistema\RRHHController;
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
-*/
+
+use App\Http\Controllers\Permiso\ConfigPermisoController;
+
+
+
 
 
 Route::get('/', [LoginController::class,'vistaLoginForm'])->name('login.admin');
@@ -105,10 +100,6 @@ Route::get('/admin/empleado/documento/download/{id}', [RRHHController::class, 'd
 
 
 
-
-
-
-
 // FICHA EMPLEADO
 Route::get('/empleado/ficha/index', [FichaController::class,'vistaFichaForm'])->name('empleado.ficha.index');
 Route::post('/empleado/ficha/actualizar', [FichaController::class,'actualizarFicha']);
@@ -125,7 +116,37 @@ Route::get('/empleado/media/download/{id}', [FichaController::class, 'download']
 
 
 
+// ================================ PERMISOS DE EMPLEADOS ============================================
 
 
+// TIPO DE PERMISO
+Route::get('/admin/tipopermiso/index', [ConfigPermisoController::class,'indexTipoPermiso'])->name('permisos.tipopermiso.index');
+Route::get('/admin/tipopermiso/tabla', [ConfigPermisoController::class,'tablaTipoPermiso']);
+Route::post('/admin/tipopermiso/nuevo', [ConfigPermisoController::class,'nuevoTipoPermiso']);
+Route::post('/admin/tipopermiso/informacion', [ConfigPermisoController::class,'informacionTipoPermiso']);
+Route::post('/admin/tipopermiso/editar', [ConfigPermisoController::class,'actualizarTipoPermiso']);
 
+// RIESGOS
+Route::get('/admin/riesgos/index', [ConfigPermisoController::class,'indexRiesgos'])->name('permisos.riesgos.index');
+Route::get('/admin/riesgos/tabla', [ConfigPermisoController::class,'tablaRiesgos']);
+Route::post('/admin/riesgos/nuevo', [ConfigPermisoController::class,'nuevoRiesgos']);
+Route::post('/admin/riesgos/informacion', [ConfigPermisoController::class,'informacionRiesgos']);
+Route::post('/admin/riesgos/editar', [ConfigPermisoController::class,'actualizarRiesgos']);
+
+// TIPO DE INCAPACIDAD
+Route::get('/admin/tipoincapacidad/index', [ConfigPermisoController::class,'indexTipoIncapacidad'])->name('tipoincapacidad.index');
+Route::get('/admin/tipoincapacidad/tabla', [ConfigPermisoController::class,'tablaTipoIncapacidad']);
+Route::post('/admin/tipoincapacidad/nuevo', [ConfigPermisoController::class,'nuevoTipoIncapacidad']);
+Route::post('/admin/tipoincapacidad/informacion', [ConfigPermisoController::class,'informacionTipoIncapacidad']);
+Route::post('/admin/tipoincapacidad/editar', [ConfigPermisoController::class,'actualizarTipoIncapacidad']);
+
+// EMPLEADOS
+Route::get('/admin/empleados/index', [ConfigPermisoController::class,'indexEmpleados'])->name('permiso.empleados.index');
+Route::get('/admin/empleados/tabla', [ConfigPermisoController::class,'tablaEmpleados']);
+Route::post('/admin/empleados/nuevo', [ConfigPermisoController::class,'nuevoEmpleados']);
+Route::post('/admin/empleados/informacion', [ConfigPermisoController::class,'informacionEmpleados']);
+Route::post('/admin/empleados/editar', [ConfigPermisoController::class,'actualizarEmpleados']);
+
+// GENERAR PERMISO
+Route::get('/admin/empleados/index', [PermisoController::class,'indexGenerarPermiso'])->name('generar.permiso.index');
 
