@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Sistema;
 
 use App\Http\Controllers\Controller;
 use App\Models\Administrador;
+use App\Models\Empleado;
 use App\Models\FichaEmpleado;
+use App\Models\TipoPermiso;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -210,16 +212,33 @@ class PermisoController extends Controller
 
     public function indexGenerarPermiso()
     {
-
-        return "edfdf";
-
         $temaPredeterminado = $this->getTemaPredeterminado();
 
-        return view('backend.permisos.generar.generarpermiso', compact('temaPredeterminado'));
+        $arrayTipoPermiso = TipoPermiso::orderBy('nombre', 'ASC')->get();
+
+        return view('backend.permisos.generar.generarpermiso', compact('temaPredeterminado', 'arrayTipoPermiso'));
     }
 
 
+    public function buscarPorNombre(Request $request)
+    {
+        $texto = $request->get('q');
 
+        $empleados = Empleado::where('nombre', 'LIKE', "%$texto%")
+            ->with(['unidad', 'cargo'])
+            ->limit(50)
+            ->get()
+            ->map(function ($e) {
+                return [
+                    'id' => $e->id,
+                    'nombre' => $e->nombre,
+                    'unidad' => $e->unidad->nombre ?? '',
+                    'cargo' => $e->cargo->nombre ?? '',
+                ];
+            });
+
+        return response()->json($empleados);
+    }
 
 
 

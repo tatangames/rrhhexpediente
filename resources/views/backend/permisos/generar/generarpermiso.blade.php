@@ -54,20 +54,14 @@
 
 @section('content')
 
-    <section class="content-header">
-        <div class="row mb-2">
-            <div class="col-sm-6">
 
-            </div>
-
-            <div class="col-sm-6">
-                <ol class="breadcrumb float-sm-right">
-                    <li class="breadcrumb-item">Permisos</li>
-                    <li class="breadcrumb-item active"></li>
-                </ol>
-            </div>
-        </div>
-    </section>
+    <style>
+        #lista-empleados .item-compacto {
+            padding: 6px 10px !important;
+            font-size: 14px;
+            line-height: 1.2;
+        }
+    </style>
 
     <section class="content">
         <div class="container-fluid">
@@ -78,7 +72,52 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-12">
-                           ssss
+
+                            <div class="row">
+                                <!-- Columna izquierda -->
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Tipo de Permiso: <span class="text-danger">*</span></label>
+                                        <select class="form-control" id="select-tipopermiso">
+                                            <option value="">Seleccionar</option>
+                                            @foreach($arrayTipoPermiso as $item)
+                                                <option value="{{ $item->id }}">{{ $item->nombre }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group mt-4">
+                                        <button type="button" class="btn btn-primary btn-block" id="btn-guardar">
+                                            <i class="fas fa-save"></i> Guardar
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Columna derecha -->
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Buscar empleado por nombre: <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="input-buscar-empleado"
+                                               placeholder="Escriba el nombre del empleado">
+                                        <input type="hidden" id="empleado-id">
+                                        <div id="lista-empleados"
+                                             class="list-group mt-1"
+                                             style="display:none; position: absolute; z-index: 1000; max-height: 300px; overflow-y: auto; width: 100%;">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Unidad</label>
+                                        <input type="text" class="form-control" id="input-unidad" readonly>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Cargo</label>
+                                        <input type="text" class="form-control" id="input-cargo" readonly>
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -86,37 +125,118 @@
         </div>
     </section>
 
-
-
-
-
-
-
-
-
 @stop
-
-
 
 @section('js')
     <script src="{{ asset('js/toastr.min.js') }}" type="text/javascript"></script>
     <script src="{{ asset('js/axios.min.js') }}" type="text/javascript"></script>
     <script src="{{ asset('js/alertaPersonalizada.js') }}"></script>
     <script src="{{ asset('js/select2.min.js') }}" type="text/javascript"></script>
+
     <script>
         $(function () {
-
+            // Inicialización si es necesaria
         });
     </script>
 
     <script>
+        // Buscar empleado
+        $('#input-buscar-empleado').on('keyup', function () {
+            let texto = $(this).val();
 
+            if (texto.length < 2) {
+                $('#lista-empleados').hide().html('');
+                $('#empleado-id').val('');
+                $('#input-unidad').val('');
+                $('#input-cargo').val('');
+                return;
+            }
 
+            axios.get(urlAdmin + '/admin/empleados/buscar', {
+                params: { q: texto }
+            }).then(resp => {
+                let html = '';
+                resp.data.forEach(e => {
+                    html += `
+                    <button type="button"
+                        class="list-group-item list-group-item-action empleado-item item-compacto"
+                        data-id="${e.id}"
+                        data-unidad="${e.unidad}"
+                        data-cargo="${e.cargo}"
+                        data-nombre="${e.nombre}">
+                        ${e.nombre}
+                    </button>
+                `;
+                });
 
+                $('#lista-empleados').html(html).show();
+            }).catch(err => {
 
+            });
+        });
 
+        // Seleccionar empleado
+        $(document).on('click', '.empleado-item', function () {
+            $('#empleado-id').val($(this).data('id'));
+            $('#input-buscar-empleado').val($(this).data('nombre'));
+            $('#input-unidad').val($(this).data('unidad'));
+            $('#input-cargo').val($(this).data('cargo'));
+            $('#lista-empleados').hide();
+        });
 
+        // Ocultar lista si se hace clic fuera
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('#input-buscar-empleado, #lista-empleados').length) {
+                $('#lista-empleados').hide();
+            }
+        });
+
+        // Botón guardar
+        $('#btn-guardar').on('click', function() {
+            const tipoPermisoId = $('#select-tipopermiso').val();
+            const empleadoId = $('#empleado-id').val();
+
+            // Validaciones
+            if (!tipoPermisoId) {
+                toastr.error('Debe seleccionar un tipo de permiso');
+                return;
+            }
+
+            if (!empleadoId) {
+                toastr.error('Debe seleccionar un empleado');
+                return;
+            }
+
+            // Log del ID del empleado
+            console.log('ID del empleado seleccionado:', empleadoId);
+            console.log('ID del tipo de permiso:', tipoPermisoId);
+
+            // Aquí puedes agregar la lógica para guardar
+            toastr.success('Datos validados correctamente');
+        });
     </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     <script>
@@ -194,25 +314,3 @@
     </script>
 
 @endsection
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

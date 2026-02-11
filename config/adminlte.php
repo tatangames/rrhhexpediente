@@ -421,6 +421,21 @@ return [
                     'route' => 'permiso.empleados.index',
                     'can'   => 'sidebar.permisos',
                 ],
+
+                [
+                    'text'  => 'Cargos',
+                    'icon'  => 'fas fa-file-alt',
+                    'route' => 'admin.cargo.index',
+                    'can'   => 'sidebar.permisos',
+                ],
+
+                [
+                    'text'  => 'Unidades',
+                    'icon'  => 'fas fa-file-alt',
+                    'route' => 'admin.unidad.index',
+                    'can'   => 'sidebar.permisos',
+                ],
+
             ],
         ],
 
