@@ -395,7 +395,12 @@ return [
                     'route' => 'generar.tipopermiso.otros',
                     'can'   => 'sidebar.permisos',
                 ],
-
+                [
+                    'text'  => 'Incapacidad',
+                    'icon'  => 'fas fa-file-alt',
+                    'route' => 'generar.tipopermiso.incapacidad',
+                    'can'   => 'sidebar.permisos',
+                ],
 
             ],
         ],

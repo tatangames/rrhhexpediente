@@ -151,10 +151,18 @@ Route::post('/admin/empleados/editar', [ConfigPermisoController::class,'actualiz
 Route::get('/admin/empleados/buscar', [PermisoController::class, 'buscarPorNombre']);
 
 
-// GENERAR PERMISO
-Route::get('/admin/tipopermiso/otros/index', [PermisoController::class,'indexGenerarPermiso'])->name('generar.tipopermiso.otros');
+// GENERAR PERMISO - OTROS
+Route::get('/admin/tipopermiso/otros/index', [PermisoController::class,'indexGenerarPermisoOtros'])->name('generar.tipopermiso.otros');
 Route::post('/admin/empleados/infopermiso/otros', [PermisoController::class, 'informacionPermisoOtros']);
 Route::post('/admin/guardar/permiso/otros', [PermisoController::class, 'guardarPermisoOtros']);
+
+// GENERAR PERMISO - INCAPACIDAD
+Route::get('/admin/tipopermiso/incapacidad/index', [PermisoController::class,'indexGenerarPermisoIncapacidad'])->name('generar.tipopermiso.incapacidad');
+Route::post('/admin/guardar/permiso/incapacidad', [PermisoController::class, 'guardarPermisoIncapacidad']);
+Route::post('/admin/empleados/infopermiso/incapacidad', [PermisoController::class, 'informacionPermisoIncapacidad']);
+
+
+
 
 
 

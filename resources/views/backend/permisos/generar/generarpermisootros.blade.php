@@ -41,7 +41,7 @@
                         <div class="card-body">
 
                             <!-- Fecha del Permiso -->
-                            <div class="form-group">
+                            <div class="form-group col-md-4">
                                 <label>Fecha: <span class="text-danger">*</span></label>
                                 <input type="date" class="form-control" id="fecha-entrego">
                             </div>

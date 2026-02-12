@@ -7,7 +7,10 @@ use App\Models\Administrador;
 use App\Models\Cargo;
 use App\Models\Empleado;
 use App\Models\FichaEmpleado;
+use App\Models\PermisoIncapacidad;
 use App\Models\PermisoOtro;
+use App\Models\Riesgo;
+use App\Models\TipoIncapacidad;
 use App\Models\TipoPermiso;
 use App\Models\Unidad;
 use Carbon\Carbon;
@@ -211,17 +214,15 @@ class PermisoController extends Controller
 
 
 
-    // =============== GENERAR PERMISO ==========================================================
+    // =============== GENERAR PERMISO - OTROS ==========================================================
 
 
 
-    public function indexGenerarPermiso()
+    public function indexGenerarPermisoOtros()
     {
         $temaPredeterminado = $this->getTemaPredeterminado();
 
-        $arrayTipoPermiso = TipoPermiso::orderBy('nombre', 'ASC')->get();
-
-        return view('backend.permisos.generar.generarpermisootros', compact('temaPredeterminado', 'arrayTipoPermiso'));
+        return view('backend.permisos.generar.generarpermisootros', compact('temaPredeterminado'));
     }
 
 
@@ -339,13 +340,100 @@ class PermisoController extends Controller
 
 
 
+    // =============== GENERAR PERMISO - INCAPACIDAD ==========================================================
+
+
+    public function indexGenerarPermisoIncapacidad()
+    {
+        $temaPredeterminado = $this->getTemaPredeterminado();
+
+        $arrayTipoIncapacidad = TipoIncapacidad::orderBy('nombre', 'asc')->get();
+        $arrayRiesgo = Riesgo::orderBy('nombre', 'asc')->get();
+
+        return view('backend.permisos.generar.generarpermisoincapacidad', compact('temaPredeterminado', 'arrayTipoIncapacidad', 'arrayRiesgo'));
+    }
 
 
 
+    public function guardarPermisoIncapacidad(Request $request)
+    {
+        try {
 
+            $empleado = Empleado::find($request->empleado_id);
 
+            if (!$empleado) {
+                return response()->json([
+                    'success' => 0,
+                    'message' => 'Empleado no encontrado'
+                ]);
+            }
 
+            // 🔎 Buscar unidad y cargo
+            $unidad = Unidad::find($empleado->id_unidad);
+            $cargo = Cargo::find($empleado->id_cargo);
 
+            $nombreUnidad = $unidad->nombre ?? null;
+            $nombreCargo = $cargo->nombre ?? null;
+
+            // Crear registro de incapacidad
+            $incapacidad = new PermisoIncapacidad();
+            $incapacidad->id_empleado = $request->empleado_id;
+            $incapacidad->unidad = $nombreUnidad;
+            $incapacidad->cargo = $nombreCargo;
+            $incapacidad->fecha = $request->fecha;
+            $incapacidad->id_tipo_incapacidad = $request->tipo_incapacidad_id;
+            $incapacidad->id_riesgo = $request->riesgo_id;
+            $incapacidad->fecha_inicio = $request->fecha_inicio;
+            $incapacidad->dias = $request->dias;
+            $incapacidad->fecha_fin = $request->fecha_fin;
+            $incapacidad->diagnostico = $request->diagnostico;
+            $incapacidad->numero = $request->numero;
+            $incapacidad->hospitalizacion = $request->hospitalizacion;
+            $incapacidad->fecha_inicio_hospitalizacion = $request->hospitalizacion ? $request->fecha_inicio_hospitalizacion : null;
+            $incapacidad->fecha_fin_hospitalizacion = $request->hospitalizacion ? $request->fecha_fin_hospitalizacion : null;
+            $incapacidad->save();
+
+            return response()->json([
+                'success' => 1,
+                'message' => 'Incapacidad guardada exitosamente',
+                'data' => $incapacidad
+            ]);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'success' => 0,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+
+    public function informacionPermisoIncapacidad(Request $request)
+    {
+        $empleadoId = $request->empleado_id;
+        $anioActual = now()->year;
+
+        $permisos = PermisoIncapacidad::where('id_empleado', $empleadoId)
+            ->whereYear('fecha_inicio', $anioActual)
+            ->orderBy('fecha_inicio', 'desc')
+            ->get();
+
+        $data = $permisos->map(function ($item) {
+            return [
+                'fecha_inicio' => Carbon::parse($item->fecha_inicio)->format('d-m-Y'),
+                'fecha_fin' => Carbon::parse($item->fecha_fin)->format('d-m-Y'),
+                'dias' => $item->dias,
+                'diagnostico' => $item->diagnostico
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'anio' => $anioActual,
+            'total' => $permisos->count(),
+            'incapacidades' => $data
+        ]);
+    }
 
 
 
