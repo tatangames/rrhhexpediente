@@ -385,11 +385,25 @@ return [
 
 
         [
-            'text'  => 'Permisos',
-            'icon'  => 'fas fa-file-alt',
-            'route' => 'generar.permiso.index',
-            'can'   => 'sidebar.permisos',
+            'text'    => 'Tipo de Permisos',
+            'icon'    => 'fas fa-pen-alt',
+            'can'     => 'sidebar.permisos',
+            'submenu' => [
+                [
+                    'text'  => 'Otros',
+                    'icon'  => 'fas fa-file-alt',
+                    'route' => 'generar.tipopermiso.otros',
+                    'can'   => 'sidebar.permisos',
+                ],
+
+
+            ],
         ],
+
+
+
+
+
 
 
         [

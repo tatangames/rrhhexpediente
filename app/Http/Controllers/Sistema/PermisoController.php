@@ -4,11 +4,15 @@ namespace App\Http\Controllers\Sistema;
 
 use App\Http\Controllers\Controller;
 use App\Models\Administrador;
+use App\Models\Cargo;
 use App\Models\Empleado;
 use App\Models\FichaEmpleado;
+use App\Models\PermisoOtro;
 use App\Models\TipoPermiso;
+use App\Models\Unidad;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Spatie\Permission\Exceptions\RoleDoesNotExist;
 use Spatie\Permission\Models\Permission;
@@ -216,7 +220,7 @@ class PermisoController extends Controller
 
         $arrayTipoPermiso = TipoPermiso::orderBy('nombre', 'ASC')->get();
 
-        return view('backend.permisos.generar.generarpermiso', compact('temaPredeterminado', 'arrayTipoPermiso'));
+        return view('backend.permisos.generar.generarpermisootros', compact('temaPredeterminado', 'arrayTipoPermiso'));
     }
 
 
@@ -238,6 +242,93 @@ class PermisoController extends Controller
             });
 
         return response()->json($empleados);
+    }
+
+
+    public function informacionPermisoOtros(Request $request)
+    {
+        $empleadoId = $request->empleado_id;
+        $tipoPermisoId = $request->tipo_permiso_id;
+        $fechaPermiso = $request->fecha_permiso;
+
+        // Aquí puedes hacer tus consultas
+        // Ejemplo:
+        // $empleado = Empleado::find($empleadoId);
+        // $tipoPermiso = TipoPermiso::find($tipoPermisoId);
+        // $permisos = Permiso::where('empleado_id', $empleadoId)
+        //                    ->where('tipo_permiso_id', $tipoPermisoId)
+        //                    ->get();
+
+        return ([
+            'success' => true,
+            'empleado_id' => $empleadoId,
+            'tipo_permiso_id' => $tipoPermisoId,
+            // 'data' => $tusDatos
+        ]);
+    }
+
+
+    public function guardarPermisoOtros(Request $request)
+    {
+        $regla = array(
+            'empleado_id' => 'required',
+            'condicion' => 'required',
+            'fechaEntrego' => 'required',
+        );
+
+        //0: DIA COMPLETO
+        // fecha_inicio, fecha_fin
+
+        //1: FRACCIONADO
+        // hora_inicio, hora_fin, duracion
+
+        // razon, dias_solicitados,
+
+        $validar = Validator::make($request->all(), $regla);
+
+        if ($validar->fails()){return ['success' => 0];}
+
+
+        try {
+
+            $empleado = Empleado::find($request->empleado_id);
+
+            if (!$empleado) {
+                return response()->json([
+                    'success' => 0,
+                    'message' => 'Empleado no encontrado'
+                ]);
+            }
+
+            // 🔎 Buscar unidad y cargo
+            $unidad = Unidad::find($empleado->id_unidad);
+            $cargo = Cargo::find($empleado->id_cargo);
+
+            $nombreUnidad = $unidad->nombre ?? null;
+            $nombreCargo = $cargo->nombre ?? null;
+
+            PermisoOtro::create([
+                'id_empleado' => $request->empleado_id,
+                'unidad' => $nombreUnidad,
+                'cargo' => $nombreCargo,
+                'fecha' => $request->fechaEntrego,
+                'condicion' => $request->condicion,
+                'fecha_inicio' => $request->fecha_inicio,
+                'fecha_fin' => $request->fecha_fin,
+                'hora_inicio' => $request->hora_inicio,
+                'hora_fin' => $request->hora_fin,
+                'razon' => $request->razon,
+            ]);
+
+            return response()->json(['success' => 1]);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'success' => 0,
+                'message' => $e->getMessage()
+            ]);
+        }
     }
 
 

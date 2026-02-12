@@ -147,7 +147,12 @@ Route::post('/admin/empleados/nuevo', [ConfigPermisoController::class,'nuevoEmpl
 Route::post('/admin/empleados/informacion', [ConfigPermisoController::class,'informacionEmpleados']);
 Route::post('/admin/empleados/editar', [ConfigPermisoController::class,'actualizarEmpleados']);
 
-// GENERAR PERMISO
-Route::get('/admin/empleddddados/index', [PermisoController::class,'indexGenerarPermiso'])->name('generar.permiso.index');
+// BUSCAR EMPLEADO
 Route::get('/admin/empleados/buscar', [PermisoController::class, 'buscarPorNombre']);
+
+
+// GENERAR PERMISO
+Route::get('/admin/tipopermiso/otros/index', [PermisoController::class,'indexGenerarPermiso'])->name('generar.tipopermiso.otros');
+Route::post('/admin/empleados/infopermiso/otros', [PermisoController::class, 'informacionPermisoOtros']);
+Route::post('/admin/guardar/permiso/otros', [PermisoController::class, 'guardarPermisoOtros']);
 
