@@ -17,6 +17,7 @@
     <link href="{{ asset('css/select2.min.css') }}" type="text/css" rel="stylesheet">
     <link href="{{ asset('css/select2-bootstrap-5-theme.min.css') }}" type="text/css" rel="stylesheet">
     <link href="{{ asset('css/estiloToggle.css') }}" type="text/css" rel="stylesheet" />
+
     <style>
         #lista-empleados .item-compacto {
             padding: 6px 10px !important;
@@ -203,6 +204,39 @@
         </div>
     </section>
 
+    <div class="modal fade" id="modalInfoPermiso" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Información de Permisos</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="formulario-editar">
+                        <div class="card-body">
+
+                            <div class="modal-body">
+                                <p><strong>Año:</strong> <span id="info-anio"></span></p>
+                                <p><strong>Total permisos:</strong> <span id="info-total"></span></p>
+
+                                <hr>
+
+                                <ul id="info-fechas" class="list-group"></ul>
+                            </div>
+
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
 @stop
 
 @section('js')
@@ -294,11 +328,32 @@
                     empleado_id: empleadoId
                 })
                     .then(resp => {
-                        console.log('Información del empleado:', resp.data);
-                        toastr.success('Información obtenida (ver consola)');
+
+                        if (resp.data.success) {
+
+                            $('#info-anio').text(resp.data.anio);
+                            $('#info-total').text(resp.data.total);
+
+                            let lista = '';
+
+                            resp.data.permisos.forEach(function(item) {
+
+                                lista += `
+                                <li class="list-group-item">
+                                    <strong>Fecha:</strong> ${item.fecha}<br>
+                                    <strong>Razón:</strong> ${item.razon ?? 'Sin descripción'}
+                                </li>
+                            `;
+                            });
+
+                            $('#info-fechas').html(lista);
+
+                            $('#modalInfoPermiso').modal('show');
+                        }
+
                     })
                     .catch(err => {
-                        console.error('Error al obtener información:', err);
+
                         toastr.error('Error al obtener la información del empleado');
                     })
                     .finally(() => {
@@ -351,8 +406,6 @@
                 // VALIDAR SEGÚN CONDICIÓN
                 // ===============================
 
-
-
                 if (condicion === 1) { // fraccionado
 
                     let fechaPermiso = $('#fecha-solicitud-permiso').val();
@@ -403,20 +456,16 @@
                         limpiarFormulario();
                     })
                     .catch(err => {
-
                         if (err.response?.data?.message) {
                             toastr.error(err.response.data.message);
                         } else {
                             toastr.error('Error al guardar el permiso');
                         }
-
                     })
                     .finally(() => {
                         closeLoading();
                     });
-
             });
-
 
 
             // ===============================
@@ -489,10 +538,8 @@
                     // Calcular fecha de reingreso (día siguiente al fin)
                     let reingreso = new Date(fin);
                     reingreso.setDate(reingreso.getDate() + 1);
-                    let fechaReingreso = reingreso.toISOString().split('T')[0];
                 }
             });
-
         });
 
 

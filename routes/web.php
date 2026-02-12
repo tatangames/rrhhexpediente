@@ -156,3 +156,12 @@ Route::get('/admin/tipopermiso/otros/index', [PermisoController::class,'indexGen
 Route::post('/admin/empleados/infopermiso/otros', [PermisoController::class, 'informacionPermisoOtros']);
 Route::post('/admin/guardar/permiso/otros', [PermisoController::class, 'guardarPermisoOtros']);
 
+
+
+
+
+
+
+
+
+

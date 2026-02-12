@@ -10,6 +10,7 @@ use App\Models\FichaEmpleado;
 use App\Models\PermisoOtro;
 use App\Models\TipoPermiso;
 use App\Models\Unidad;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -248,24 +249,28 @@ class PermisoController extends Controller
     public function informacionPermisoOtros(Request $request)
     {
         $empleadoId = $request->empleado_id;
-        $tipoPermisoId = $request->tipo_permiso_id;
-        $fechaPermiso = $request->fecha_permiso;
+        $anioActual = now()->year;
 
-        // Aquí puedes hacer tus consultas
-        // Ejemplo:
-        // $empleado = Empleado::find($empleadoId);
-        // $tipoPermiso = TipoPermiso::find($tipoPermisoId);
-        // $permisos = Permiso::where('empleado_id', $empleadoId)
-        //                    ->where('tipo_permiso_id', $tipoPermisoId)
-        //                    ->get();
+        $permisos = PermisoOtro::where('id_empleado', $empleadoId)
+            ->whereYear('fecha', $anioActual)
+            ->orderBy('fecha', 'desc')
+            ->get();
 
-        return ([
+        $data = $permisos->map(function ($item) {
+            return [
+                'fecha' => Carbon::parse($item->fecha)->format('d-m-Y'),
+                'razon' => $item->razon
+            ];
+        });
+
+        return response()->json([
             'success' => true,
-            'empleado_id' => $empleadoId,
-            'tipo_permiso_id' => $tipoPermisoId,
-            // 'data' => $tusDatos
+            'anio' => $anioActual,
+            'total' => $permisos->count(),
+            'permisos' => $data
         ]);
     }
+
 
 
     public function guardarPermisoOtros(Request $request)
