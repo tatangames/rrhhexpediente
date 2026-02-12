@@ -390,6 +390,18 @@ return [
             'can'     => 'sidebar.permisos',
             'submenu' => [
                 [
+                    'text'  => 'Enfermedad',
+                    'icon'  => 'fas fa-file-alt',
+                    'route' => 'generar.tipopermiso.enfermedad',
+                    'can'   => 'sidebar.permisos',
+                ],
+                [
+                    'text'  => 'Consulta Medica',
+                    'icon'  => 'fas fa-file-alt',
+                    'route' => 'generar.tipopermiso.consultamedica',
+                    'can'   => 'sidebar.permisos',
+                ],
+                [
                     'text'  => 'Otros',
                     'icon'  => 'fas fa-file-alt',
                     'route' => 'generar.tipopermiso.otros',

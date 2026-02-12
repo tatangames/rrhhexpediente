@@ -161,8 +161,15 @@ Route::get('/admin/tipopermiso/incapacidad/index', [PermisoController::class,'in
 Route::post('/admin/guardar/permiso/incapacidad', [PermisoController::class, 'guardarPermisoIncapacidad']);
 Route::post('/admin/empleados/infopermiso/incapacidad', [PermisoController::class, 'informacionPermisoIncapacidad']);
 
+// GENERAR PERMISO - ENFERMEDAD
+Route::get('/admin/tipopermiso/enfermedad/index', [PermisoController::class,'indexGenerarPermisoEnfermedad'])->name('generar.tipopermiso.enfermedad');
+Route::post('/admin/guardar/permiso/enfermedad', [PermisoController::class, 'guardarPermisoEnfermedad']);
+Route::post('/admin/empleados/infopermiso/enfermedad', [PermisoController::class, 'informacionPermisoEnfermedad']);
 
-
+// GENERAR PERMISO - ENFERMEDAD
+Route::get('/admin/tipopermiso/consultamedica/index', [PermisoController::class,'indexGenerarPermisoConsultaMedica'])->name('generar.tipopermiso.consultamedica');
+Route::post('/admin/guardar/permiso/consultamedica', [PermisoController::class, 'guardarPermisoConsultaMedica']);
+Route::post('/admin/empleados/infopermiso/consultamedica', [PermisoController::class, 'informacionPermisoConsultaMedica']);
 
 
 
