@@ -432,6 +432,24 @@ return [
 
 
         [
+            'text'    => 'Historial',
+            'icon'    => 'fas fa-pen-alt',
+            'can'     => 'sidebar.permisos',
+            'submenu' => [
+                [
+                    'text'  => 'Otros',
+                    'icon'  => 'fas fa-file-alt',
+                    'route' => 'historial.permisos.otros',
+                    'can'   => 'sidebar.permisos',
+                ],
+
+            ],
+        ],
+
+
+
+
+        [
             'text'    => 'Reportes',
             'icon'    => 'fas fa-pen-alt',
             'can'     => 'sidebar.permisos',

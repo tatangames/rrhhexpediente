@@ -10,7 +10,9 @@
     <tbody>
     @foreach($arrayPermisos as $dato)
         <tr>
-            <td>{{ $dato->nombre }}</td>
+            <td>{{ $dato->nombreEmpleado }}</td>
+            <td>{{ $dato->unidad }}</td>
+            <td>{{ $dato->cargo }}</td>
             <td>
                 <button type="button"
                         class="btn btn-info btn-xs" onclick="informacion({{ $dato->id }})">

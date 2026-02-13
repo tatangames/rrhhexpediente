@@ -57,18 +57,13 @@
     <section class="content-header">
         <div class="row mb-2">
             <div class="col-sm-6">
-                <button type="button"
-                        onclick="modalAgregar()"
-                        class="btn btn-primary btn-sm">
-                    <i class="fas fa-pencil-alt"></i>
-                    Nuevo Riesgo
-                </button>
+
             </div>
 
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
-                    <li class="breadcrumb-item">Riesgo</li>
-                    <li class="breadcrumb-item active">Listado de Riesgos</li>
+                    <li class="breadcrumb-item">Permisos</li>
+                    <li class="breadcrumb-item active">Listado de Otros</li>
                 </ol>
             </div>
         </div>
@@ -92,46 +87,9 @@
         </div>
     </section>
 
-    <div class="modal fade" id="modalAgregar">
-        <div class="modal-dialog ">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h4 class="modal-title">Nuevo Riesgo</h4>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <form id="formulario-nuevo">
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-12">
-
-                                    <div class="form-group">
-                                        <label>Riesgo</label>
-                                        <input type="text" maxlength="100" class="form-control" id="riesgo-nuevo"
-                                               autocomplete="off">
-                                    </div>
-
-
-                                </div>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer justify-content-between">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
-                    <button type="button"
-                            class="btn btn-success btn-sm" onclick="nuevo()">Guardar
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- modal editar -->
     <div class="modal fade" id="modalEditar">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h4 class="modal-title">Editar Riesgo</h4>
@@ -150,10 +108,13 @@
                                     </div>
 
                                     <div class="form-group">
-                                        <label>Riesgo</label>
-                                        <input type="text" maxlength="100" class="form-control" id="riesgo-editar"
-                                               autocomplete="off">
+                                        <label>Empleado: <span style="color: red">*</span></label>
+                                        <br>
+                                        <select width="100%" class="form-control" id="select-empleado">
+                                        </select>
                                     </div>
+
+
 
                                 </div>
                             </div>
@@ -180,7 +141,7 @@
     <script src="{{ asset('js/select2.min.js') }}" type="text/javascript"></script>
     <script>
         $(function () {
-            const ruta = "{{ url('/admin/riesgos/tabla') }}";
+            const ruta = "{{ url('/admin/historial/otros/tabla') }}";
 
             function initDataTable() {
                 // Si ya hay instancia, destrúyela antes de re-crear
@@ -242,50 +203,25 @@
     <script>
 
         function recargar() {
-            var ruta = "{{ url('/admin/riesgos/tabla') }}";
+            var ruta = "{{ url('/admin/historial/otros/tabla') }}";
             $('#tablaDatatable').load(ruta);
         }
 
-        function modalAgregar() {
-            document.getElementById("formulario-nuevo").reset();
+        $('#select-empleado').select2({
+            theme: "bootstrap-5",
+            "language": {
+                "noResults": function(){
+                    return "Búsqueda no encontrada";
+                }
+            },
+        });
 
-            $('#modalAgregar').modal('show');
-        }
-
-        function nuevo() {
-            var nombre = document.getElementById('riesgo-nuevo').value;
-
-            if (nombre === '') {
-                toastr.error('Nombre es requerido');
-                return;
-            }
-
-            openLoading();
-            var formData = new FormData();
-            formData.append('nombre', nombre);
-
-            axios.post(urlAdmin + '/admin/riesgos/nuevo', formData, {})
-                .then((response) => {
-                    closeLoading();
-                    if (response.data.success === 1) {
-                        toastr.success('Registrado correctamente');
-                        $('#modalAgregar').modal('hide');
-                        recargar();
-                    } else {
-                        toastr.error('Error al registrar');
-                    }
-                })
-                .catch((error) => {
-                    toastr.error('Error al registrar');
-                    closeLoading();
-                });
-        }
 
         function informacion(id) {
             openLoading();
             document.getElementById("formulario-editar").reset();
 
-            axios.post(urlAdmin + '/admin/riesgos/informacion', {
+            axios.post(urlAdmin + '/admin/historial/otros/informacion', {
                 'id': id
             })
                 .then((response) => {
@@ -293,7 +229,20 @@
                     if (response.data.success === 1) {
                         $('#modalEditar').modal('show');
                         $('#id-editar').val(id);
-                        $('#riesgo-editar').val(response.data.info.nombre);
+
+
+                        document.getElementById("select-empleado").options.length = 0;
+
+                        $.each(response.data.arrayEmpleados, function( key, val ){
+                            if(response.data.info.id_empleado == val.id){
+                                $('#select-empleado').append('<option value="' +val.id +'" selected="selected">'+ val.nombre +'</option>');
+                            }else{
+                                $('#select-empleado').append('<option value="' +val.id +'">'+ val.nombre +'</option>');
+                            }
+                        });
+
+
+
 
                     } else {
                         toastr.error('Información no encontrada');
@@ -307,7 +256,7 @@
 
         function editar() {
             var id = document.getElementById('id-editar').value;
-            var nombre = document.getElementById('riesgo-editar').value;
+
 
             if (nombre === '') {
                 toastr.error('Nombre es requerido');
@@ -337,6 +286,10 @@
                 });
         }
     </script>
+
+
+
+
 
 
     <script>

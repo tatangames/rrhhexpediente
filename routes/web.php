@@ -13,6 +13,7 @@ use App\Http\Controllers\Sistema\RRHHController;
 
 use App\Http\Controllers\Permiso\ConfigPermisoController;
 use App\Http\Controllers\Permiso\ReportesPermisoController;
+use App\Http\Controllers\Permiso\HistorialPermisoController;
 
 
 
@@ -183,6 +184,33 @@ Route::post('/admin/guardar/permiso/personal', [PermisoController::class, 'guard
 Route::get('/admin/tipopermiso/compensatorio/index', [PermisoController::class,'indexGenerarPermisoCompensatorio'])->name('generar.tipopermiso.compensatorio');
 Route::post('/admin/empleados/infopermiso/compensatorio', [PermisoController::class, 'informacionPermisoCompensatorio']);
 Route::post('/admin/guardar/permiso/compensatorio', [PermisoController::class, 'guardarPermisoCompensatorio']);
+
+
+
+
+// HISTORIAL - OTROS
+Route::get('/admin/historial/otros/index', [HistorialPermisoController::class,'indexHistorialPermisoOtros'])->name('historial.permisos.otros');
+Route::get('/admin/historial/otros/tabla', [HistorialPermisoController::class,'tablaHistorialPermisoOtros']);
+Route::post('/admin/historial/otros/informacion', [HistorialPermisoController::class,'informacionHistorialPermisoOtros']);
+Route::post('/admin/historial/otros/actualizar', [HistorialPermisoController::class,'actualizarHistorialPermisoOtros']);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // REPORTES - GENERAL
 Route::get('/admin/reportes/general/index', [ReportesPermisoController::class,'indexReportesGeneral'])->name('reporte.general.index');
