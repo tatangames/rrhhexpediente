@@ -12,6 +12,7 @@ use App\Http\Controllers\Sistema\RRHHController;
 
 
 use App\Http\Controllers\Permiso\ConfigPermisoController;
+use App\Http\Controllers\Permiso\ReportesPermisoController;
 
 
 
@@ -183,7 +184,8 @@ Route::get('/admin/tipopermiso/compensatorio/index', [PermisoController::class,'
 Route::post('/admin/empleados/infopermiso/compensatorio', [PermisoController::class, 'informacionPermisoCompensatorio']);
 Route::post('/admin/guardar/permiso/compensatorio', [PermisoController::class, 'guardarPermisoCompensatorio']);
 
-
+// REPORTES - GENERAL
+Route::get('/admin/reportes/general/index', [ReportesPermisoController::class,'indexReportesGeneral'])->name('reporte.general.index');
 
 
 

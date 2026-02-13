@@ -334,6 +334,7 @@
             // BOTÓN INFORMACIÓN
             // ===============================
             $(document).on('click', '#btn-informacion', function() {
+
                 let empleadoId = $('#empleado-id').val();
                 let fecha = $('#fecha-entrego').val();
 
@@ -347,46 +348,107 @@
                     return;
                 }
 
-                openLoading()
+                openLoading();
 
-                // Petición API para obtener información del empleado
                 axios.post(urlAdmin + '/admin/empleados/infopermiso/enfermedad', {
                     empleado_id: empleadoId,
                     fecha: fecha
                 })
                     .then(resp => {
 
-                        if (resp.data.success) {
+                        if (!resp.data || !resp.data.success) {
+                            toastr.error('No se pudo obtener la información');
+                            return;
+                        }
 
-                            $('#info-anio').text(resp.data.anio);
-                            $('#info-total').text(resp.data.total);
+                        $('#info-anio').text(resp.data.anio);
+                        $('#info-total').text(resp.data.total);
 
-                            let lista = '';
+                        let lista = '';
+
+                        if (!resp.data.permisos || resp.data.permisos.length === 0) {
+
+                            lista = `
+                <li class="list-group-item text-center text-muted">
+                    No hay permisos registrados en este año
+                </li>
+            `;
+
+                        } else {
 
                             resp.data.permisos.forEach(function(item) {
 
+                                let tiempoHtml = '';
+
+                                if (item.condicion == 0) {
+
+                                    // Día completo
+                                    tiempoHtml = `
+                        <div class="mt-2">
+                            <span class="badge badge-primary">
+                                <i class="fas fa-calendar-day"></i> ${item.tipo}
+                            </span>
+                        </div>
+                        ${item.fecha_inicio && item.fecha_fin ? `
+                            <div class="mt-1">
+                                <small class="text-muted">
+                                    Desde: ${item.fecha_inicio} - Hasta: ${item.fecha_fin}
+                                </small>
+                            </div>
+                        ` : ''}
+                    `;
+
+                                } else {
+
+                                    // Fraccionado
+                                    tiempoHtml = `
+                        <div class="mt-2">
+                            <span class="badge badge-warning">
+                                <i class="fas fa-clock"></i> ${item.tipo}
+                            </span>
+                        </div>
+                        ${item.hora_inicio && item.hora_fin ? `
+                            <div class="mt-1">
+                                <small class="text-muted">
+                                    De: ${item.hora_inicio} - A: ${item.hora_fin}
+                                </small>
+                            </div>
+                        ` : ''}
+                        ${item.horas_texto ? `
+                            <div class="mt-1">
+                                <span class="badge badge-info">
+                                    Total: ${item.horas_texto}
+                                </span>
+                            </div>
+                        ` : ''}
+                    `;
+                                }
+
                                 lista += `
-                                <li class="list-group-item">
-                                    <strong>Fecha:</strong> ${item.fecha}<br>
-                                    <strong>Razón:</strong> ${item.razon ?? 'Sin descripción'}
-                                </li>
-                            `;
+                    <li class="list-group-item">
+                        <div>
+                            <strong>Fecha:</strong> ${item.fecha}<br>
+                            <strong>Razón:</strong> ${item.razon ?? 'Sin descripción'}
+                            ${tiempoHtml}
+                        </div>
+                    </li>
+                `;
                             });
-
-                            $('#info-fechas').html(lista);
-
-                            $('#modalInfoPermiso').modal('show');
                         }
 
+                        $('#info-fechas').html(lista);
+
+                        $('#modalInfoPermiso').modal('show');
                     })
                     .catch(err => {
-
+                        console.error(err);
                         toastr.error('Error al obtener la información del empleado');
                     })
                     .finally(() => {
                         closeLoading();
                     });
             });
+
 
             // ===============================
             // BOTÓN GUARDAR
@@ -515,8 +577,8 @@
             });
 
             // ===============================
-            // CALCULAR DURACIÓN (FRACCIONADO)
-            // ===============================
+// CALCULAR DURACIÓN (FRACCIONADO)
+// ===============================
             $(document).on('change', '#hora-inicio-4, #hora-fin-4', function() {
 
                 let horaInicio = $('#hora-inicio-4').val();
@@ -533,13 +595,27 @@
                     let fin = new Date();
                     fin.setHours(parseInt(horaFinH), parseInt(minFin), 0, 0);
 
-                    let diferenciaHoras = (fin - inicio) / (1000 * 60 * 60);
+                    let diferenciaMilisegundos = fin - inicio;
 
-                    if (diferenciaHoras > 0) {
+                    if (diferenciaMilisegundos > 0) {
 
-                        let horas = Math.floor(diferenciaHoras);
+                        let diferenciaMinutos = diferenciaMilisegundos / (1000 * 60);
 
-                        $('#horas-permiso-4').val(horas + (horas === 1 ? ' hora' : ' horas'));
+                        let horas = Math.floor(diferenciaMinutos / 60);
+                        let minutos = diferenciaMinutos % 60;
+
+                        let texto = '';
+
+                        if (horas > 0) {
+                            texto += horas + (horas === 1 ? ' hora' : ' horas');
+                        }
+
+                        if (minutos > 0) {
+                            if (texto !== '') texto += ' ';
+                            texto += minutos + (minutos === 1 ? ' minuto' : ' minutos');
+                        }
+
+                        $('#horas-permiso-4').val(texto);
 
                     } else {
                         $('#horas-permiso-4').val('');
@@ -547,6 +623,7 @@
                     }
                 }
             });
+
 
 
             // ===============================

@@ -260,10 +260,58 @@ class PermisoController extends Controller
             ->get();
 
         $data = $permisos->map(function ($item) {
-            return [
+
+            $info = [
                 'fecha' => Carbon::parse($item->fecha)->format('d-m-Y'),
-                'razon' => $item->razon
+                'razon' => $item->razon,
+                'condicion' => $item->condicion ?? 0
             ];
+
+            if ($item->condicion == 0) {
+
+                // Día completo
+                $info['tipo'] = 'Día completo';
+                $info['fecha_inicio'] = $item->fecha_inicio
+                    ? Carbon::parse($item->fecha_inicio)->format('d-m-Y')
+                    : null;
+
+                $info['fecha_fin'] = $item->fecha_fin
+                    ? Carbon::parse($item->fecha_fin)->format('d-m-Y')
+                    : null;
+
+            } else {
+
+                // Fraccionado
+                $info['tipo'] = 'Fraccionado';
+
+                if ($item->hora_inicio && $item->hora_fin) {
+
+                    $horaInicio = Carbon::parse($item->hora_inicio);
+                    $horaFin = Carbon::parse($item->hora_fin);
+
+                    $minutosTotales = $horaFin->diffInMinutes($horaInicio);
+
+                    $horas = floor($minutosTotales / 60);
+                    $minutos = $minutosTotales % 60;
+
+                    $info['hora_inicio'] = $horaInicio->format('H:i');
+                    $info['hora_fin'] = $horaFin->format('H:i');
+
+                    $texto = '';
+
+                    if ($horas > 0) {
+                        $texto .= $horas . ' h ';
+                    }
+
+                    if ($minutos > 0) {
+                        $texto .= $minutos . ' m';
+                    }
+
+                    $info['horas_texto'] = trim($texto);
+                }
+            }
+
+            return $info;
         });
 
         return response()->json([
@@ -273,6 +321,7 @@ class PermisoController extends Controller
             'permisos' => $data
         ]);
     }
+
 
 
 
@@ -462,10 +511,48 @@ class PermisoController extends Controller
             ->get();
 
         $data = $permisos->map(function ($item) {
-            return [
+
+            $info = [
                 'fecha' => Carbon::parse($item->fecha)->format('d-m-Y'),
-                'razon' => $item->razon
+                'razon' => $item->razon,
+                'condicion' => $item->condicion ?? 0, // 0 = Día completo, 1 = Fraccionado
             ];
+
+            if ($item->condicion == 0) {
+
+                // Día completo
+                $info['tipo'] = 'Día completo';
+                $info['fecha_inicio'] = $item->fecha_inicio
+                    ? Carbon::parse($item->fecha_inicio)->format('d-m-Y')
+                    : null;
+
+                $info['fecha_fin'] = $item->fecha_fin
+                    ? Carbon::parse($item->fecha_fin)->format('d-m-Y')
+                    : null;
+
+            } else {
+
+                // Fraccionado
+                $info['tipo'] = 'Fraccionado';
+
+                if ($item->hora_inicio && $item->hora_fin) {
+
+                    $horaInicio = Carbon::parse($item->hora_inicio);
+                    $horaFin = Carbon::parse($item->hora_fin);
+
+                    $minutosTotales = $horaFin->diffInMinutes($horaInicio);
+
+                    $horas = floor($minutosTotales / 60);
+                    $minutos = $minutosTotales % 60;
+
+                    $info['hora_inicio'] = $horaInicio->format('H:i');
+                    $info['hora_fin'] = $horaFin->format('H:i');
+
+                    $info['horas_texto'] = $horas . 'h ' . $minutos . 'm';
+                }
+            }
+
+            return $info;
         });
 
         return response()->json([
@@ -475,6 +562,7 @@ class PermisoController extends Controller
             'permisos' => $data
         ]);
     }
+
 
 
     public function guardarPermisoEnfermedad(Request $request)
@@ -567,10 +655,58 @@ class PermisoController extends Controller
             ->get();
 
         $data = $permisos->map(function ($item) {
-            return [
+
+            $info = [
                 'fecha' => Carbon::parse($item->fecha)->format('d-m-Y'),
-                'razon' => $item->razon
+                'razon' => $item->razon,
+                'condicion' => $item->condicion ?? 0
             ];
+
+            if ($item->condicion == 0) {
+
+                // Día completo
+                $info['tipo'] = 'Día completo';
+                $info['fecha_inicio'] = $item->fecha_inicio
+                    ? Carbon::parse($item->fecha_inicio)->format('d-m-Y')
+                    : null;
+
+                $info['fecha_fin'] = $item->fecha_fin
+                    ? Carbon::parse($item->fecha_fin)->format('d-m-Y')
+                    : null;
+
+            } else {
+
+                // Fraccionado
+                $info['tipo'] = 'Fraccionado';
+
+                if ($item->hora_inicio && $item->hora_fin) {
+
+                    $horaInicio = Carbon::parse($item->hora_inicio);
+                    $horaFin = Carbon::parse($item->hora_fin);
+
+                    $minutosTotales = $horaFin->diffInMinutes($horaInicio);
+
+                    $horas = floor($minutosTotales / 60);
+                    $minutos = $minutosTotales % 60;
+
+                    $info['hora_inicio'] = $horaInicio->format('H:i');
+                    $info['hora_fin'] = $horaFin->format('H:i');
+
+                    $texto = '';
+
+                    if ($horas > 0) {
+                        $texto .= $horas . ' h ';
+                    }
+
+                    if ($minutos > 0) {
+                        $texto .= $minutos . ' m';
+                    }
+
+                    $info['horas_texto'] = trim($texto);
+                }
+            }
+
+            return $info;
         });
 
         return response()->json([
@@ -580,6 +716,7 @@ class PermisoController extends Controller
             'permisos' => $data
         ]);
     }
+
 
 
     public function guardarPermisoConsultaMedica(Request $request)
@@ -665,85 +802,135 @@ class PermisoController extends Controller
         return view('backend.permisos.generar.generarpermisopersonal', compact('temaPredeterminado'));
     }
 
+
+
     public function informacionPermisoPersonal(Request $request)
     {
         $empleadoId = $request->empleado_id;
 
-        // 📅 Si se envía una fecha, usar su año, sino usar el año actual
+        // 📅 Año según fecha enviada o año actual
         if ($request->has('fecha') && $request->fecha) {
             $anio = Carbon::parse($request->fecha)->year;
         } else {
             $anio = now()->year;
         }
 
-        // Obtener todos los permisos del año
+        // Obtener permisos del año
         $permisos = PermisoPersonal::where('id_empleado', $empleadoId)
             ->whereYear('fecha', $anio)
             ->orderBy('fecha', 'desc')
             ->get();
 
-        // Separar por tipo de goce
         $permisosConGoce = $permisos->where('goce', 1);
         $permisosSinGoce = $permisos->where('goce', 0);
 
-        // ✅ Calcular totales CON GOCE (en días)
-        $totalConGoce = 0;
-        $horasAcumuladasConGoce = 0;
+        // =====================================================
+        // CALCULAR MINUTOS CON GOCE
+        // =====================================================
+        $totalMinutosConGoce = 0;
 
         foreach ($permisosConGoce as $permiso) {
+
             if ($permiso->condicion == 0) {
-                // Día completo
+                // Día completo (8h = 480 min)
                 $inicio = Carbon::parse($permiso->fecha_inicio);
                 $fin = Carbon::parse($permiso->fecha_fin);
-                $totalConGoce += $inicio->diffInDays($fin) + 1;
+                $dias = $inicio->diffInDays($fin) + 1;
+                $totalMinutosConGoce += $dias * 480;
+
             } else {
-                // Fraccionado: acumular horas
-                $horaInicio = Carbon::parse($permiso->hora_inicio);
-                $horaFin = Carbon::parse($permiso->hora_fin);
-                $horasAcumuladasConGoce += $horaFin->diffInHours($horaInicio);
+                // Fraccionado (evitar pérdida por segundos)
+                $horaInicio = Carbon::parse($permiso->hora_inicio)->seconds(0);
+                $horaFin = Carbon::parse($permiso->hora_fin)->seconds(0);
+
+                $minutos = $horaInicio->diffInSeconds($horaFin) / 60;
+                $totalMinutosConGoce += round($minutos);
             }
         }
 
-        // Convertir horas acumuladas a días (cada 8 horas = 1 día)
-        $totalConGoce += $horasAcumuladasConGoce / 8;
-
-        // ✅ Calcular totales SIN GOCE (en días)
-        $totalSinGoce = 0;
-        $horasAcumuladasSinGoce = 0;
+        // =====================================================
+        // CALCULAR MINUTOS SIN GOCE
+        // =====================================================
+        $totalMinutosSinGoce = 0;
 
         foreach ($permisosSinGoce as $permiso) {
+
             if ($permiso->condicion == 0) {
-                // Día completo
                 $inicio = Carbon::parse($permiso->fecha_inicio);
                 $fin = Carbon::parse($permiso->fecha_fin);
-                $totalSinGoce += $inicio->diffInDays($fin) + 1;
+                $dias = $inicio->diffInDays($fin) + 1;
+                $totalMinutosSinGoce += $dias * 480;
+
             } else {
-                // Fraccionado: acumular horas
-                $horaInicio = Carbon::parse($permiso->hora_inicio);
-                $horaFin = Carbon::parse($permiso->hora_fin);
-                $horasAcumuladasSinGoce += $horaFin->diffInHours($horaInicio);
+                $horaInicio = Carbon::parse($permiso->hora_inicio)->seconds(0);
+                $horaFin = Carbon::parse($permiso->hora_fin)->seconds(0);
+
+                $minutos = $horaInicio->diffInSeconds($horaFin) / 60;
+                $totalMinutosSinGoce += round($minutos);
             }
         }
 
-        // Convertir horas acumuladas a días (cada 8 horas = 1 día)
-        $totalSinGoce += $horasAcumuladasSinGoce / 8;
+        // =====================================================
+        // LÍMITES
+        // =====================================================
+        $limiteConGoce = 5 * 480;   // 5 días
+        $limiteSinGoce = 60 * 480;  // 60 días
 
-        // Mapear todos los permisos con detalles
+        $disponibleConGoce = max($limiteConGoce - $totalMinutosConGoce, 0);
+        $disponibleSinGoce = max($limiteSinGoce - $totalMinutosSinGoce, 0);
+
+        // =====================================================
+        // FUNCIÓN PARA FORMATEAR MINUTOS A DÍAS/HORAS/MIN
+        // =====================================================
+        $formatearTiempo = function ($minutos) {
+            $dias = floor($minutos / 480);
+            $resto = $minutos % 480;
+
+            $horas = floor($resto / 60);
+            $mins = $resto % 60;
+
+            $texto = '';
+
+            if ($dias > 0) {
+                $texto .= $dias . ($dias == 1 ? ' día ' : ' días ');
+            }
+
+            if ($horas > 0) {
+                $texto .= $horas . ($horas == 1 ? ' hora ' : ' horas ');
+            }
+
+            if ($mins > 0 || $texto == '') {
+                $texto .= $mins . ($mins == 1 ? ' minuto' : ' minutos');
+            }
+
+            return trim($texto);
+        };
+
+        // =====================================================
+        // DETALLE DE PERMISOS
+        // =====================================================
         $data = $permisos->map(function ($item) {
-            $detalle = '';
 
             if ($item->condicion == 0) {
-                // Día completo
                 $inicio = Carbon::parse($item->fecha_inicio);
                 $fin = Carbon::parse($item->fecha_fin);
                 $dias = $inicio->diffInDays($fin) + 1;
-                $detalle = "Del " . $inicio->format('d/m/Y') . " al " . $fin->format('d/m/Y') . " ({$dias} " . ($dias == 1 ? 'día' : 'días') . ")";
+
+                $detalle = "Del " . $inicio->format('d/m/Y') .
+                    " al " . $fin->format('d/m/Y') .
+                    " ({$dias} " . ($dias == 1 ? 'día' : 'días') . ")";
+
             } else {
-                // Fraccionado
                 $horaInicio = Carbon::parse($item->hora_inicio);
                 $horaFin = Carbon::parse($item->hora_fin);
-                $horas = $horaFin->diffInHours($horaInicio);
-                $detalle = "De " . $horaInicio->format('H:i') . " a " . $horaFin->format('H:i') . " ({$horas} " . ($horas == 1 ? 'hora' : 'horas') . ")";
+
+                $minutos = $horaInicio->diffInSeconds($horaFin) / 60;
+                $horas = floor($minutos / 60);
+                $mins = $minutos % 60;
+
+                $detalle = "De " . $horaInicio->format('H:i') .
+                    " a " . $horaFin->format('H:i') .
+                    " ({$horas}h {$mins}m)";
             }
 
             return [
@@ -755,27 +942,36 @@ class PermisoController extends Controller
             ];
         });
 
+        // =====================================================
+        // RESPUESTA
+        // =====================================================
         return response()->json([
             'success' => true,
             'anio' => $anio,
             'total' => $permisos->count(),
             'con_goce' => [
-                'usado' => round($totalConGoce, 2), // 🔹 Redondear a 2 decimales
-                'limite' => 5,
-                'disponible' => round(5 - $totalConGoce, 2),
-                'cantidad' => $permisosConGoce->count()
+                'usado_minutos' => $totalMinutosConGoce,
+                'limite_minutos' => $limiteConGoce,
+                'disponible_minutos' => $disponibleConGoce,
+                'cantidad' => $permisosConGoce->count(),
+                'usado_texto' => $formatearTiempo($totalMinutosConGoce),
+                'disponible_texto' => $formatearTiempo($disponibleConGoce)
             ],
             'sin_goce' => [
-                'usado' => round($totalSinGoce, 2),
-                'limite' => 60,
-                'disponible' => round(60 - $totalSinGoce, 2),
-                'cantidad' => $permisosSinGoce->count()
+                'usado_minutos' => $totalMinutosSinGoce,
+                'limite_minutos' => $limiteSinGoce,
+                'disponible_minutos' => $disponibleSinGoce,
+                'cantidad' => $permisosSinGoce->count(),
+                'usado_texto' => $formatearTiempo($totalMinutosSinGoce),
+                'disponible_texto' => $formatearTiempo($disponibleSinGoce)
             ],
             'permisos' => $data
         ]);
     }
 
 
+
+// MÉTODO: guardarPermisoPersonal
     public function guardarPermisoPersonal(Request $request)
     {
         $regla = array(
@@ -787,7 +983,7 @@ class PermisoController extends Controller
 
         $validar = Validator::make($request->all(), $regla);
 
-        if ($validar->fails()){
+        if ($validar->fails()) {
             return ['success' => 0, 'message' => 'Datos incompletos'];
         }
 
@@ -812,7 +1008,7 @@ class PermisoController extends Controller
             // 📅 Obtener el año de la fecha
             $anio = Carbon::parse($request->fechaEntrego)->year;
 
-            // 🔢 Calcular cuántos permisos/días ya ha usado este empleado en el año
+            // 🔢 Calcular cuántos permisos/minutos ya ha usado este empleado en el año
             $permisosDelAnio = PermisoPersonal::where('id_empleado', $request->empleado_id)
                 ->whereYear('fecha', $anio)
                 ->where('goce', $request->goce_sueldo)
@@ -820,114 +1016,106 @@ class PermisoController extends Controller
 
             // ✅ VALIDAR SEGÚN TIPO DE GOCE
             if ($request->goce_sueldo == 1) {
-                // CON GOCE DE SUELDO: Máximo 5 días al año
+                // CON GOCE DE SUELDO: Máximo 5 días (2400 minutos) al año
 
-                $totalDiasUsados = 0;
-                $horasAcumuladas = 0;
+                $totalMinutosUsados = 0;
 
                 foreach ($permisosDelAnio as $permiso) {
                     if ($permiso->condicion == 0) {
-                        // Día completo: contar días entre fecha_inicio y fecha_fin
+                        // Día completo: 8 horas = 480 minutos por día
                         $inicio = Carbon::parse($permiso->fecha_inicio);
                         $fin = Carbon::parse($permiso->fecha_fin);
-                        $totalDiasUsados += $inicio->diffInDays($fin) + 1;
+                        $dias = $inicio->diffInDays($fin) + 1;
+                        $totalMinutosUsados += $dias * 480;
                     } else {
-                        // Fraccionado: acumular horas
+                        // Fraccionado: calcular minutos
                         $horaInicio = Carbon::parse($permiso->hora_inicio);
                         $horaFin = Carbon::parse($permiso->hora_fin);
-                        $horasAcumuladas += $horaFin->diffInHours($horaInicio);
+                        $totalMinutosUsados += $horaFin->diffInMinutes($horaInicio);
                     }
                 }
 
-                // Convertir horas acumuladas a días (cada 8 horas = 1 día)
-                $totalDiasUsados += $horasAcumuladas / 8;
-
-                // Calcular cuántos días se están solicitando ahora
-                $diasSolicitados = 0;
+                // Calcular cuántos minutos se están solicitando ahora
+                $minutosSolicitados = 0;
 
                 if ($request->condicion == 0) {
                     // Día completo
                     $inicio = Carbon::parse($request->fecha_inicio);
                     $fin = Carbon::parse($request->fecha_fin);
-                    $diasSolicitados = $inicio->diffInDays($fin) + 1;
+                    $dias = $inicio->diffInDays($fin) + 1;
+                    $minutosSolicitados = $dias * 480;
                 } else {
-                    // Fraccionado: convertir horas a días
-                    $horaInicio = Carbon::parse($request->hora_inicio);
-                    $horaFin = Carbon::parse($request->hora_fin);
-                    $horasDiferencia = $horaFin->diffInHours($horaInicio);
-                    $diasSolicitados = $horasDiferencia / 8;
+                    // Fraccionado: usar los minutos calculados en el frontend
+                    $minutosSolicitados = $request->duracion_minutos;
                 }
 
+                $limiteMinutos = 5 * 480; // 5 días = 2400 minutos
+
                 // Validar límite
-                if (($totalDiasUsados + $diasSolicitados) > 5) {
-                    $disponibles = 5 - $totalDiasUsados;
+                if (($totalMinutosUsados + $minutosSolicitados) > $limiteMinutos) {
+                    $disponibles = $limiteMinutos - $totalMinutosUsados;
                     return response()->json([
                         'success' => 0,
                         'tipo' => 'limite_excedido',
                         'data' => [
                             'anio' => $anio,
                             'tipo_goce' => 'Con goce de sueldo',
-                            'limite_total' => 5,
-                            'usados' => round($totalDiasUsados, 2),
-                            'solicitando' => round($diasSolicitados, 2),
-                            'disponibles' => round($disponibles, 2),
-                            'unidad' => 'días'
+                            'limite_minutos' => $limiteMinutos,
+                            'usados_minutos' => $totalMinutosUsados,
+                            'solicitando_minutos' => $minutosSolicitados,
+                            'disponibles_minutos' => $disponibles
                         ],
                         'message' => "Límite de permisos con goce de sueldo excedido."
                     ]);
                 }
 
             } else {
-                // SIN GOCE DE SUELDO: Máximo 60 días al año
+                // SIN GOCE DE SUELDO: Máximo 60 días (28800 minutos) al año
 
-                $totalDiasUsados = 0;
-                $horasAcumuladas = 0;
+                $totalMinutosUsados = 0;
 
                 foreach ($permisosDelAnio as $permiso) {
                     if ($permiso->condicion == 0) {
-                        // Día completo
+                        // Día completo: 8 horas = 480 minutos por día
                         $inicio = Carbon::parse($permiso->fecha_inicio);
                         $fin = Carbon::parse($permiso->fecha_fin);
-                        $totalDiasUsados += $inicio->diffInDays($fin) + 1;
+                        $dias = $inicio->diffInDays($fin) + 1;
+                        $totalMinutosUsados += $dias * 480;
                     } else {
-                        // Fraccionado: acumular horas
+                        // Fraccionado: calcular minutos
                         $horaInicio = Carbon::parse($permiso->hora_inicio);
                         $horaFin = Carbon::parse($permiso->hora_fin);
-                        $horasAcumuladas += $horaFin->diffInHours($horaInicio);
+                        $totalMinutosUsados += $horaFin->diffInMinutes($horaInicio);
                     }
                 }
 
-                // Convertir horas acumuladas a días (cada 8 horas = 1 día)
-                $totalDiasUsados += $horasAcumuladas / 8;
-
-                // Calcular días solicitados
-                $diasSolicitados = 0;
+                // Calcular minutos solicitados
+                $minutosSolicitados = 0;
 
                 if ($request->condicion == 0) {
                     $inicio = Carbon::parse($request->fecha_inicio);
                     $fin = Carbon::parse($request->fecha_fin);
-                    $diasSolicitados = $inicio->diffInDays($fin) + 1;
+                    $dias = $inicio->diffInDays($fin) + 1;
+                    $minutosSolicitados = $dias * 480;
                 } else {
-                    $horaInicio = Carbon::parse($request->hora_inicio);
-                    $horaFin = Carbon::parse($request->hora_fin);
-                    $horasDiferencia = $horaFin->diffInHours($horaInicio);
-                    $diasSolicitados = $horasDiferencia / 8;
+                    $minutosSolicitados = $request->duracion_minutos;
                 }
 
+                $limiteMinutos = 60 * 480; // 60 días = 28800 minutos
+
                 // Validar límite
-                if (($totalDiasUsados + $diasSolicitados) > 60) {
-                    $disponibles = 60 - $totalDiasUsados;
+                if (($totalMinutosUsados + $minutosSolicitados) > $limiteMinutos) {
+                    $disponibles = $limiteMinutos - $totalMinutosUsados;
                     return response()->json([
                         'success' => 0,
                         'tipo' => 'limite_excedido',
                         'data' => [
                             'anio' => $anio,
                             'tipo_goce' => 'Sin goce de sueldo',
-                            'limite_total' => 60,
-                            'usados' => round($totalDiasUsados, 2),
-                            'solicitando' => round($diasSolicitados, 2),
-                            'disponibles' => round($disponibles, 2),
-                            'unidad' => 'días'
+                            'limite_minutos' => $limiteMinutos,
+                            'usados_minutos' => $totalMinutosUsados,
+                            'solicitando_minutos' => $minutosSolicitados,
+                            'disponibles_minutos' => $disponibles
                         ],
                         'message' => "Límite de permisos sin goce de sueldo excedido."
                     ]);
@@ -963,6 +1151,9 @@ class PermisoController extends Controller
 
 
 
+
+
+
     // =============== GENERAR PERMISO - COMPENSATORIO ==========================================================
 
     public function indexGenerarPermisoCompensatorio()
@@ -984,10 +1175,49 @@ class PermisoController extends Controller
             ->get();
 
         $data = $permisos->map(function ($item) {
-            return [
+
+            $info = [
                 'fecha' => Carbon::parse($item->fecha)->format('d-m-Y'),
-                'razon' => $item->razon
+                'razon' => $item->razon,
+                'condicion' => $item->condicion, // 0: Día completo, 1: Fraccionado
             ];
+
+            if ($item->condicion == 0) {
+
+                // Día completo
+                $info['tipo'] = 'Día completo';
+                $info['fecha_inicio'] = $item->fecha_inicio
+                    ? Carbon::parse($item->fecha_inicio)->format('d-m-Y')
+                    : null;
+
+                $info['fecha_fin'] = $item->fecha_fin
+                    ? Carbon::parse($item->fecha_fin)->format('d-m-Y')
+                    : null;
+
+            } else {
+
+                // Fraccionado
+                $info['tipo'] = 'Fraccionado';
+
+                if ($item->hora_inicio && $item->hora_fin) {
+
+                    $horaInicio = Carbon::parse($item->hora_inicio);
+                    $horaFin = Carbon::parse($item->hora_fin);
+
+                    $minutosTotales = $horaFin->diffInMinutes($horaInicio);
+
+                    $horas = floor($minutosTotales / 60);
+                    $minutos = $minutosTotales % 60;
+
+                    $info['hora_inicio'] = $horaInicio->format('H:i');
+                    $info['hora_fin'] = $horaFin->format('H:i');
+
+                    $info['minutos_totales'] = $minutosTotales;
+                    $info['horas_texto'] = $horas . 'h ' . $minutos . 'm';
+                }
+            }
+
+            return $info;
         });
 
         return response()->json([

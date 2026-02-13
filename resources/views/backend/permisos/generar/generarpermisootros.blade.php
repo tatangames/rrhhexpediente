@@ -343,17 +343,74 @@
 
                             let lista = '';
 
-                            resp.data.permisos.forEach(function(item) {
+                            if (!resp.data.permisos || resp.data.permisos.length === 0) {
 
-                                lista += `
-                                <li class="list-group-item">
-                                    <strong>Fecha:</strong> ${item.fecha}<br>
-                                    <strong>Razón:</strong> ${item.razon ?? 'Sin descripción'}
-                                </li>
+                                lista = `
+        <li class="list-group-item text-center text-muted">
+            No hay permisos registrados en este año
+        </li>
+    `;
+
+                            } else {
+
+                                resp.data.permisos.forEach(function(item) {
+
+                                    let tiempoHtml = '';
+
+                                    if (item.condicion == 0) {
+
+                                        tiempoHtml = `
+                <div class="mt-2">
+                    <span class="badge badge-primary">
+                        <i class="fas fa-calendar-day"></i> ${item.tipo}
+                    </span>
+                </div>
+                ${item.fecha_inicio && item.fecha_fin ? `
+                    <div class="mt-1">
+                        <small class="text-muted">
+                            Desde: ${item.fecha_inicio} - Hasta: ${item.fecha_fin}
+                        </small>
+                    </div>
+                ` : ''}
+            `;
+
+                                    } else {
+
+                                        tiempoHtml = `
+                                <div class="mt-2">
+                                    <span class="badge badge-warning">
+                                        <i class="fas fa-clock"></i> ${item.tipo}
+                                    </span>
+                                </div>
+                                ${item.hora_inicio && item.hora_fin ? `
+                                    <div class="mt-1">
+                                        <small class="text-muted">
+                                            De: ${item.hora_inicio} - A: ${item.hora_fin}
+                                        </small>
+                                    </div>
+                                ` : ''}
+                                ${item.horas_texto ? `
+                                    <div class="mt-1">
+                                        <span class="badge badge-info">
+                                            Total: ${item.horas_texto}
+                                        </span>
+                                    </div>
+                                ` : ''}
                             `;
-                            });
+                                                    }
+
+                                                    lista += `
+                            <li class="list-group-item">
+                                <strong>Fecha:</strong> ${item.fecha}<br>
+                                <strong>Razón:</strong> ${item.razon ?? 'Sin descripción'}
+                                ${tiempoHtml}
+                            </li>
+                        `;
+                                });
+                            }
 
                             $('#info-fechas').html(lista);
+
 
                             $('#modalInfoPermiso').modal('show');
                         }
@@ -498,22 +555,36 @@
 
                 if (horaInicio && horaFin) {
 
-                    let [horaIni, minIni] = horaInicio.split(':');
-                    let [horaFinH, minFin] = horaFin.split(':');
+                    let [hIni, mIni] = horaInicio.split(':');
+                    let [hFin, mFin] = horaFin.split(':');
 
                     let inicio = new Date();
-                    inicio.setHours(parseInt(horaIni), parseInt(minIni), 0, 0);
+                    inicio.setHours(parseInt(hIni), parseInt(mIni), 0, 0);
 
                     let fin = new Date();
-                    fin.setHours(parseInt(horaFinH), parseInt(minFin), 0, 0);
+                    fin.setHours(parseInt(hFin), parseInt(mFin), 0, 0);
 
-                    let diferenciaHoras = (fin - inicio) / (1000 * 60 * 60);
+                    let diferenciaMs = fin - inicio;
 
-                    if (diferenciaHoras > 0) {
+                    if (diferenciaMs > 0) {
 
-                        let horas = Math.floor(diferenciaHoras);
+                        let totalMinutos = diferenciaMs / (1000 * 60);
 
-                        $('#horas-permiso-4').val(horas + (horas === 1 ? ' hora' : ' horas'));
+                        let horas = Math.floor(totalMinutos / 60);
+                        let minutos = totalMinutos % 60;
+
+                        let texto = '';
+
+                        if (horas > 0) {
+                            texto += horas + (horas === 1 ? ' hora' : ' horas');
+                        }
+
+                        if (minutos > 0) {
+                            if (texto !== '') texto += ' ';
+                            texto += minutos + (minutos === 1 ? ' minuto' : ' minutos');
+                        }
+
+                        $('#horas-permiso-4').val(texto);
 
                     } else {
                         $('#horas-permiso-4').val('');
@@ -521,6 +592,7 @@
                     }
                 }
             });
+
 
 
             // ===============================

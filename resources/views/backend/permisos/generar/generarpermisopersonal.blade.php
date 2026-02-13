@@ -121,6 +121,7 @@
                             <hr>
 
                             <!-- Sección FRACCIONADO -->
+                            <!-- Sección FRACCIONADO -->
                             <div id="seccion-fraccionado-4">
                                 <div class="row">
                                     <div class="col-md-12">
@@ -153,6 +154,8 @@
                                         <div class="form-group">
                                             <label>Duración del Permiso:</label>
                                             <input type="text" class="form-control" id="horas-permiso-4" readonly>
+                                            <!-- ✅ CAMPO OCULTO PARA GUARDAR LOS MINUTOS EXACTOS -->
+                                            <input type="hidden" id="minutos-permiso-4">
                                             <small class="form-text text-muted">Se calcula automáticamente</small>
                                         </div>
                                     </div>
@@ -477,7 +480,9 @@
     <script src="{{ asset('js/alertaPersonalizada.js') }}"></script>
     <script src="{{ asset('js/select2.min.js') }}"></script>
 
+
     <script>
+
         $(function () {
 
             // ===============================
@@ -541,7 +546,6 @@
                 }
             });
 
-
             // ===============================
             // BOTÓN INFORMACIÓN
             // ===============================
@@ -566,7 +570,7 @@
                 // Petición API para obtener información del empleado
                 axios.post(urlAdmin + '/admin/empleados/infopermiso/personal', {
                     empleado_id: empleadoId,
-                    fecha: fechaSeleccionada || null  // Enviar la fecha si está seleccionada
+                    fecha: fechaSeleccionada || null
                 })
                     .then(resp => {
 
@@ -577,23 +581,23 @@
                             $('#info-total').text(resp.data.total);
 
                             // CON GOCE DE SUELDO
-                            $('#info-con-goce-usado').text(resp.data.con_goce.usado);
-                            $('#info-con-goce-limite').text(resp.data.con_goce.limite);
-                            $('#info-con-goce-disponible').text(resp.data.con_goce.disponible);
+                            $('#info-con-goce-usado').text(formatearTiempo(resp.data.con_goce.usado_minutos));
+                            $('#info-con-goce-limite').text(formatearTiempo(resp.data.con_goce.limite_minutos));
+                            $('#info-con-goce-disponible').text(formatearTiempo(resp.data.con_goce.disponible_minutos));
                             $('#info-con-goce-cantidad').text(resp.data.con_goce.cantidad);
 
-                            let porcentajeConGoce = (resp.data.con_goce.usado / resp.data.con_goce.limite) * 100;
+                            let porcentajeConGoce = (resp.data.con_goce.usado_minutos / resp.data.con_goce.limite_minutos) * 100;
                             $('#progress-con-goce').css('width', porcentajeConGoce + '%');
                             $('#progress-con-goce').attr('aria-valuenow', porcentajeConGoce);
                             $('#progress-con-goce-text').text(Math.round(porcentajeConGoce) + '%');
 
                             // SIN GOCE DE SUELDO
-                            $('#info-sin-goce-usado').text(resp.data.sin_goce.usado);
-                            $('#info-sin-goce-limite').text(resp.data.sin_goce.limite);
-                            $('#info-sin-goce-disponible').text(resp.data.sin_goce.disponible);
+                            $('#info-sin-goce-usado').text(formatearTiempo(resp.data.sin_goce.usado_minutos));
+                            $('#info-sin-goce-limite').text(formatearTiempo(resp.data.sin_goce.limite_minutos));
+                            $('#info-sin-goce-disponible').text(formatearTiempo(resp.data.sin_goce.disponible_minutos));
                             $('#info-sin-goce-cantidad').text(resp.data.sin_goce.cantidad);
 
-                            let porcentajeSinGoce = (resp.data.sin_goce.usado / resp.data.sin_goce.limite) * 100;
+                            let porcentajeSinGoce = (resp.data.sin_goce.usado_minutos / resp.data.sin_goce.limite_minutos) * 100;
                             $('#progress-sin-goce').css('width', porcentajeSinGoce + '%');
                             $('#progress-sin-goce').attr('aria-valuenow', porcentajeSinGoce);
                             $('#progress-sin-goce-text').text(Math.round(porcentajeSinGoce) + '%');
@@ -603,10 +607,10 @@
 
                             if (resp.data.permisos.length === 0) {
                                 lista = `
-                    <li class="list-group-item text-center text-muted">
-                        <i class="fas fa-inbox"></i> No hay permisos registrados para el año ${resp.data.anio}
-                    </li>
-                `;
+                        <li class="list-group-item text-center text-muted">
+                            <i class="fas fa-inbox"></i> No hay permisos registrados para el año ${resp.data.anio}
+                        </li>
+                    `;
                             } else {
                                 resp.data.permisos.forEach(function(item) {
 
@@ -614,30 +618,30 @@
                                     let tipoClass = item.tipo === 'Completo' ? 'badge-primary' : 'badge-info';
 
                                     lista += `
-                        <li class="list-group-item">
-                            <div class="row">
-                                <div class="col-md-2">
-                                    <strong><i class="fas fa-calendar"></i> ${item.fecha}</strong>
-                                </div>
-                                <div class="col-md-2">
-                                    <span class="badge ${badgeClass}">${item.goce}</span>
-                                </div>
-                                <div class="col-md-2">
-                                    <span class="badge ${tipoClass}">${item.tipo}</span>
-                                </div>
-                                <div class="col-md-6">
-                                    <small class="text-muted">${item.detalle}</small>
-                                </div>
-                            </div>
-                            ${item.razon ? `
-                                <div class="row mt-2">
-                                    <div class="col-md-12">
-                                        <small><strong>Razón:</strong> ${item.razon}</small>
+                            <li class="list-group-item">
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        <strong><i class="fas fa-calendar"></i> ${item.fecha}</strong>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <span class="badge ${badgeClass}">${item.goce}</span>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <span class="badge ${tipoClass}">${item.tipo}</span>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted">${item.detalle}</small>
                                     </div>
                                 </div>
-                            ` : ''}
-                        </li>
-                    `;
+                                ${item.razon ? `
+                                    <div class="row mt-2">
+                                        <div class="col-md-12">
+                                            <small><strong>Razón:</strong> ${item.razon}</small>
+                                        </div>
+                                    </div>
+                                ` : ''}
+                            </li>
+                        `;
                                 });
                             }
 
@@ -654,6 +658,33 @@
                         closeLoading();
                     });
             });
+
+            // ===============================
+            // FUNCIÓN PARA FORMATEAR TIEMPO
+            // ===============================
+            function formatearTiempo(minutos) {
+                if (minutos < 60) {
+                    return minutos + ' min';
+                }
+
+                const dias = Math.floor(minutos / (8 * 60));
+                const minutosRestantes = minutos % (8 * 60);
+                const horas = Math.floor(minutosRestantes / 60);
+                const mins = minutosRestantes % 60;
+
+                let resultado = '';
+                if (dias > 0) resultado += dias + (dias === 1 ? ' día' : ' días');
+                if (horas > 0) {
+                    if (resultado) resultado += ', ';
+                    resultado += horas + (horas === 1 ? ' hora' : ' horas');
+                }
+                if (mins > 0) {
+                    if (resultado) resultado += ', ';
+                    resultado += mins + ' min';
+                }
+
+                return resultado || '0 min';
+            }
 
             // ===============================
             // BOTÓN GUARDAR
@@ -707,23 +738,23 @@
                     let fechaPermiso = $('#fecha-solicitud-permiso').val();
                     let horaInicio = $('#hora-inicio-4').val();
                     let horaFin = $('#hora-fin-4').val();
-                    let duracion = $('#horas-permiso-4').val();
+                    let duracionMinutos = $('#minutos-permiso-4').val();
 
                     if (!fechaPermiso || !horaInicio || !horaFin) {
                         toastr.error('Complete todos los campos del permiso fraccionado');
                         return;
                     }
 
-                    // ✅ Validar que la duración no esté vacía (indicaría 0 horas)
-                    if (!duracion || duracion.trim() === '') {
-                        toastr.error('El permiso debe ser de al menos 1 hora');
+                    // ✅ Validar que la duración no esté vacía (indicaría 0 minutos)
+                    if (!duracionMinutos || duracionMinutos == 0) {
+                        toastr.error('El permiso debe ser de al menos 1 minuto');
                         return;
                     }
 
                     datosPermiso.fecha = fechaPermiso;
                     datosPermiso.hora_inicio = horaInicio;
                     datosPermiso.hora_fin = horaFin;
-                    datosPermiso.duracion = duracion;
+                    datosPermiso.duracion_minutos = parseInt(duracionMinutos);
 
                 } else {
 
@@ -786,17 +817,16 @@
                     });
             });
 
-
             // ===============================
             // FUNCIÓN PARA MOSTRAR MODAL DE LÍMITE
             // ===============================
             function mostrarModalLimite(data) {
                 $('#modal-anio').text(data.anio);
                 $('#modal-tipo-goce').text(data.tipo_goce);
-                $('#modal-limite').html(`<strong>${data.limite_total}</strong> <small>${data.unidad}</small>`);
-                $('#modal-usados').html(`<strong>${data.usados}</strong> <small>${data.unidad}</small>`);
-                $('#modal-solicitando').html(`<strong>${data.solicitando}</strong> <small>${data.unidad}</small>`);
-                $('#modal-disponibles').html(`<strong>${data.disponibles}</strong> <small>${data.unidad}</small>`);
+                $('#modal-limite').html(`<strong>${formatearTiempo(data.limite_minutos)}</strong>`);
+                $('#modal-usados').html(`<strong>${formatearTiempo(data.usados_minutos)}</strong>`);
+                $('#modal-solicitando').html(`<strong>${formatearTiempo(data.solicitando_minutos)}</strong>`);
+                $('#modal-disponibles').html(`<strong>${formatearTiempo(data.disponibles_minutos)}</strong>`);
 
                 $('#modalLimitePermiso').modal('show');
             }
@@ -814,13 +844,13 @@
                     $('#seccion-completo-4').slideDown(200);
                     $('#seccion-fraccionado-4').slideUp(200);
                     // Limpiar campos de fraccionado
-                    $('#fecha-solicitud-permiso, #hora-inicio-4, #hora-fin-4, #horas-permiso-4').val('');
+                    $('#fecha-solicitud-permiso, #hora-inicio-4, #hora-fin-4, #horas-permiso-4, #minutos-permiso-4').val('');
                 }
             });
 
             // ===============================
-// CALCULAR DURACIÓN (FRACCIONADO)
-// ===============================
+            // CALCULAR DURACIÓN (FRACCIONADO) - AHORA EN MINUTOS
+            // ===============================
             $(document).on('change', '#hora-inicio-4, #hora-fin-4', function() {
 
                 let horaInicio = $('#hora-inicio-4').val();
@@ -837,28 +867,35 @@
                     let fin = new Date();
                     fin.setHours(parseInt(horaFinH), parseInt(minFin), 0, 0);
 
-                    let diferenciaHoras = (fin - inicio) / (1000 * 60 * 60);
+                    let diferenciaMinutos = (fin - inicio) / (1000 * 60);
 
-                    if (diferenciaHoras > 0) {
+                    if (diferenciaMinutos > 0) {
 
-                        let horas = Math.floor(diferenciaHoras);
+                        // Guardar minutos totales en campo oculto
+                        $('#minutos-permiso-4').val(diferenciaMinutos);
 
-                        // ✅ Validar que no sean 0 horas
-                        if (horas === 0) {
-                            $('#horas-permiso-4').val('');
-                            toastr.error('El permiso debe ser de al menos 1 hora');
-                            return;
+                        // Mostrar formato legible
+                        let horas = Math.floor(diferenciaMinutos / 60);
+                        let minutos = diferenciaMinutos % 60;
+
+                        let textoMostrar = '';
+                        if (horas > 0) {
+                            textoMostrar += horas + (horas === 1 ? ' hora' : ' horas');
+                        }
+                        if (minutos > 0) {
+                            if (textoMostrar) textoMostrar += ' y ';
+                            textoMostrar += minutos + ' minutos';
                         }
 
-                        $('#horas-permiso-4').val(horas + (horas === 1 ? ' hora' : ' horas'));
+                        $('#horas-permiso-4').val(textoMostrar);
 
                     } else {
                         $('#horas-permiso-4').val('');
+                        $('#minutos-permiso-4').val('');
                         toastr.error('La hora de fin debe ser mayor a la hora de inicio');
                     }
                 }
             });
-
 
             // ===============================
             // CALCULAR DÍAS Y FECHA REINGRESO (COMPLETO)
@@ -882,7 +919,6 @@
             });
         });
 
-
         function limpiarFormulario() {
 
             // Limpiar empleado
@@ -903,11 +939,15 @@
             $('#seccion-completo-4').hide();
 
             // Limpiar campos fraccionado
-            $('#fecha-solicitud-permiso, #hora-inicio-4, #hora-fin-4, #horas-permiso-4').val('');
+            $('#fecha-solicitud-permiso, #hora-inicio-4, #hora-fin-4, #horas-permiso-4, #minutos-permiso-4').val('');
 
             // Limpiar campos completo
             $('#fecha-inicio-comp-4, #fecha-fin-comp-4, #dias-solicitados-4').val('');
         }
+
     </script>
+
+
+
 
 @endsection

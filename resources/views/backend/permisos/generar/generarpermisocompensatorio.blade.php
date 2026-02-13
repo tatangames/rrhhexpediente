@@ -54,7 +54,7 @@
                                     <div class="custom-control custom-radio">
                                         <input class="custom-control-input" type="radio" id="radio-fraccionado-4" name="condicion-otros" value="fraccionado" checked>
                                         <label for="radio-fraccionado-4" class="custom-control-label">
-                                            <strong>Fraccionado</strong> (Por horas)
+                                            <strong>Fraccionado</strong> (Por horas y/o minutos)
                                         </label>
                                     </div>
                                     <div class="custom-control custom-radio">
@@ -84,14 +84,14 @@
                                         <div class="form-group">
                                             <label>Hora de Inicio: <span class="text-danger">*</span></label>
                                             <input type="time" class="form-control" id="hora-inicio-4">
-                                            <small class="form-text text-muted">Desde qué hora necesita el permiso</small>
+                                            <small class="form-text text-muted">Hora exacta de inicio del permiso</small>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Hora de Fin: <span class="text-danger">*</span></label>
                                             <input type="time" class="form-control" id="hora-fin-4">
-                                            <small class="form-text text-muted">Hasta qué hora necesita el permiso</small>
+                                            <small class="form-text text-muted">Hora exacta de finalización del permiso</small>
                                         </div>
                                     </div>
                                 </div>
@@ -99,9 +99,14 @@
                                 <div class="row">
                                     <div class="col-md-12">
                                         <div class="form-group">
-                                            <label>Duración del Permiso:</label>
+                                            <label>Duración del Permiso (Tiempo Total):</label>
                                             <input type="text" class="form-control" id="horas-permiso-4" readonly>
-                                            <small class="form-text text-muted">Se calcula automáticamente</small>
+                                            <!-- ✅ CAMPO OCULTO PARA GUARDAR LOS MINUTOS EXACTOS -->
+                                            <input type="hidden" id="minutos-permiso-4">
+                                            <small class="form-text text-muted">
+                                                <i class="fas fa-info-circle text-info"></i>
+                                                Se calcula automáticamente en horas y minutos
+                                            </small>
                                         </div>
                                     </div>
                                 </div>
@@ -193,7 +198,7 @@
 
                             <div class="form-group mt-4" id="bloque-btn-info" style="display:none;">
                                 <button type="button" class="btn btn-info btn-block" id="btn-informacion">
-                                    <i class="fas fa-info-circle"></i> Información
+                                    <i class="fas fa-info-circle"></i> Información de Permisos
                                 </button>
                             </div>
                         </div>
@@ -205,32 +210,41 @@
     </section>
 
     <div class="modal fade" id="modalInfoPermiso" tabindex="-1">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-xl">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h4 class="modal-title">Información de Permisos</h4>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <div class="modal-header bg-info">
+                    <h4 class="modal-title text-white">
+                        <i class="fas fa-info-circle"></i> Información de Permisos del Año <span id="info-anio"></span>
+                    </h4>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body">
-                    <form id="formulario-editar">
+                    <div class="card">
                         <div class="card-body">
-
-                            <div class="modal-body">
-                                <p><strong>Año:</strong> <span id="info-anio"></span></p>
-                                <p><strong>Total permisos:</strong> <span id="info-total"></span></p>
-
-                                <hr>
-
-                                <ul id="info-fechas" class="list-group"></ul>
-                            </div>
-
+                            <p><strong>Año:</strong> <span id="info-anio-text"></span></p>
+                            <p><strong>Total de permisos compensatorios:</strong> <span id="info-total"></span></p>
                         </div>
-                    </form>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header bg-secondary">
+                            <h3 class="card-title">
+                                <i class="fas fa-list"></i> Historial Detallado
+                            </h3>
+                        </div>
+                        <div class="card-body p-0">
+                            <ul id="info-fechas" class="list-group list-group-flush" style="max-height: 400px; overflow-y: auto;">
+                                <!-- Se llenará con JavaScript -->
+                            </ul>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer justify-content-between">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">
+                        <i class="fas fa-times"></i> Cerrar
+                    </button>
                 </div>
             </div>
         </div>
@@ -310,63 +324,145 @@
                 }
             });
 
+
             // ===============================
             // BOTÓN INFORMACIÓN
             // ===============================
-            $(document).on('click', '#btn-informacion', function() {
+            $(document).on('click', '#btn-informacion', function () {
+
                 let empleadoId = $('#empleado-id').val();
-                let fecha = $('#fecha-entrego').val();
+                let fechaSeleccionada = $('#fecha-entrego').val();
 
                 if (!empleadoId) {
                     toastr.error('No hay empleado seleccionado');
                     return;
                 }
 
-                if(!fecha){
-                    toastr.error('Fecha es requerido');
+                if (!fechaSeleccionada) {
+                    toastr.error('Debe seleccionar una fecha');
                     return;
                 }
 
-                openLoading()
+                openLoading();
 
-                // Petición API para obtener información del empleado
                 axios.post(urlAdmin + '/admin/empleados/infopermiso/compensatorio', {
                     empleado_id: empleadoId,
-                    fecha: fecha
+                    fecha: fechaSeleccionada
                 })
-                    .then(resp => {
+                    .then(function (response) {
+                        closeLoading();
 
-                        if (resp.data.success) {
+                        if (!response.data || !response.data.success) {
+                            toastr.error('No se pudo obtener la información');
+                            return;
+                        }
 
-                            $('#info-anio').text(resp.data.anio);
-                            $('#info-total').text(resp.data.total);
+                        let data = response.data;
 
-                            let lista = '';
+                        // 🔹 Año
+                        $('#info-anio').text(data.anio || '');
+                        $('#info-anio-text').text(data.anio || '');
 
-                            resp.data.permisos.forEach(function(item) {
+                        // 🔹 Total
+                        $('#info-total').text(data.total || 0);
 
-                                lista += `
-                                <li class="list-group-item">
-                                    <strong>Fecha:</strong> ${item.fecha}<br>
-                                    <strong>Razón:</strong> ${item.razon ?? 'Sin descripción'}
-                                </li>
-                            `;
+                        // 🔹 Limpiar lista
+                        $('#info-fechas').empty();
+
+                        if (!data.permisos || data.permisos.length === 0) {
+                            $('#info-fechas').append(`
+                <li class="list-group-item text-center text-muted">
+                    No hay permisos registrados en este año
+                </li>
+            `);
+                        } else {
+                            data.permisos.forEach(function (item) {
+
+                                // Construir información de tiempo según el tipo
+                                let tiempoHtml = '';
+
+                                if (item.condicion == 0) {
+                                    // Día completo
+                                    tiempoHtml = `
+                        <div class="mt-2">
+                            <span class="badge badge-primary">
+                                <i class="fas fa-calendar-day"></i> ${item.tipo}
+                            </span>
+                        </div>
+                        ${item.fecha_inicio && item.fecha_fin ? `
+                            <div class="mt-1">
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    Desde: ${item.fecha_inicio} - Hasta: ${item.fecha_fin}
+                                </small>
+                            </div>
+                        ` : ''}
+                    `;
+                                } else {
+                                    // Fraccionado
+                                    tiempoHtml = `
+                        <div class="mt-2">
+                            <span class="badge badge-warning">
+                                <i class="fas fa-clock"></i> ${item.tipo}
+                            </span>
+                        </div>
+                       ${item.hora_inicio && item.hora_fin ? `
+                            <div class="mt-1">
+                                <small class="text-muted">
+                                    <i class="fas fa-hourglass-half"></i>
+                                    De: ${item.hora_inicio} - A: ${item.hora_fin}
+                                </small>
+                            </div>
+
+                            ${item.horas_texto ? `
+                                    <div class="mt-1">
+                                        <span class="badge badge-info">
+                                            <i class="fas fa-clock"></i>
+                                            Total: ${item.horas_texto}
+                                        </span>
+                                    </div>
+                                ` : ''}
+                            ` : ''}
+
+
+                    `;
+                                }
+
+                                $('#info-fechas').append(`
+                    <li class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div>
+                                    <strong><i class="fas fa-calendar"></i> Fecha:</strong> ${item.fecha || 'N/A'}
+                                </div>
+                                <div class="mt-1">
+                                    <strong><i class="fas fa-comment"></i> Razón:</strong> ${item.razon || 'Sin descripción'}
+                                </div>
+                                ${tiempoHtml}
+                            </div>
+                        </div>
+                    </li>
+                `);
                             });
+                        }
 
-                            $('#info-fechas').html(lista);
-
+                        // 🔹 Mostrar modal
+                        if ($('#modalInfoPermiso').length) {
                             $('#modalInfoPermiso').modal('show');
+                        } else {
+                            console.error('El modal #modalInfoPermiso no existe en el DOM');
+                            toastr.error('Error al mostrar el modal');
                         }
 
                     })
-                    .catch(err => {
-
-                        toastr.error('Error al obtener la información del empleado');
-                    })
-                    .finally(() => {
+                    .catch(function (error) {
                         closeLoading();
+                        console.error('Error completo:', error);
+                        toastr.error('Error al obtener información');
                     });
+
             });
+
 
             // ===============================
             // BOTÓN GUARDAR
@@ -418,17 +514,23 @@
                     let fechaPermiso = $('#fecha-solicitud-permiso').val();
                     let horaInicio = $('#hora-inicio-4').val();
                     let horaFin = $('#hora-fin-4').val();
-                    let duracion = $('#horas-permiso-4').val();
+                    let duracionMinutos = $('#minutos-permiso-4').val();
 
                     if (!fechaPermiso || !horaInicio || !horaFin) {
                         toastr.error('Complete todos los campos del permiso fraccionado');
                         return;
                     }
 
+                    // ✅ Validar que la duración no esté vacía (indicaría 0 minutos)
+                    if (!duracionMinutos || duracionMinutos == 0) {
+                        toastr.error('El permiso debe ser de al menos 1 minuto');
+                        return;
+                    }
+
                     datosPermiso.fecha = fechaPermiso;
                     datosPermiso.hora_inicio = horaInicio;
                     datosPermiso.hora_fin = horaFin;
-                    datosPermiso.duracion = duracion;
+                    datosPermiso.duracion_minutos = parseInt(duracionMinutos);
 
                 } else {
 
@@ -484,12 +586,12 @@
                     $('#seccion-completo-4').slideDown(200);
                     $('#seccion-fraccionado-4').slideUp(200);
                     // Limpiar campos de fraccionado
-                    $('#fecha-solicitud-permiso, #hora-inicio-4, #hora-fin-4, #horas-permiso-4').val('');
+                    $('#fecha-solicitud-permiso, #hora-inicio-4, #hora-fin-4, #horas-permiso-4, #minutos-permiso-4').val('');
                 }
             });
 
             // ===============================
-            // CALCULAR DURACIÓN (FRACCIONADO)
+            // CALCULAR DURACIÓN (FRACCIONADO) - AHORA EN MINUTOS
             // ===============================
             $(document).on('change', '#hora-inicio-4, #hora-fin-4', function() {
 
@@ -507,16 +609,31 @@
                     let fin = new Date();
                     fin.setHours(parseInt(horaFinH), parseInt(minFin), 0, 0);
 
-                    let diferenciaHoras = (fin - inicio) / (1000 * 60 * 60);
+                    let diferenciaMinutos = (fin - inicio) / (1000 * 60);
 
-                    if (diferenciaHoras > 0) {
+                    if (diferenciaMinutos > 0) {
 
-                        let horas = Math.floor(diferenciaHoras);
+                        // Guardar minutos totales en campo oculto
+                        $('#minutos-permiso-4').val(diferenciaMinutos);
 
-                        $('#horas-permiso-4').val(horas + (horas === 1 ? ' hora' : ' horas'));
+                        // Mostrar formato legible
+                        let horas = Math.floor(diferenciaMinutos / 60);
+                        let minutos = diferenciaMinutos % 60;
+
+                        let textoMostrar = '';
+                        if (horas > 0) {
+                            textoMostrar += horas + (horas === 1 ? ' hora' : ' horas');
+                        }
+                        if (minutos > 0) {
+                            if (textoMostrar) textoMostrar += ' y ';
+                            textoMostrar += minutos + ' minutos';
+                        }
+
+                        $('#horas-permiso-4').val(textoMostrar);
 
                     } else {
                         $('#horas-permiso-4').val('');
+                        $('#minutos-permiso-4').val('');
                         toastr.error('La hora de fin debe ser mayor a la hora de inicio');
                     }
                 }
@@ -564,7 +681,7 @@
             $('#seccion-completo-4').hide();
 
             // Limpiar campos fraccionado
-            $('#fecha-solicitud-permiso, #hora-inicio-4, #hora-fin-4, #horas-permiso-4').val('');
+            $('#fecha-solicitud-permiso, #hora-inicio-4, #hora-fin-4, #horas-permiso-4, #minutos-permiso-4').val('');
 
             // Limpiar campos completo
             $('#fecha-inicio-comp-4, #fecha-fin-comp-4, #dias-solicitados-4').val('');
