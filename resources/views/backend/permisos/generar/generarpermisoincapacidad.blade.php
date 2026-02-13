@@ -297,6 +297,12 @@
             $(document).on('click', '#btn-informacion', function() {
 
                 let empleadoId = $('#empleado-id').val();
+                let fecha = $('#fecha-incapacidad').val();
+
+                if (!fecha) {
+                    toastr.error('Fecha es requerido');
+                    return;
+                }
 
                 if (!empleadoId) {
                     toastr.error('No hay empleado seleccionado');

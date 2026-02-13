@@ -396,6 +396,12 @@ return [
                     'can'   => 'sidebar.permisos',
                 ],
                 [
+                    'text'  => 'Compensatorio',
+                    'icon'  => 'fas fa-file-alt',
+                    'route' => 'generar.tipopermiso.compensatorio',
+                    'can'   => 'sidebar.permisos',
+                ],
+                [
                     'text'  => 'Enfermedad',
                     'icon'  => 'fas fa-file-alt',
                     'route' => 'generar.tipopermiso.enfermedad',
@@ -408,15 +414,15 @@ return [
                     'can'   => 'sidebar.permisos',
                 ],
                 [
-                    'text'  => 'Otros',
-                    'icon'  => 'fas fa-file-alt',
-                    'route' => 'generar.tipopermiso.otros',
-                    'can'   => 'sidebar.permisos',
-                ],
-                [
                     'text'  => 'Incapacidad',
                     'icon'  => 'fas fa-file-alt',
                     'route' => 'generar.tipopermiso.incapacidad',
+                    'can'   => 'sidebar.permisos',
+                ],
+                [
+                    'text'  => 'Otros',
+                    'icon'  => 'fas fa-file-alt',
+                    'route' => 'generar.tipopermiso.otros',
                     'can'   => 'sidebar.permisos',
                 ],
 

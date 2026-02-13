@@ -3,7 +3,7 @@
 @section('title', 'Generar Permiso')
 
 @section('content_header')
-    <h1>Generar Permiso - Enfermedad</h1>
+    <h1>Generar Permiso - Compensatorio</h1>
 @stop
 
 @section('plugins.Datatables', true)
@@ -143,26 +143,6 @@
                                 <label>Razón del Permiso:</label>
                                 <textarea class="form-control" rows="3" maxlength="800" id="razon-permiso-4" placeholder="Describa brevemente el motivo del permiso"></textarea>
                             </div>
-
-                            <!--  -->
-                            <div class="form-group">
-                                <label>Condición Medica:</label>
-                                <input class="form-control" type="text" maxlength="800" id="condicion-medica" placeholder="">
-                            </div>
-
-                            <!--  -->
-                            <div class="form-group">
-                                <label>Unidad de atención:</label>
-                                <input class="form-control" type="text" maxlength="800" id="unidad-atencion" placeholder="">
-                            </div>
-
-                            <!--  -->
-                            <div class="form-group">
-                                <label>Especialidad:</label>
-                                <input class="form-control" type="text" maxlength="100" id="especialidad" placeholder="">
-                            </div>
-
-
 
                             <!-- Nota informativa -->
                             <div class="alert alert-info mt-3">
@@ -337,20 +317,20 @@
                 let empleadoId = $('#empleado-id').val();
                 let fecha = $('#fecha-entrego').val();
 
-                if (!fecha) {
-                    toastr.error('Fecha es requerido');
+                if (!empleadoId) {
+                    toastr.error('No hay empleado seleccionado');
                     return;
                 }
 
-                if (!empleadoId) {
-                    toastr.error('No hay empleado seleccionado');
+                if(!fecha){
+                    toastr.error('Fecha es requerido');
                     return;
                 }
 
                 openLoading()
 
                 // Petición API para obtener información del empleado
-                axios.post(urlAdmin + '/admin/empleados/infopermiso/enfermedad', {
+                axios.post(urlAdmin + '/admin/empleados/infopermiso/compensatorio', {
                     empleado_id: empleadoId,
                     fecha: fecha
                 })
@@ -398,9 +378,6 @@
                 let condicion = (condicionTexto === 'fraccionado') ? 1 : 0;
                 let razon = $('#razon-permiso-4').val().trim();
                 let fechaEntrego = $('#fecha-entrego').val();
-                let unidadAtencion = $('#unidad-atencion').val();
-                let especialidad = $('#especialidad').val();
-                let condicionMedica = $('#condicion-medica').val();
 
                 // ===============================
                 // VALIDACIONES GENERALES
@@ -429,10 +406,7 @@
                     empleado_id: empleadoId,
                     condicion: condicion,
                     razon: razon || null,
-                    fechaEntrego: fechaEntrego,
-                    unidadAtencion: unidadAtencion,
-                    especialidad: especialidad,
-                    condicionMedica: condicionMedica
+                    fechaEntrego: fechaEntrego
                 };
 
                 // ===============================
@@ -483,7 +457,7 @@
 
                 openLoading();
 
-                axios.post(urlAdmin + '/admin/guardar/permiso/enfermedad', datosPermiso)
+                axios.post(urlAdmin + '/admin/guardar/permiso/compensatorio', datosPermiso)
                     .then(resp => {
                         toastr.success('Permiso guardado exitosamente');
                         limpiarFormulario();
@@ -579,11 +553,6 @@
             $('#empleado-id').val('');
             $('#input-unidad').val('');
             $('#input-cargo').val('');
-
-            $('#unidad-atencion').val('');
-            $('#especialidad').val('');
-            $('#condicion-medica').val('');
-
             $('#bloque-btn-info').hide();
 
             // Limpiar razón

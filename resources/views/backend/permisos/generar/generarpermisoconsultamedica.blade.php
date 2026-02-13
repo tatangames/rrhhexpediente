@@ -335,6 +335,12 @@
             // ===============================
             $(document).on('click', '#btn-informacion', function() {
                 let empleadoId = $('#empleado-id').val();
+                let fecha = $('#fecha-entrego').val();
+
+                if (!fecha) {
+                    toastr.error('Fecha es requerido');
+                    return;
+                }
 
                 if (!empleadoId) {
                     toastr.error('No hay empleado seleccionado');
@@ -345,7 +351,8 @@
 
                 // Petición API para obtener información del empleado
                 axios.post(urlAdmin + '/admin/empleados/infopermiso/consultamedica', {
-                    empleado_id: empleadoId
+                    empleado_id: empleadoId,
+                    fecha: fecha
                 })
                     .then(resp => {
 

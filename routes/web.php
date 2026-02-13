@@ -166,7 +166,7 @@ Route::get('/admin/tipopermiso/enfermedad/index', [PermisoController::class,'ind
 Route::post('/admin/guardar/permiso/enfermedad', [PermisoController::class, 'guardarPermisoEnfermedad']);
 Route::post('/admin/empleados/infopermiso/enfermedad', [PermisoController::class, 'informacionPermisoEnfermedad']);
 
-// GENERAR PERMISO - ENFERMEDAD
+// GENERAR PERMISO - CONSULTA MEDICA
 Route::get('/admin/tipopermiso/consultamedica/index', [PermisoController::class,'indexGenerarPermisoConsultaMedica'])->name('generar.tipopermiso.consultamedica');
 Route::post('/admin/guardar/permiso/consultamedica', [PermisoController::class, 'guardarPermisoConsultaMedica']);
 Route::post('/admin/empleados/infopermiso/consultamedica', [PermisoController::class, 'informacionPermisoConsultaMedica']);
@@ -178,6 +178,10 @@ Route::post('/admin/empleados/infopermiso/personal', [PermisoController::class, 
 Route::post('/admin/guardar/permiso/personal', [PermisoController::class, 'guardarPermisoPersonal']);
 
 
+// GENERAR PERMISO - COMPENSATORIO
+Route::get('/admin/tipopermiso/compensatorio/index', [PermisoController::class,'indexGenerarPermisoCompensatorio'])->name('generar.tipopermiso.compensatorio');
+Route::post('/admin/empleados/infopermiso/compensatorio', [PermisoController::class, 'informacionPermisoCompensatorio']);
+Route::post('/admin/guardar/permiso/compensatorio', [PermisoController::class, 'guardarPermisoCompensatorio']);
 
 
 

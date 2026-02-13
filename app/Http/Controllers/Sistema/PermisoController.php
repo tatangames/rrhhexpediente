@@ -7,6 +7,7 @@ use App\Models\Administrador;
 use App\Models\Cargo;
 use App\Models\Empleado;
 use App\Models\FichaEmpleado;
+use App\Models\PermisoCompensatorio;
 use App\Models\PermisoConsultaMedica;
 use App\Models\PermisoEnfermedad;
 use App\Models\PermisoIncapacidad;
@@ -219,8 +220,6 @@ class PermisoController extends Controller
 
     // =============== GENERAR PERMISO - OTROS ==========================================================
 
-
-
     public function indexGenerarPermisoOtros()
     {
         $temaPredeterminado = $this->getTemaPredeterminado();
@@ -253,7 +252,7 @@ class PermisoController extends Controller
     public function informacionPermisoOtros(Request $request)
     {
         $empleadoId = $request->empleado_id;
-        $anioActual = now()->year;
+        $anioActual = Carbon::parse($request->fecha)->year;
 
         $permisos = PermisoOtro::where('id_empleado', $empleadoId)
             ->whereYear('fecha', $anioActual)
@@ -414,7 +413,7 @@ class PermisoController extends Controller
     public function informacionPermisoIncapacidad(Request $request)
     {
         $empleadoId = $request->empleado_id;
-        $anioActual = now()->year;
+        $anioActual = Carbon::parse($request->fecha)->year;
 
         $permisos = PermisoIncapacidad::where('id_empleado', $empleadoId)
             ->whereYear('fecha_inicio', $anioActual)
@@ -455,7 +454,7 @@ class PermisoController extends Controller
     public function informacionPermisoEnfermedad(Request $request)
     {
         $empleadoId = $request->empleado_id;
-        $anioActual = now()->year;
+        $anioActual = Carbon::parse($request->fecha)->year;
 
         $permisos = PermisoEnfermedad::where('id_empleado', $empleadoId)
             ->whereYear('fecha', $anioActual)
@@ -560,7 +559,7 @@ class PermisoController extends Controller
     public function informacionPermisoConsultaMedica(Request $request)
     {
         $empleadoId = $request->empleado_id;
-        $anioActual = now()->year;
+        $anioActual = Carbon::parse($request->fecha)->year;
 
         $permisos = PermisoConsultaMedica::where('id_empleado', $empleadoId)
             ->whereYear('fecha', $anioActual)
@@ -960,5 +959,122 @@ class PermisoController extends Controller
             ]);
         }
     }
+
+
+
+
+    // =============== GENERAR PERMISO - COMPENSATORIO ==========================================================
+
+    public function indexGenerarPermisoCompensatorio()
+    {
+        $temaPredeterminado = $this->getTemaPredeterminado();
+
+        return view('backend.permisos.generar.generarpermisocompensatorio', compact('temaPredeterminado'));
+    }
+
+
+    public function informacionPermisoCompensatorio(Request $request)
+    {
+        $empleadoId = $request->empleado_id;
+        $anioActual = Carbon::parse($request->fecha)->year;
+
+        $permisos = PermisoCompensatorio::where('id_empleado', $empleadoId)
+            ->whereYear('fecha', $anioActual)
+            ->orderBy('fecha', 'desc')
+            ->get();
+
+        $data = $permisos->map(function ($item) {
+            return [
+                'fecha' => Carbon::parse($item->fecha)->format('d-m-Y'),
+                'razon' => $item->razon
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'anio' => $anioActual,
+            'total' => $permisos->count(),
+            'permisos' => $data
+        ]);
+    }
+
+
+
+    public function guardarPermisoCompensatorio(Request $request)
+    {
+        $regla = array(
+            'empleado_id' => 'required',
+            'condicion' => 'required',
+            'fechaEntrego' => 'required',
+        );
+
+        //0: DIA COMPLETO
+        // fecha_inicio, fecha_fin
+
+        //1: FRACCIONADO
+        // hora_inicio, hora_fin, duracion
+
+        // razon, dias_solicitados,
+
+        $validar = Validator::make($request->all(), $regla);
+
+        if ($validar->fails()){return ['success' => 0];}
+
+
+        try {
+
+            $empleado = Empleado::find($request->empleado_id);
+
+            if (!$empleado) {
+                return response()->json([
+                    'success' => 0,
+                    'message' => 'Empleado no encontrado'
+                ]);
+            }
+
+            // 🔎 Buscar unidad y cargo
+            $unidad = Unidad::find($empleado->id_unidad);
+            $cargo = Cargo::find($empleado->id_cargo);
+
+            $nombreUnidad = $unidad->nombre ?? null;
+            $nombreCargo = $cargo->nombre ?? null;
+
+            PermisoCompensatorio::create([
+                'id_empleado' => $request->empleado_id,
+                'unidad' => $nombreUnidad,
+                'cargo' => $nombreCargo,
+                'fecha' => $request->fechaEntrego,
+                'condicion' => $request->condicion,
+                'fecha_inicio' => $request->fecha_inicio,
+                'fecha_fin' => $request->fecha_fin,
+                'hora_inicio' => $request->hora_inicio,
+                'hora_fin' => $request->hora_fin,
+                'razon' => $request->razon,
+            ]);
+
+            return response()->json(['success' => 1]);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'success' => 0,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 }
