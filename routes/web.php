@@ -172,6 +172,10 @@ Route::post('/admin/guardar/permiso/consultamedica', [PermisoController::class, 
 Route::post('/admin/empleados/infopermiso/consultamedica', [PermisoController::class, 'informacionPermisoConsultaMedica']);
 
 
+// GENERAR PERMISO - PERSONAL
+Route::get('/admin/tipopermiso/personal/index', [PermisoController::class,'indexGenerarPermisoPersonal'])->name('generar.tipopermiso.personal');
+Route::post('/admin/empleados/infopermiso/personal', [PermisoController::class, 'informacionPermisoPersonal']);
+Route::post('/admin/guardar/permiso/personal', [PermisoController::class, 'guardarPermisoPersonal']);
 
 
 

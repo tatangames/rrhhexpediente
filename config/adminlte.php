@@ -390,6 +390,12 @@ return [
             'can'     => 'sidebar.permisos',
             'submenu' => [
                 [
+                    'text'  => 'Personal',
+                    'icon'  => 'fas fa-file-alt',
+                    'route' => 'generar.tipopermiso.personal',
+                    'can'   => 'sidebar.permisos',
+                ],
+                [
                     'text'  => 'Enfermedad',
                     'icon'  => 'fas fa-file-alt',
                     'route' => 'generar.tipopermiso.enfermedad',

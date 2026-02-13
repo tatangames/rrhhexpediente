@@ -29,7 +29,7 @@ class ControlController extends Controller
         }
 
         if ($user->hasRole('permisos')) {
-            return redirect()->route('generar.tipopermiso.otros');
+            return redirect()->route('generar.tipopermiso.personal');
         }
 
 
