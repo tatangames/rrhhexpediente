@@ -193,6 +193,7 @@ Route::get('/admin/historial/otros/index', [HistorialPermisoController::class,'i
 Route::get('/admin/historial/otros/tabla', [HistorialPermisoController::class,'tablaHistorialPermisoOtros']);
 Route::post('/admin/historial/otros/informacion', [HistorialPermisoController::class,'informacionHistorialPermisoOtros']);
 Route::post('/admin/historial/otros/actualizar', [HistorialPermisoController::class,'actualizarHistorialPermisoOtros']);
+Route::post('/admin/historial/otros/borrar', [HistorialPermisoController::class,'borrarHistorialPermisoOtros']);
 
 
 
