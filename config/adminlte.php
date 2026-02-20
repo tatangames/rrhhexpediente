@@ -467,6 +467,25 @@ return [
 
 
 
+        [
+            'text'    => 'Evaluación',
+            'icon'    => 'fas fa-pen-alt',
+
+            'submenu' => [
+                [
+                    'text'  => 'Datos Generales',
+                    'icon'  => 'fas fa-file-alt',
+                    'route' => 'evaluacion.index',
+
+                ],
+
+            ],
+        ],
+
+
+
+
+
 
 
 

@@ -16,6 +16,7 @@ use App\Http\Controllers\Permiso\ReportesPermisoController;
 use App\Http\Controllers\Permiso\HistorialPermisoController;
 
 
+use App\Http\Controllers\Evaluacion\EvaluacionController;
 
 
 
@@ -198,9 +199,22 @@ Route::post('/admin/historial/otros/borrar', [HistorialPermisoController::class,
 
 
 
+// EVALUACION - REGISTRO
+Route::get('/admin/evaluacion/index', [EvaluacionController::class,'indexEvaluacion'])->name('evaluacion.index');
+Route::get('/admin/evaluacion/tabla', [EvaluacionController::class,'tablaEvaluacion']);
+Route::post('/admin/evaluacion/nuevo', [EvaluacionController::class,'nuevaEvaluacion']);
+Route::post('/admin/evaluacion/informacion', [EvaluacionController::class,'informacionEvaluacion']);
+Route::post('/admin/evaluacion/editar', [EvaluacionController::class,'editarEvaluacion']);
+Route::post('/admin/evaluacion/borrar', [EvaluacionController::class,'borrarEvaluacion']);
 
 
-
+// EVALUACION - REGISTRO
+Route::get('/admin/evaluacion-detalle/index/{id}', [EvaluacionController::class,'indexEvaluacionDetalle']);
+Route::get('/admin/evaluacion-detalle/tabla/{id}', [EvaluacionController::class,'tablaEvaluacionDetalle']);
+Route::post('/admin/evaluacion-detalle/nuevo', [EvaluacionController::class,'nuevaEvaluacionDetalle']);
+Route::post('/admin/evaluacion-detalle/informacion', [EvaluacionController::class,'informacionEvaluacionDetalle']);
+Route::post('/admin/evaluacion-detalle/editar', [EvaluacionController::class,'editarEvaluacionDetalle']);
+Route::post('/admin/evaluacion-detalle/borrar', [EvaluacionController::class,'borrarEvaluacionDetalle']);
 
 
 
