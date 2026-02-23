@@ -4,6 +4,9 @@ namespace App\Http\Controllers\Evaluacion;
 
 use App\Http\Controllers\Controller;
 use App\Models\Evaluacion;
+use App\Models\EvaluacionCargo;
+use App\Models\EvaluacionDependencias;
+use App\Models\EvaluacionUnidad;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -14,6 +17,11 @@ class JefeEvaluacionController extends Controller
 
     public function indexLlenarEvaluacion()
     {
+
+        $arrayUnidades = EvaluacionUnidad::orderBy('nombre', 'ASC')->get();
+        $arrayCargos = EvaluacionCargo::orderBy('nombre', 'ASC')->get();
+        $arrayDependencias = EvaluacionDependencias::orderBy('nombre', 'ASC')->get();
+
         $evaluaciones = Evaluacion::with(['detalles' => function ($q) {
             $q->orderBy('posicion');
         }])
@@ -21,7 +29,7 @@ class JefeEvaluacionController extends Controller
             ->orderBy('posicion')
             ->get();
 
-        return view('backend.evaluacion.jefe.vistacamposevaluar', compact('evaluaciones'));
+        return view('backend.evaluacion.jefe.vistacamposevaluar', compact('evaluaciones', 'arrayDependencias', 'arrayCargos', 'arrayUnidades'));
     }
 
 

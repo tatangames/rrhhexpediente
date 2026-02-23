@@ -470,14 +470,39 @@ return [
         [
             'text'    => 'Evaluación',
             'icon'    => 'fas fa-pen-alt',
-            'can'   => 'sidebar.permisos',
+            'can'   => 'sidebar.evaluacion',
             'submenu' => [
                 [
                     'text'  => 'Datos Generales',
                     'icon'  => 'fas fa-file-alt',
                     'route' => 'evaluacion.index',
-                    'can'   => 'sidebar.permisos',
+                    'can'   => 'sidebar.evaluacion',
                 ],
+
+                [
+                    'text'  => 'Cargos',
+                    'icon'  => 'fas fa-file-alt',
+                    'route' => 'admin.cargo.evaluacion.index',
+                    'can'   => 'sidebar.evaluacion',
+                ],
+
+                [
+                    'text'  => 'Unidades',
+                    'icon'  => 'fas fa-file-alt',
+                    'route' => 'admin.unidad.evaluacion.index',
+                    'can'   => 'sidebar.evaluacion',
+                ],
+
+                [
+                    'text'  => 'Dependencias',
+                    'icon'  => 'fas fa-file-alt',
+                    'route' => 'admin.dependencia.evaluacion.index',
+                    'can'   => 'sidebar.evaluacion',
+                ],
+
+
+
+
 
             ],
         ],

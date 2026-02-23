@@ -109,19 +109,6 @@
             background: var(--navy);
             border-bottom: 3px solid var(--gold);
         }
-        .section-number {
-            width: 28px;
-            height: 28px;
-            background: var(--gold);
-            color: var(--navy);
-            font-size: 13px;
-            font-weight: 700;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
         .section-header h2 {
             font-family: 'Playfair Display', serif;
             color: var(--white);
@@ -131,12 +118,20 @@
 
         .section-body { padding: 28px; }
 
+        /* Grid principal 1 columna */
         .form-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr;
             gap: 20px;
         }
-        .form-grid .full-width { grid-column: 1 / -1; }
+        .form-grid .full-width { grid-column: 1; }
+
+        /* Subgrid de 1 columna para puesto/unidad/dependencia */
+        .form-grid-3col {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
 
         .form-group {
             display: flex;
@@ -190,6 +185,102 @@
             color: var(--gold-light);
             font-weight: 600;
             font-size: 14px;
+        }
+
+        /* ── Custom Select con buscador ── */
+        .custom-select-wrapper { position: relative; }
+
+        .custom-select-trigger {
+            padding: 11px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: 3px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            color: var(--text);
+            background: var(--cream);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+            user-select: none;
+            min-height: 44px;
+        }
+        .custom-select-trigger:hover,
+        .custom-select-trigger.open {
+            border-color: var(--navy-mid);
+            background: var(--white);
+            box-shadow: 0 0 0 3px rgba(26,50,96,0.08);
+        }
+        .custom-select-trigger.error {
+            border-color: var(--error);
+            box-shadow: 0 0 0 3px rgba(185,64,64,0.1);
+        }
+        .trigger-text {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .trigger-text.placeholder { color: var(--text-muted); }
+        .trigger-text.selected-text { color: var(--text); font-weight: 500; }
+        .select-arrow {
+            flex-shrink: 0;
+            transition: transform 0.2s;
+            color: var(--text-muted);
+        }
+        .custom-select-trigger.open .select-arrow { transform: rotate(180deg); }
+
+        .custom-select-dropdown {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0; right: 0;
+            background: var(--white);
+            border: 1.5px solid var(--navy-mid);
+            border-radius: 3px;
+            box-shadow: var(--shadow-hover);
+            z-index: 200;
+            display: none;
+            overflow: hidden;
+        }
+        .custom-select-dropdown.open { display: block; }
+
+        .select-search {
+            padding: 9px 12px;
+            border: none;
+            border-bottom: 1px solid var(--border);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            width: 100%;
+            outline: none;
+            background: var(--cream);
+            color: var(--text);
+        }
+        .select-search:focus { background: var(--white); }
+
+        .select-options {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .select-option {
+            padding: 10px 14px;
+            font-size: 13.5px;
+            cursor: pointer;
+            transition: background 0.12s;
+            border-bottom: 1px solid var(--cream-dark);
+            line-height: 1.4;
+        }
+        .select-option:last-child { border-bottom: none; }
+        .select-option:hover { background: rgba(201,151,58,0.07); }
+        .select-option.selected { background: rgba(201,151,58,0.12); color: var(--navy); font-weight: 600; }
+        .select-option.hidden { display: none; }
+        .select-no-results {
+            padding: 12px 14px;
+            font-size: 13px;
+            color: var(--text-muted);
+            text-align: center;
+            display: none;
         }
 
         /* ── Bloques de evaluación ── */
@@ -294,35 +385,7 @@
         }
         .evaluacion-bloque.error .bloque-error-msg { display: block; }
 
-        /* Resumen */
-        .puntaje-resumen {
-            background: var(--navy);
-            color: var(--white);
-            border-radius: 4px;
-            padding: 20px 28px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 20px;
-            margin-bottom: 28px;
-            animation: fadeUp 0.5s 0.25s ease both;
-        }
-        .puntaje-label {
-            font-size: 13px;
-            color: rgba(255,255,255,0.6);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: 600;
-        }
-        .puntaje-max { font-size: 14px; color: rgba(255,255,255,0.4); margin-top: 2px; }
-        .puntaje-valor {
-            font-family: 'Playfair Display', serif;
-            font-size: 36px;
-            font-weight: 700;
-            color: var(--gold-light);
-            line-height: 1;
-        }
-
+        /* Botón */
         .btn-submit {
             display: block;
             width: 100%;
@@ -389,13 +452,6 @@
             to   { opacity: 1; transform: translateX(0); }
         }
 
-        @media (max-width: 600px) {
-            .form-grid { grid-template-columns: 1fr; }
-            .form-grid .full-width { grid-column: 1; }
-            .puntaje-resumen { flex-direction: column; text-align: center; }
-            .section-body { padding: 20px; }
-        }
-
         .indicaciones-banner {
             display: flex;
             align-items: flex-start;
@@ -407,10 +463,17 @@
             font-size: 14px;
             line-height: 1.5;
         }
-        .indicaciones-banner strong {
-            color: var(--navy);
-        }
+        .indicaciones-banner strong { color: var(--navy); }
 
+        @media (max-width: 700px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .form-grid .full-width { grid-column: 1; }
+            .form-grid-3col { grid-template-columns: 1fr; }
+            .section-body { padding: 20px; }
+        }
+        @media (min-width: 701px) and (max-width: 860px) {
+            .form-grid-3col { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
@@ -433,45 +496,133 @@
         <div class="section-body">
             <div class="form-grid">
 
+                {{-- Nombre completo --}}
                 <div class="form-group full-width">
                     <label for="nombre_completo">Nombre Completo del Empleado</label>
                     <input type="text" id="nombre_completo" name="nombre_completo"
-                           class="form-control" maxlength="100">
+                           class="form-control" maxlength="100"
+                           placeholder="Ingrese el nombre completo">
                     <span class="field-error" id="err-nombre">Este campo es requerido.</span>
                 </div>
 
-                <div class="form-group">
-                    <label for="puesto">Puesto o Cargo Actual</label>
-                    <input type="text" id="puesto" name="puesto"
-                           class="form-control" maxlength="100">
-                    <span class="field-error" id="err-puesto">Este campo es requerido.</span>
+                {{-- Fila de 3 selects: Puesto | Unidad | Dependencia --}}
+                <div class="form-group full-width">
+                    <div class="form-grid-3col">
+
+                        {{-- Puesto --}}
+                        <div class="form-group">
+                            <label>Puesto o Cargo Actual</label>
+                            <div class="custom-select-wrapper" id="wrap-puesto">
+                                <div class="custom-select-trigger" id="trigger-puesto"
+                                     onclick="toggleSelect('puesto')">
+                                    <span class="trigger-text placeholder" id="display-puesto">Seleccionar cargo...</span>
+                                    <svg class="select-arrow" width="14" height="14" viewBox="0 0 24 24"
+                                         fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <polyline points="6 9 12 15 18 9"/>
+                                    </svg>
+                                </div>
+                                <div class="custom-select-dropdown" id="dropdown-puesto">
+                                    <input class="select-search" type="text"
+                                           placeholder="&#128269; Buscar cargo..."
+                                           oninput="filterOptions('puesto', this.value)">
+                                    <div class="select-options" id="options-puesto">
+                                        @foreach($arrayCargos as $cargo)
+                                            <div class="select-option"
+                                                 data-value="{{ $cargo->nombre }}"
+                                                 onclick="selectOption('puesto', '{{ addslashes($cargo->nombre) }}')">
+                                                {{ $cargo->nombre }}
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                    <div class="select-no-results" id="no-results-puesto">Sin resultados</div>
+                                </div>
+                            </div>
+                            <input type="hidden" name="puesto" id="val-puesto">
+                            <span class="field-error" id="err-puesto">Este campo es requerido.</span>
+                        </div>
+
+                        {{-- Unidad --}}
+                        <div class="form-group">
+                            <label>Unidad a la que Pertenece</label>
+                            <div class="custom-select-wrapper" id="wrap-unidad">
+                                <div class="custom-select-trigger" id="trigger-unidad"
+                                     onclick="toggleSelect('unidad')">
+                                    <span class="trigger-text placeholder" id="display-unidad">Seleccionar unidad...</span>
+                                    <svg class="select-arrow" width="14" height="14" viewBox="0 0 24 24"
+                                         fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <polyline points="6 9 12 15 18 9"/>
+                                    </svg>
+                                </div>
+                                <div class="custom-select-dropdown" id="dropdown-unidad">
+                                    <input class="select-search" type="text"
+                                           placeholder="&#128269; Buscar unidad..."
+                                           oninput="filterOptions('unidad', this.value)">
+                                    <div class="select-options" id="options-unidad">
+                                        @foreach($arrayUnidades as $unidad)
+                                            <div class="select-option"
+                                                 data-value="{{ $unidad->nombre }}"
+                                                 onclick="selectOption('unidad', '{{ addslashes($unidad->nombre) }}')">
+                                                {{ $unidad->nombre }}
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                    <div class="select-no-results" id="no-results-unidad">Sin resultados</div>
+                                </div>
+                            </div>
+                            <input type="hidden" name="unidad" id="val-unidad">
+                            <span class="field-error" id="err-unidad">Este campo es requerido.</span>
+                        </div>
+
+                        {{-- Dependencia --}}
+                        <div class="form-group">
+                            <label>Dependencia Jerárquica</label>
+                            <div class="custom-select-wrapper" id="wrap-dependencia">
+                                <div class="custom-select-trigger" id="trigger-dependencia"
+                                     onclick="toggleSelect('dependencia')">
+                                    <span class="trigger-text placeholder" id="display-dependencia">Seleccionar dependencia...</span>
+                                    <svg class="select-arrow" width="14" height="14" viewBox="0 0 24 24"
+                                         fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <polyline points="6 9 12 15 18 9"/>
+                                    </svg>
+                                </div>
+                                <div class="custom-select-dropdown" id="dropdown-dependencia">
+                                    <input class="select-search" type="text"
+                                           placeholder="&#128269; Buscar dependencia..."
+                                           oninput="filterOptions('dependencia', this.value)">
+                                    <div class="select-options" id="options-dependencia">
+                                        @foreach($arrayDependencias as $dep)
+                                            <div class="select-option"
+                                                 data-value="{{ $dep->nombre }}"
+                                                 onclick="selectOption('dependencia', '{{ addslashes($dep->nombre) }}')">
+                                                {{ $dep->nombre }}
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                    <div class="select-no-results" id="no-results-dependencia">Sin resultados</div>
+                                </div>
+                            </div>
+                            <input type="hidden" name="dependencia" id="val-dependencia">
+                            <span class="field-error" id="err-dependencia">Este campo es requerido.</span>
+                        </div>
+
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="unidad">Unidad a la que Pertenece</label>
-                    <input type="text" id="unidad" name="unidad"
-                           class="form-control" maxlength="100">
-                    <span class="field-error" id="err-unidad">Este campo es requerido.</span>
-                </div>
-
-                <div class="form-group">
-                    <label for="dependencia">Dependencia Jerárquica</label>
-                    <input type="text" id="dependencia" name="dependencia"
-                           class="form-control" maxlength="100">
-                    <span class="field-error" id="err-dependencia">Este campo es requerido.</span>
-                </div>
-
+                {{-- Jefe inmediato --}}
                 <div class="form-group">
                     <label for="jefe_inmediato">Nombre del Jefe Inmediato</label>
                     <input type="text" id="jefe_inmediato" name="jefe_inmediato"
-                           class="form-control" maxlength="100">
+                           class="form-control" maxlength="100"
+                           placeholder="Ingrese el nombre del jefe">
                     <span class="field-error" id="err-jefe">Este campo es requerido.</span>
                 </div>
 
+                {{-- Período evaluado --}}
                 <div class="form-group">
                     <label>Período Evaluado</label>
                     <div class="periodo-badge">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2">
                             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
                             <line x1="16" y1="2" x2="16" y2="6"/>
                             <line x1="8" y1="2" x2="8" y2="6"/>
@@ -493,7 +644,8 @@
         </div>
 
         <div class="indicaciones-banner">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" style="flex-shrink:0;margin-top:1px;">
                 <circle cx="12" cy="12" r="10"/>
                 <line x1="12" y1="8" x2="12" y2="12"/>
                 <line x1="12" y1="16" x2="12.01" y2="16"/>
@@ -506,7 +658,8 @@
 
             @if($evaluaciones->isEmpty())
                 <div class="empty-state">
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:0.3;margin-bottom:12px;">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="1.5" style="opacity:0.3;margin-bottom:12px;display:block;margin-left:auto;margin-right:auto;">
                         <circle cx="12" cy="12" r="10"/>
                         <line x1="12" y1="8" x2="12" y2="12"/>
                         <line x1="12" y1="16" x2="12.01" y2="16"/>
@@ -527,7 +680,8 @@
                         </div>
                         <div class="opciones-lista">
                             @foreach($evaluacion->detalles as $detalle)
-                                <label class="opcion-item" id="opcion-{{ $evaluacion->id }}-{{ $detalle->id }}"
+                                <label class="opcion-item"
+                                       id="opcion-{{ $evaluacion->id }}-{{ $detalle->id }}"
                                        onclick="marcarSeleccionado({{ $evaluacion->id }}, {{ $detalle->id }})">
                                     <input type="radio"
                                            name="evaluacion_{{ $evaluacion->id }}"
@@ -548,9 +702,8 @@
         </div>
     </div>
 
-    {{-- ── Resumen de Puntaje ── --}}
+    {{-- ── Botón Enviar ── --}}
     @if($evaluaciones->isNotEmpty())
-
         <button class="btn-submit" id="btn-enviar" onclick="enviarEvaluacion()">
             Enviar Evaluación
         </button>
@@ -561,59 +714,121 @@
 <div class="toast-container" id="toast-container"></div>
 
 <script>
-    var CSRF_TOKEN = '{{ csrf_token() }}';
-    var URL_REGISTRAR = '{{ route("evaluacion.registrar") }}'; // ajusta el nombre de tu ruta
-    var respuestas = {}; // { evaluacion_id: { detalle_id, puntos } }
-
-    // IDs de evaluaciones desde Blade para validación JS
+    var CSRF_TOKEN   = '{{ csrf_token() }}';
+    var URL_REGISTRAR = '{{ route("evaluacion.registrar") }}';
+    var respuestas   = {};
     var evaluacionIds = @json($evaluaciones->pluck('id'));
 
-    // ── Seleccionar opción ──
+    /* ════════════════════════════════
+       CUSTOM SELECT CON BUSCADOR
+    ════════════════════════════════ */
+    var openSelect = null;
+
+    function toggleSelect(id) {
+        if (openSelect && openSelect !== id) closeSelect(openSelect);
+        var dropdown = document.getElementById('dropdown-' + id);
+        var trigger  = document.getElementById('trigger-'  + id);
+        if (dropdown.classList.contains('open')) {
+            closeSelect(id);
+        } else {
+            dropdown.classList.add('open');
+            trigger.classList.add('open');
+            openSelect = id;
+            setTimeout(function() {
+                var search = dropdown.querySelector('.select-search');
+                if (search) search.focus();
+            }, 50);
+        }
+    }
+
+    function closeSelect(id) {
+        var dropdown = document.getElementById('dropdown-' + id);
+        var trigger  = document.getElementById('trigger-'  + id);
+        if (dropdown) dropdown.classList.remove('open');
+        if (trigger)  trigger.classList.remove('open');
+        if (openSelect === id) openSelect = null;
+    }
+
+    function selectOption(id, value) {
+        document.getElementById('val-' + id).value = value;
+
+        var display = document.getElementById('display-' + id);
+        display.textContent = value;
+        display.className   = 'trigger-text selected-text';
+
+        var trigger = document.getElementById('trigger-' + id);
+        trigger.classList.remove('error');
+        document.getElementById('err-' + id).classList.remove('visible');
+
+        // Marcar opción activa
+        document.querySelectorAll('#options-' + id + ' .select-option').forEach(function(opt) {
+            opt.classList.toggle('selected', opt.dataset.value === value);
+        });
+
+        // Limpiar buscador
+        var search = document.querySelector('#dropdown-' + id + ' .select-search');
+        if (search) {
+            search.value = '';
+            filterOptions(id, '');
+        }
+
+        closeSelect(id);
+    }
+
+    function filterOptions(id, query) {
+        var q    = query.toLowerCase().trim();
+        var opts = document.querySelectorAll('#options-' + id + ' .select-option');
+        var visible = 0;
+        opts.forEach(function(opt) {
+            var match = opt.textContent.toLowerCase().includes(q);
+            opt.classList.toggle('hidden', !match);
+            if (match) visible++;
+        });
+        var noResults = document.getElementById('no-results-' + id);
+        if (noResults) noResults.style.display = visible === 0 ? 'block' : 'none';
+    }
+
+    // Cerrar al click fuera
+    document.addEventListener('click', function(e) {
+        if (!openSelect) return;
+        var wrapper = document.getElementById('wrap-' + openSelect);
+        if (wrapper && !wrapper.contains(e.target)) {
+            closeSelect(openSelect);
+        }
+    });
+
+    /* ════════════════════════════════
+       EVALUACIÓN — RADIO BUTTONS
+    ════════════════════════════════ */
     function seleccionarOpcion(radio) {
         var evalId    = radio.dataset.eval;
         var puntos    = parseInt(radio.dataset.puntos);
         var detalleId = radio.value;
-
         respuestas[evalId] = { detalle_id: detalleId, puntos: puntos };
-
-        // Quitar error del bloque
         document.getElementById('bloque-' + evalId).classList.remove('error');
-
-        // Actualizar puntaje
-        actualizarPuntaje();
     }
 
     function marcarSeleccionado(evalId, detalleId) {
-        // Quitar .selected de todas las opciones del bloque
         var bloque = document.getElementById('bloque-' + evalId);
-        bloque.querySelectorAll('.opcion-item').forEach(function (item) {
+        bloque.querySelectorAll('.opcion-item').forEach(function(item) {
             item.classList.remove('selected');
         });
-        // Agregar .selected a la opción clickeada
         var opcion = document.getElementById('opcion-' + evalId + '-' + detalleId);
         if (opcion) opcion.classList.add('selected');
     }
 
-    function actualizarPuntaje() {
-        var total = 0;
-        Object.values(respuestas).forEach(function (r) { total += r.puntos; });
-        document.getElementById('puntaje-actual').textContent = total;
-    }
-
-    // ── Validar y enviar ──
+    /* ════════════════════════════════
+       VALIDACIÓN Y ENVÍO
+    ════════════════════════════════ */
     function enviarEvaluacion() {
-
         var valido = true;
 
-        var campos = [
+        // Validar input texto
+        var inputCampos = [
             { id: 'nombre_completo', err: 'err-nombre' },
-            { id: 'puesto',          err: 'err-puesto' },
-            { id: 'unidad',          err: 'err-unidad' },
-            { id: 'dependencia',     err: 'err-dependencia' },
-            { id: 'jefe_inmediato',  err: 'err-jefe' },
+            { id: 'jefe_inmediato',  err: 'err-jefe'   },
         ];
-
-        campos.forEach(function (c) {
+        inputCampos.forEach(function(c) {
             var el  = document.getElementById(c.id);
             var err = document.getElementById(c.err);
             if (!el.value.trim()) {
@@ -626,7 +841,24 @@
             }
         });
 
-        evaluacionIds.forEach(function (id) {
+        // Validar selects
+        var selectCampos = ['puesto', 'unidad', 'dependencia'];
+        selectCampos.forEach(function(id) {
+            var val     = document.getElementById('val-' + id).value;
+            var trigger = document.getElementById('trigger-' + id);
+            var err     = document.getElementById('err-' + id);
+            if (!val.trim()) {
+                trigger.classList.add('error');
+                err.classList.add('visible');
+                valido = false;
+            } else {
+                trigger.classList.remove('error');
+                err.classList.remove('visible');
+            }
+        });
+
+        // Validar criterios de evaluación
+        evaluacionIds.forEach(function(id) {
             if (!respuestas[id]) {
                 document.getElementById('bloque-' + id).classList.add('error');
                 valido = false;
@@ -635,52 +867,53 @@
 
         if (!valido) {
             showToast('Por favor complete todos los campos requeridos.', 'error');
+            // Scroll al primer error
+            var firstError = document.querySelector('.error, .form-control.error');
+            if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
             return;
         }
 
+        // Construir y enviar formulario
         var form = document.createElement('form');
         form.method = 'POST';
         form.action = URL_REGISTRAR;
 
         var csrf = document.createElement('input');
-        csrf.type = 'hidden';
-        csrf.name = '_token';
-        csrf.value = CSRF_TOKEN;
+        csrf.type = 'hidden'; csrf.name = '_token'; csrf.value = CSRF_TOKEN;
         form.appendChild(csrf);
 
         var respuestasArr = [];
-        Object.keys(respuestas).forEach(function (evalId) {
+        Object.keys(respuestas).forEach(function(evalId) {
             respuestasArr.push({
                 evaluacion_id: parseInt(evalId),
-                detalle_id: parseInt(respuestas[evalId].detalle_id),
-                puntos: respuestas[evalId].puntos
+                detalle_id:    parseInt(respuestas[evalId].detalle_id),
+                puntos:        respuestas[evalId].puntos
             });
         });
 
         var camposEnviar = {
             nombre_completo: document.getElementById('nombre_completo').value.trim(),
-            puesto: document.getElementById('puesto').value.trim(),
-            unidad: document.getElementById('unidad').value.trim(),
-            dependencia: document.getElementById('dependencia').value.trim(),
-            jefe_inmediato: document.getElementById('jefe_inmediato').value.trim(),
-            periodo: 'De Julio-Diciembre 2025',
-            respuestas: JSON.stringify(respuestasArr)
+            puesto:          document.getElementById('val-puesto').value,
+            unidad:          document.getElementById('val-unidad').value,
+            dependencia:     document.getElementById('val-dependencia').value,
+            jefe_inmediato:  document.getElementById('jefe_inmediato').value.trim(),
+            periodo:         'De Julio-Diciembre 2025',
+            respuestas:      JSON.stringify(respuestasArr)
         };
 
         for (var key in camposEnviar) {
             var input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = key;
-            input.value = camposEnviar[key];
+            input.type = 'hidden'; input.name = key; input.value = camposEnviar[key];
             form.appendChild(input);
         }
 
         document.body.appendChild(form);
-        form.target = '_blank';
         form.submit();
     }
 
-    // ── Toast ──
+    /* ════════════════════════════════
+       TOAST
+    ════════════════════════════════ */
     function showToast(msg, type) {
         var container = document.getElementById('toast-container');
         var toast = document.createElement('div');
@@ -690,7 +923,7 @@
             : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
         toast.innerHTML = icon + msg;
         container.appendChild(toast);
-        setTimeout(function () { toast.remove(); }, 4000);
+        setTimeout(function() { toast.remove(); }, 4000);
     }
 </script>
 

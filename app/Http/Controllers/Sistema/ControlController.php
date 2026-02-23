@@ -32,6 +32,11 @@ class ControlController extends Controller
             return redirect()->route('generar.tipopermiso.personal');
         }
 
+        if ($user->hasRole('evaluacion')) {
+            return redirect()->route('evaluacion.index');
+        }
+
+
 
 
         return redirect()->route('no.permisos.index');
