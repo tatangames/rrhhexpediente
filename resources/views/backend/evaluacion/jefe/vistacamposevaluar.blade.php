@@ -550,21 +550,6 @@
 
     {{-- ── Resumen de Puntaje ── --}}
     @if($evaluaciones->isNotEmpty())
-        <div class="puntaje-resumen">
-            <div>
-                <div class="puntaje-label">Puntaje Acumulado</div>
-                {{-- Calcular el puntaje máximo posible (mayor puntos de cada evaluación) --}}
-                @php
-                    $puntajeMax = $evaluaciones->sum(function($ev) {
-                        return $ev->detalles->max('puntos') ?? 0;
-                    });
-                @endphp
-                <div class="puntaje-max">de {{ $puntajeMax }} puntos posibles</div>
-            </div>
-            <div style="text-align:right;">
-                <div class="puntaje-valor" id="puntaje-actual">0</div>
-            </div>
-        </div>
 
         <button class="btn-submit" id="btn-enviar" onclick="enviarEvaluacion()">
             Enviar Evaluación

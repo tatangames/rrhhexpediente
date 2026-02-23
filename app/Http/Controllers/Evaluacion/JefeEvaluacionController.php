@@ -92,7 +92,7 @@ class JefeEvaluacionController extends Controller
             'margin_bottom' => 15,
         ]);
 
-        $mpdf->SetTitle('Evaluacion de Desempeno');
+        $mpdf->SetTitle('Evaluacion de Desempeño');
 
         $logoalcaldia    = public_path('images/gobiernologo.jpg');
         $fechaEvaluacion = now()->format('d-m-Y');
