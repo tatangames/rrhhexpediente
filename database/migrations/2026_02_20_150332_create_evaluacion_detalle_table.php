@@ -21,6 +21,8 @@ return new class extends Migration
 
             $table->boolean('estado')->default(true);
 
+            $table->integer('puntos');
+
             $table->integer('posicion');
         });
     }

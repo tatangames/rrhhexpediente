@@ -115,8 +115,8 @@
                                     </div>
 
                                     <div class="form-group">
-                                        <label>Descripción</label>
-                                        <input type="text" maxlength="2000" class="form-control" id="descripcion-nuevo"
+                                        <label>Puntos</label>
+                                        <input type="number" class="form-control" id="puntos-nuevo"
                                                autocomplete="off">
                                     </div>
 
@@ -162,20 +162,9 @@
                                     </div>
 
                                     <div class="form-group">
-                                        <label>Descripción</label>
-                                        <input type="text" maxlength="2000" class="form-control" id="descripcion-editar"
+                                        <label>Puntos</label>
+                                        <input type="number" class="form-control" id="puntos-editar"
                                                autocomplete="off">
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label>VISIBLE</label><br>
-                                        <label class="switch" style="margin-top:10px">
-                                            <input type="checkbox" id="check-visible">
-                                            <div class="slider round">
-                                                <span class="on">SI</span>
-                                                <span class="off">NO</span>
-                                            </div>
-                                        </label>
                                     </div>
 
                                 </div>
@@ -214,7 +203,9 @@
 
     <script>
         $(function () {
-            const ruta = "{{ url('/admin/evaluacion/tabla') }}";
+
+            const evaluacionId = @json($id);
+            const ruta = "{{ url('/admin/evaluacion-detalle/tabla') }}/"+ evaluacionId;
 
             function initDataTable() {
                 // Si ya hay instancia, destrúyela antes de re-crear
@@ -274,10 +265,12 @@
     </script>
 
 
+
     <script>
 
         function recargar() {
-            var ruta = "{{ url('/admin/evaluacion/tabla') }}";
+            const evaluacionId = @json($id);
+            var ruta = "{{ url('/admin/evaluacion-detalle/tabla') }}/" + evaluacionId;
             $('#tablaDatatable').load(ruta);
         }
 
@@ -289,20 +282,39 @@
 
         function nuevo() {
             var nombre = document.getElementById('nombre-nuevo').value;
-            var descripcion = document.getElementById('descripcion-nuevo').value;
+            var puntos = document.getElementById('puntos-nuevo').value;
+            const evaluacionId = @json($id);
 
             if (nombre === '') {
                 toastr.error('Título es requerido');
                 return;
             }
 
+            var reglaNumeroEntero = /^[0-9]\d*$/;
+
+            if(!puntos.match(reglaNumeroEntero)) {
+                toastr.error('Puntos ser número Entero');
+                return;
+            }
+
+            if(puntos <= 0){
+                toastr.error('Puntos no debe tener negativos');
+                return;
+            }
+
+            if(puntos > 300){
+                toastr.error('Puntos máximo 300');
+                return;
+            }
+
 
             openLoading();
             var formData = new FormData();
+            formData.append('id', evaluacionId);
             formData.append('nombre', nombre);
-            formData.append('descripcion', descripcion);
+            formData.append('puntos', puntos);
 
-            axios.post(urlAdmin + '/admin/evaluacion/nuevo', formData, {})
+            axios.post(urlAdmin + '/admin/evaluacion-detalle/nuevo', formData, {})
                 .then((response) => {
                     closeLoading();
                     if (response.data.success === 1) {
@@ -323,7 +335,7 @@
             openLoading();
             document.getElementById("formulario-editar").reset();
 
-            axios.post(urlAdmin + '/admin/evaluacion/informacion', {
+            axios.post(urlAdmin + '/admin/evaluacion-detalle/informacion', {
                 'id': id
             })
                 .then((response) => {
@@ -332,13 +344,8 @@
                         $('#modalEditar').modal('show');
                         $('#id-editar').val(id);
                         $('#nombre-editar').val(response.data.info.nombre);
-                        $('#descripcion-editar').val(response.data.info.descripcion);
+                        $('#puntos-editar').val(response.data.info.puntos);
 
-                        if(response.data.info.estado === 0){
-                            $("#check-visible").prop("checked", false);
-                        }else{
-                            $("#check-visible").prop("checked", true);
-                        }
 
                     } else {
                         toastr.error('Información no encontrada');
@@ -353,25 +360,38 @@
         function editar() {
             var id = document.getElementById('id-editar').value;
             var nombre = document.getElementById('nombre-editar').value;
-            var descripcion = document.getElementById('descripcion-editar').value;
+            var puntos = document.getElementById('puntos-editar').value;
 
-            var checkbox = document.getElementById('check-visible');
-            var valorCheckbox = checkbox.checked ? 1 : 0;
 
             if (nombre === '') {
                 toastr.error('Título es requerido');
                 return;
             }
 
+            var reglaNumeroEntero = /^[0-9]\d*$/;
+
+            if(!puntos.match(reglaNumeroEntero)) {
+                toastr.error('Puntos ser número Entero');
+                return;
+            }
+
+            if(puntos <= 0){
+                toastr.error('Puntos no debe tener negativos');
+                return;
+            }
+
+            if(puntos > 300){
+                toastr.error('Puntos máximo 300');
+                return;
+            }
 
             openLoading();
             var formData = new FormData();
             formData.append('id', id);
             formData.append('nombre', nombre);
-            formData.append('descripcion', descripcion);
-            formData.append('estado', valorCheckbox);
+            formData.append('puntos', puntos);
 
-            axios.post(urlAdmin + '/admin/evaluacion/editar', formData, {})
+            axios.post(urlAdmin + '/admin/evaluacion-detalle/editar', formData, {})
                 .then((response) => {
                     closeLoading();
 
@@ -412,7 +432,7 @@
             var formData = new FormData();
             formData.append('id', id);
 
-            axios.post(urlAdmin + '/admin/evaluacion/borrar', formData)
+            axios.post(urlAdmin + '/admin/evaluacion-detalle/borrar', formData)
                 .then((response) => {
                     closeLoading();
 
@@ -429,10 +449,6 @@
                 });
         }
 
-
-        function infoExtras(id){
-            window.location.href="{{ url('/admin/evaluacion-detalle/index') }}/"+ id;
-        }
 
 
 

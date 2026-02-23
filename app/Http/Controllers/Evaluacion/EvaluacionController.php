@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Evaluacion;
 
 use App\Http\Controllers\Controller;
 use App\Models\Evaluacion;
+use App\Models\EvaluacionDetalle;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -38,7 +39,6 @@ class EvaluacionController extends Controller
     {
         $regla = array(
             'nombre' => 'required',
-            'puntos' => 'required',
         );
 
         // descripcion
@@ -61,7 +61,6 @@ class EvaluacionController extends Controller
             $dato = new Evaluacion();
             $dato->nombre = $request->nombre;
             $dato->descripcion = $request->descripcion;
-            $dato->puntos = $request->puntos;
             $dato->posicion = $nuevaPosicion;
             $dato->estado = true;
             $dato->save();
@@ -97,7 +96,6 @@ class EvaluacionController extends Controller
         $regla = array(
             'id' => 'required',
             'nombre' => 'required',
-            'puntos' => 'required',
             'estado' => 'required',
         );
 
@@ -110,7 +108,6 @@ class EvaluacionController extends Controller
         Evaluacion::where('id', $request->id)->update([
             'nombre' => $request->nombre,
             'descripcion' => $request->descripcion,
-            'puntos' => $request->puntos,
             'estado' => $request->estado,
         ]);
 
@@ -140,5 +137,127 @@ class EvaluacionController extends Controller
 
 
 
+
+    //*********************************************************************
+
+    public function indexEvaluacionDetalle($id)
+    {
+
+        $temaPredeterminado =  $this->getTemaPredeterminado();
+
+        return view('backend.evaluacion.detalle.vistaevaluaciondetalle', compact('id', 'temaPredeterminado'));
+    }
+
+
+    public function tablaEvaluacionDetalle($id)
+    {
+       $arrayDetalle = EvaluacionDetalle::where('evaluacion_id', $id)
+           ->orderBy('posicion', 'ASC')
+           ->get();
+
+        return view('backend.evaluacion.detalle.tablaevaluaciondetalle', compact('arrayDetalle'));
+    }
+
+    public function nuevaEvaluacionDetalle(Request $request)
+    {
+        $regla = array(
+            'id' => 'required',
+            'nombre' => 'required',
+            'puntos' => 'required',
+        );
+
+        // descripcion
+
+        $validar = Validator::make($request->all(), $regla);
+
+        if ($validar->fails()) {
+            return ['success' => 0];
+        }
+        DB::beginTransaction();
+
+        try {
+
+            // Obtener la posición máxima actual
+            $ultimaPosicion = EvaluacionDetalle::where('evaluacion_id', $request->id)->max('posicion');
+
+            // Si no hay registros, será null, entonces empieza en 1
+            $nuevaPosicion = $ultimaPosicion ? $ultimaPosicion + 1 : 1;
+
+            $dato = new EvaluacionDetalle();
+            $dato->evaluacion_id = $request->id;
+            $dato->nombre = $request->nombre;
+            $dato->posicion = $nuevaPosicion;
+            $dato->puntos = $request->puntos;
+            $dato->save();
+
+            DB::commit();
+            return ['success' => 1];
+        } catch (\Throwable $e) {
+            Log::info('error ' . $e);
+            DB::rollback();
+            return ['success' => 99];
+        }
+    }
+
+
+    public function informacionEvaluacionDetalle(Request $request)
+    {
+        $regla = array(
+            'id' => 'required'
+        );
+
+        $validar = Validator::make($request->all(), $regla);
+
+        if ($validar->fails()) {
+            return ['success' => 0];
+        }
+
+        $info = EvaluacionDetalle::where('id', $request->id)->first();
+
+        return ['success' => 1, 'info' => $info];
+    }
+
+
+    public function editarEvaluacionDetalle(Request $request)
+    {
+        $regla = array(
+            'id' => 'required',
+            'nombre' => 'required',
+            'puntos' => 'required',
+        );
+
+        $validar = Validator::make($request->all(), $regla);
+
+        if ($validar->fails()) {
+            return ['success' => 0];
+        }
+
+        EvaluacionDetalle::where('id', $request->id)->update([
+            'nombre' => $request->nombre,
+            'puntos' => $request->puntos,
+        ]);
+
+        return ['success' => 1];
+    }
+
+
+
+    public function borrarEvaluacionDetalle(Request $request)
+    {
+        $regla = array(
+            'id' => 'required'
+        );
+
+        $validar = Validator::make($request->all(), $regla);
+
+        if ($validar->fails()) {
+            return ['success' => 0];
+        }
+
+        // YA BORRA EN CASCADA
+        Evaluacion::where('id', $request->id)->delete();
+
+        return ['success' => 1];
+    }
 
 }

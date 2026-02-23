@@ -15,9 +15,7 @@ return new class extends Migration
             $table->id();
 
             $table->text('nombre');
-            $table->string('descripcion')->nullable();
-
-            $table->integer('puntos');
+            $table->text('descripcion')->nullable();
 
             $table->boolean('estado')->default(true);
 

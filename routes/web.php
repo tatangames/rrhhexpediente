@@ -17,6 +17,7 @@ use App\Http\Controllers\Permiso\HistorialPermisoController;
 
 
 use App\Http\Controllers\Evaluacion\EvaluacionController;
+use App\Http\Controllers\Evaluacion\JefeEvaluacionController;
 
 
 
@@ -199,6 +200,26 @@ Route::post('/admin/historial/otros/borrar', [HistorialPermisoController::class,
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // EVALUACION - REGISTRO
 Route::get('/admin/evaluacion/index', [EvaluacionController::class,'indexEvaluacion'])->name('evaluacion.index');
 Route::get('/admin/evaluacion/tabla', [EvaluacionController::class,'tablaEvaluacion']);
@@ -215,6 +236,12 @@ Route::post('/admin/evaluacion-detalle/nuevo', [EvaluacionController::class,'nue
 Route::post('/admin/evaluacion-detalle/informacion', [EvaluacionController::class,'informacionEvaluacionDetalle']);
 Route::post('/admin/evaluacion-detalle/editar', [EvaluacionController::class,'editarEvaluacionDetalle']);
 Route::post('/admin/evaluacion-detalle/borrar', [EvaluacionController::class,'borrarEvaluacionDetalle']);
+
+// VISTA PUBLICA PARA LLENAR LA EVALUACION
+Route::get('/evaluacion/empleado', [JefeEvaluacionController::class,'indexLlenarEvaluacion']);
+// Guardar evaluación
+Route::get('/evaluacion/registrar', [JefeEvaluacionController::class, 'registrarEvaluacion'])->name('evaluacion.registrar');
+
 
 
 
