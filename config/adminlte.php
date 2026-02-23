@@ -470,13 +470,13 @@ return [
         [
             'text'    => 'Evaluación',
             'icon'    => 'fas fa-pen-alt',
-
+            'can'   => 'sidebar.permisos',
             'submenu' => [
                 [
                     'text'  => 'Datos Generales',
                     'icon'  => 'fas fa-file-alt',
                     'route' => 'evaluacion.index',
-
+                    'can'   => 'sidebar.permisos',
                 ],
 
             ],
