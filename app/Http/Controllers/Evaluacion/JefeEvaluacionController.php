@@ -47,7 +47,7 @@ class JefeEvaluacionController extends Controller
             ->where('estado', true)
             ->orderBy('posicion')
             ->with(['detalles' => function ($q) {
-                $q->where('estado', true)->orderBy('posicion');
+                $q->orderBy('posicion');
             }])
             ->get();
 
