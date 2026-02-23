@@ -13,7 +13,7 @@ class EvaluacionDetalle extends Model
     public $timestamps = false;
 
 
-    protected $fillable = ['evaluacion_id', 'nombre', 'estado', 'puntos', 'posicion'];
+    protected $fillable = ['evaluacion_id', 'nombre', 'puntos', 'posicion'];
 
     public function evaluacion()
     {

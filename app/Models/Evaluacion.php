@@ -18,7 +18,6 @@ class Evaluacion extends Model
     public function detalles()
     {
         return $this->hasMany(EvaluacionDetalle::class, 'evaluacion_id')
-            ->where('estado', true)
             ->orderBy('posicion');
     }
 }

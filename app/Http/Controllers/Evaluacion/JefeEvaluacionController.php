@@ -14,7 +14,6 @@ class JefeEvaluacionController extends Controller
 
     public function indexLlenarEvaluacion()
     {
-
         $evaluaciones = Evaluacion::with(['detalles' => function ($q) {
             $q->orderBy('posicion');
         }])
@@ -24,9 +23,6 @@ class JefeEvaluacionController extends Controller
 
         return view('backend.evaluacion.jefe.vistacamposevaluar', compact('evaluaciones'));
     }
-
-
-
 
 
 
