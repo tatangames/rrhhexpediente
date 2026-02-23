@@ -47,7 +47,7 @@ class JefeEvaluacionController extends Controller
             ->unique()
             ->values();
 
-        $factores = \App\Models\Evaluacion::whereIn('id', $evaluacionIds)
+        $factores = Evaluacion::whereIn('id', $evaluacionIds)
             ->where('estado', true)
             ->orderBy('posicion')
             ->with(['detalles' => function ($q) {

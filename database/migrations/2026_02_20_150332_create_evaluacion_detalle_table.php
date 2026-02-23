@@ -19,7 +19,6 @@ return new class extends Migration
 
             $table->text('nombre')->nullable();
 
-            $table->boolean('estado')->default(true);
 
             $table->integer('puntos');
 
