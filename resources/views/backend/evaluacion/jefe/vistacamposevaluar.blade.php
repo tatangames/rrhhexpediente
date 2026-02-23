@@ -617,9 +617,9 @@
 
     // ── Validar y enviar ──
     function enviarEvaluacion() {
+
         var valido = true;
 
-        // Validar campos de texto
         var campos = [
             { id: 'nombre_completo', err: 'err-nombre' },
             { id: 'puesto',          err: 'err-puesto' },
@@ -639,16 +639,8 @@
                 el.classList.remove('error');
                 err.classList.remove('visible');
             }
-            // Quitar error al escribir
-            el.oninput = function () {
-                if (el.value.trim()) {
-                    el.classList.remove('error');
-                    err.classList.remove('visible');
-                }
-            };
         });
 
-        // Validar que cada evaluación tenga respuesta
         evaluacionIds.forEach(function (id) {
             if (!respuestas[id]) {
                 document.getElementById('bloque-' + id).classList.add('error');
@@ -658,55 +650,49 @@
 
         if (!valido) {
             showToast('Por favor complete todos los campos requeridos.', 'error');
-            var primerError = document.querySelector('.form-control.error, .evaluacion-bloque.error');
-            if (primerError) primerError.scrollIntoView({ behavior: 'smooth', block: 'center' });
             return;
         }
 
-        // Construir payload
-        var btn = document.getElementById('btn-enviar');
-        btn.disabled = true;
-        btn.textContent = 'Enviando...';
+        var form = document.createElement('form');
+        form.method = 'POST';
+        form.action = URL_REGISTRAR;
+
+        var csrf = document.createElement('input');
+        csrf.type = 'hidden';
+        csrf.name = '_token';
+        csrf.value = CSRF_TOKEN;
+        form.appendChild(csrf);
 
         var respuestasArr = [];
         Object.keys(respuestas).forEach(function (evalId) {
             respuestasArr.push({
                 evaluacion_id: parseInt(evalId),
-                detalle_id:    parseInt(respuestas[evalId].detalle_id),
-                puntos:        respuestas[evalId].puntos
+                detalle_id: parseInt(respuestas[evalId].detalle_id),
+                puntos: respuestas[evalId].puntos
             });
         });
 
-        var formData = new FormData();
-        formData.append('_token',           CSRF_TOKEN);
-        formData.append('nombre_completo',  document.getElementById('nombre_completo').value.trim());
-        formData.append('puesto',           document.getElementById('puesto').value.trim());
-        formData.append('unidad',           document.getElementById('unidad').value.trim());
-        formData.append('dependencia',      document.getElementById('dependencia').value.trim());
-        formData.append('jefe_inmediato',   document.getElementById('jefe_inmediato').value.trim());
-        formData.append('periodo',          'De Julio-Diciembre 2025');
-        formData.append('respuestas',       JSON.stringify(respuestasArr));
+        var camposEnviar = {
+            nombre_completo: document.getElementById('nombre_completo').value.trim(),
+            puesto: document.getElementById('puesto').value.trim(),
+            unidad: document.getElementById('unidad').value.trim(),
+            dependencia: document.getElementById('dependencia').value.trim(),
+            jefe_inmediato: document.getElementById('jefe_inmediato').value.trim(),
+            periodo: 'De Julio-Diciembre 2025',
+            respuestas: JSON.stringify(respuestasArr)
+        };
 
-        fetch(URL_REGISTRAR, {
-            method: 'POST',
-            body: formData
-        })
-            .then(function (res) { return res.json(); })
-            .then(function (data) {
-                if (data.success === 1) {
-                    showToast('Evaluación enviada correctamente.', 'success');
-                    setTimeout(function () { location.reload(); }, 2000);
-                } else {
-                    showToast(data.message || 'Error al enviar. Intente nuevamente.', 'error');
-                }
-            })
-            .catch(function () {
-                showToast('Error de conexión. Intente nuevamente.', 'error');
-            })
-            .finally(function () {
-                btn.disabled = false;
-                btn.textContent = 'GENERAR EVALUACIÓN';
-            });
+        for (var key in camposEnviar) {
+            var input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = camposEnviar[key];
+            form.appendChild(input);
+        }
+
+        document.body.appendChild(form);
+        form.target = '_blank';
+        form.submit();
     }
 
     // ── Toast ──

@@ -24,201 +24,102 @@ class JefeEvaluacionController extends Controller
         return view('backend.evaluacion.jefe.vistacamposevaluar', compact('evaluaciones'));
     }
 
+
+
+
+
     public function registrarEvaluacion(Request $request)
     {
+        $respuestas = json_decode($request->respuestas, true);
+        $puntajeTotal = collect($respuestas)->sum('puntos');
 
-
-
-
-
-        // =========================
         $mpdf = new \Mpdf\Mpdf([
             'tempDir' => sys_get_temp_dir(),
             'format' => 'LETTER',
             'orientation' => 'L'
         ]);
 
-
-
-        // =========================
-        // HTML PDF
-        // =========================
-
-        $mpdf->SetTitle('Reporte');
-
-        // mostrar errores
+        $mpdf->SetTitle('Evaluación de Desempeño');
         $mpdf->showImageErrors = false;
 
-        $logoalcaldia = 'images/gobiernologo.jpg';
+        $logoalcaldia = public_path('images/gobiernologo.jpg');
 
         $tabla = "
-           <table width='100%' style='border-collapse:collapse; font-family: Arial, sans-serif;'>
-            <tr>
-                <td style='width:25%; border:0.8px solid #000; padding:6px 8px;'>
-                    <table width='100%'>
-                        <tr>
-                            <td style='width:30%; text-align:left;'>
-                                <img src='{$logoalcaldia}' style='height:38px'>
-                            </td>
-                            <td style='width:70%; text-align:left; color:#104e8c; font-size:13px; font-weight:bold; line-height:1.3;'>
-                                SANTA ANA NORTE<br>EL SALVADOR
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-                <td style='width:50%; border-top:0.8px solid #000; border-bottom:0.8px solid #000; padding:6px 8px; text-align:center; font-size:15px; font-weight:bold;'>
-                    $nombreEncabezado<br>
-                </td>
-                <td style='width:25%; border:0.8px solid #000; padding:0; vertical-align:top;'>
-                    <table width='100%' style='font-size:10px;'>
-                        <tr>
-                            <td width='40%' style='border-right:0.8px solid #000; border-bottom:0.8px solid #000; padding:4px 6px;'><strong>Código:</strong></td>
-                            <td width='60%' style='border-bottom:0.8px solid #000; padding:4px 6px; text-align:center;'>$nombreCodigo</td>
-                        </tr>
-                        <tr>
-                            <td style='border-right:0.8px solid #000; border-bottom:0.8px solid #000; padding:4px 6px;'><strong>Versión:</strong></td>
-                            <td style='border-bottom:0.8px solid #000; padding:4px 6px; text-align:center;'>000</td>
-                        </tr>
-                        <tr>
-                            <td style='border-right:0.8px solid #000; padding:4px 6px;'><strong>Fecha de vigencia:</strong></td>
-                            <td style='padding:4px 6px; text-align:center;'>22/10/2025</td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-        </table>
-        <br>";
-
-        $tabla .= '<p style="text-align:center; font-weight:bold;">' . $nombreTitulo . '</p>';
-
-
-        $tabla .= "<table width='100%' style='border-collapse:collapse; font-size:10px;' border='1' cellpadding='4'>";
-
-        if($tipo == 1){ // ACCESO
-
-            $tabla .= "
-    <tr style='background:#f0f0f0; font-weight:bold;'>
-        <td>FECHA</td>
-        <td>HORA</td>
-        <td>OPERADOR</td>
-        <td>TIPO DE ACCESO</td>
-        <td>NOVEDAD</td>
-        <td>EQUIPO INVOLUCRADO</td>
-        <td>OBSERVACIONES</td>
-        <td style='width: 10%'>FIRMA</td>
-    </tr>";
-
-            foreach($registros as $r){
-                $tabla .= "
+    <table width='100%' style='border-collapse:collapse; font-family: Arial, sans-serif;'>
         <tr>
-    <td style='padding:3px;'>".$this->fechaDMY($r->fecha)."</td>
-    <td style='padding:3px;'>".$this->fechaHora($r->fecha)."</td>
-    <td style='padding:3px;'>{$r->usuario}</td>
-    <td style='padding:3px;'>{$r->tipo_acceso}</td>
-    <td style='padding:3px;'>{$r->novedad}</td>
-    <td style='padding:3px;'>{$r->equipo_involucrado}</td>
-    <td style='padding:3px;'>{$r->observaciones}</td>
-    <td style='height:30px;'></td>
-</tr>";
-            }
-        }
+            <td style='width:25%; border:0.8px solid #000; padding:6px 8px;'>
+                <img src='{$logoalcaldia}' style='height:38px'>
+            </td>
+            <td style='width:50%; border:0.8px solid #000; padding:6px 8px; text-align:center; font-size:15px; font-weight:bold;'>
+                FICHA DE EVALUACIÓN DE DESEMPEÑO
+            </td>
+            <td style='width:25%; border:0.8px solid #000; padding:6px 8px; font-size:10px;'>
+                Periodo: {$request->periodo}
+            </td>
+        </tr>
+    </table>
+    <br>";
 
+        $tabla .= "
+    <table width='100%' border='1' cellpadding='5' style='border-collapse:collapse; font-size:11px;'>
+        <tr><td><strong>Empleado:</strong> {$request->nombre_completo}</td></tr>
+        <tr><td><strong>Puesto:</strong> {$request->puesto}</td></tr>
+        <tr><td><strong>Unidad:</strong> {$request->unidad}</td></tr>
+        <tr><td><strong>Dependencia:</strong> {$request->dependencia}</td></tr>
+        <tr><td><strong>Jefe Inmediato:</strong> {$request->jefe_inmediato}</td></tr>
+    </table><br>";
 
-        if($tipo == 2){ // MANTENIMIENTO
-
-            $tabla .= "
-            <tr style='background:#f0f0f0; font-weight:bold;'>
-                <td>FECHA</td>
-                <td>EQUIPO</td>
-                <td>TIPO MTTO</td>
-                <td>DESCRIPCIÓN</td>
-                <td>TÉCNICO</td>
-                <td>PRÓXIMO MTTO</td>
-                <td>OBSERVACIONES</td>
-            </tr>";
-
-            foreach($registros as $r){
-                $tabla .= "
-        <tr>
-            <td>".$this->fechaDMY($r->fecha)."</td>
-            <td>{$r->equipo}</td>
-            <td>".$this->estadoMantenimientoTexto($r->tipo_mantenimiento)."</td>
-            <td>{$r->descripcion}</td>
-            <td>{$r->usuario}</td>
-             <td>".$this->fechaDMY($r->proximo_mantenimiento)."</td>
-            <td>{$r->observaciones}</td>
+        $tabla .= "
+    <table width='100%' border='1' cellpadding='4' style='border-collapse:collapse; font-size:10px;'>
+        <tr style='background:#f0f0f0; font-weight:bold;'>
+            <td>#</td>
+            <td>ID Evaluación</td>
+            <td>ID Detalle</td>
+            <td>Puntos</td>
         </tr>";
-            }
-        }
 
-
-        if($tipo == 3){ // SOPORTE
-
+        foreach ($respuestas as $index => $r) {
             $tabla .= "
-<tr style='background:#f0f0f0; font-weight:bold;'>
-    <td>No.</td>
-    <td>FECHA</td>
-    <td>UNIDAD</td>
-    <td>DESCRIPCIÓN</td>
-    <td>TÉCNICO</td>
-    <td>SOLUCIÓN</td>
-    <td>ESTADO</td>
-    <td>OBSERVACIONES</td>
-</tr>";
-
-            $i = 1; // contador correlativo
-
-            foreach($registros as $r){
-                $tabla .= "
-                <tr>
-                    <td style='text-align:center;'>".$i."</td>
-                    <td>".$this->fechaDMY($r->fecha)."</td>
-                    <td>{$r->unidad}</td>
-                    <td>{$r->descripcion}</td>
-                    <td>{$r->usuario}</td>
-                    <td>{$r->solucion}</td>
-                    <td>".$this->estadoSoporteTexto($r->estado)."</td>
-                    <td>{$r->observaciones}</td>
-                </tr>";
-                $i++;
-            }
-        }
-
-
-
-
-        if($tipo == 4){ // INCIDENCIAS
-
-            $tabla .= "
-    <tr style='background:#f0f0f0; font-weight:bold;'>
-        <td>FECHA</td>
-        <td>TIPO DE INCIDENTE</td>
-        <td>SISTEMA AFECTADO</td>
-        <td>NIVEL</td>
-        <td>RESPONSABLE</td>
-        <td>MEDIDAS CORRECTIVAS</td>
-        <td>OBSERVACIONES</td>
-    </tr>";
-
-            foreach($registros as $r){
-                $tabla .= "
         <tr>
-            <td>".$this->fechaDMY($r->fecha)."</td>
-            <td>{$r->tipo_incidente}</td>
-            <td>{$r->sistema_afectado}</td>
-            <td>".$this->estadoIncidenciasTexto($r->nivel)."</td>
-            <td>{$r->usuario}</td>
-            <td>{$r->medida_correctivas}</td>
-            <td>{$r->observaciones}</td>
+            <td>" . ($index + 1) . "</td>
+            <td>{$r['evaluacion_id']}</td>
+            <td>{$r['detalle_id']}</td>
+            <td>{$r['puntos']}</td>
         </tr>";
-            }
         }
+
+        $tabla .= "
+        <tr style='font-weight:bold;'>
+            <td colspan='3' align='right'>PUNTAJE TOTAL</td>
+            <td>{$puntajeTotal}</td>
+        </tr>
+    </table>";
 
         $mpdf->SetFooter('Página {PAGENO} de {nbpg}');
-        $tabla .= "</table>";
         $mpdf->WriteHTML($tabla);
-        $mpdf->Output();
+
+        // 🔥 ABRIR EN NAVEGADOR
+        $mpdf->Output('Evaluacion.pdf', 'I');
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 }

@@ -240,7 +240,7 @@ Route::post('/admin/evaluacion-detalle/borrar', [EvaluacionController::class,'bo
 // VISTA PUBLICA PARA LLENAR LA EVALUACION
 Route::get('/evaluacion/empleado', [JefeEvaluacionController::class,'indexLlenarEvaluacion']);
 // Guardar evaluación
-Route::get('/evaluacion/registrar', [JefeEvaluacionController::class, 'registrarEvaluacion'])->name('evaluacion.registrar');
+Route::post('/evaluacion/generar/pdf', [JefeEvaluacionController::class, 'registrarEvaluacion'])->name('evaluacion.registrar');
 
 
 
