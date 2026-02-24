@@ -337,7 +337,7 @@ class PermisoController extends Controller
         // fecha_inicio, fecha_fin
 
         //1: FRACCIONADO
-        // hora_inicio, hora_fin, duracion
+        // hora_inicio, hora_fin, duracion, fecha_fraccionado
 
         // razon, dias_solicitados,
 
@@ -370,6 +370,7 @@ class PermisoController extends Controller
                 'cargo' => $nombreCargo,
                 'fecha' => $request->fechaEntrego,
                 'condicion' => $request->condicion,
+                'fecha_fraccionado' => $request->fecha_fraccionado,
                 'fecha_inicio' => $request->fecha_inicio,
                 'fecha_fin' => $request->fecha_fin,
                 'hora_inicio' => $request->hora_inicio,
@@ -577,7 +578,7 @@ class PermisoController extends Controller
         // fecha_inicio, fecha_fin
 
         //1: FRACCIONADO
-        // hora_inicio, hora_fin, duracion
+        // hora_inicio, hora_fin, duracion, fecha_fraccionado
 
         // razon, dias_solicitados,
 
@@ -610,6 +611,7 @@ class PermisoController extends Controller
                 'cargo' => $nombreCargo,
                 'fecha' => $request->fechaEntrego,
                 'condicion' => $request->condicion,
+                'fecha_fraccionado' => $request->fecha_fraccionado,
                 'fecha_inicio' => $request->fecha_inicio,
                 'fecha_fin' => $request->fecha_fin,
                 'hora_inicio' => $request->hora_inicio,

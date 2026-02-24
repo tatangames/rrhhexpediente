@@ -198,6 +198,19 @@ Route::post('/admin/historial/otros/actualizar', [HistorialPermisoController::cl
 Route::post('/admin/historial/otros/borrar', [HistorialPermisoController::class,'borrarHistorialPermisoOtros']);
 
 
+// HISTORIAL - ENFERMEDAD
+Route::get('/admin/historial/enfermedad/index', [HistorialPermisoController::class,'indexHistorialPermisoEnfermedad'])->name('historial.permisos.enfermedad');
+Route::get('/admin/historial/enfermedad/tabla', [HistorialPermisoController::class,'tablaHistorialPermisoEnfermedad']);
+Route::post('/admin/historial/enfermedad/informacion', [HistorialPermisoController::class,'informacionHistorialPermisoEnfermedad']);
+Route::post('/admin/historial/enfermedad/actualizar', [HistorialPermisoController::class,'actualizarHistorialPermisoEnfermedad']);
+Route::post('/admin/historial/enfermedad/borrar', [HistorialPermisoController::class,'borrarHistorialPermisoEnfermedad']);
+
+
+
+
+
+// REPORTES - GENERAL
+Route::get('/admin/reportes/general/index', [ReportesPermisoController::class,'indexReportesGeneral'])->name('reporte.general.index');
 
 
 
@@ -215,6 +228,17 @@ Route::post('/admin/historial/otros/borrar', [HistorialPermisoController::class,
 
 
 
+
+
+
+
+
+
+
+
+
+// *-***************************************************************************************
+// ============================ MODULO EVALUACION ==========================================
 
 
 
@@ -265,28 +289,8 @@ Route::post('/admin/dependencia-evaluacion/borrar', [EvaluacionController::class
 
 
 
-
-
 // VISTA PUBLICA PARA LLENAR LA EVALUACION
 Route::get('/evaluacion/empleado', [JefeEvaluacionController::class,'indexLlenarEvaluacion']);
 // Guardar evaluación
 Route::post('/evaluacion/generar/pdf', [JefeEvaluacionController::class, 'registrarEvaluacion'])->name('evaluacion.registrar');
-
-
-
-
-
-
-
-
-
-
-
-
-
-// REPORTES - GENERAL
-Route::get('/admin/reportes/general/index', [ReportesPermisoController::class,'indexReportesGeneral'])->name('reporte.general.index');
-
-
-
 

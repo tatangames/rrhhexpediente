@@ -443,6 +443,12 @@ return [
                     'can'   => 'sidebar.permisos',
                 ],
 
+                [
+                    'text'  => 'Enfermedad',
+                    'icon'  => 'fas fa-file-alt',
+                    'route' => 'historial.permisos.enfermedad',
+                    'can'   => 'sidebar.permisos',
+                ],
             ],
         ],
 

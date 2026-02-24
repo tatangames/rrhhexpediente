@@ -18,6 +18,7 @@ class PermisoOtro extends Model
         'unidad',
         'cargo',
         'fecha',
+        'fecha_fraccionado',
         'condicion',
         'fecha_inicio',
         'fecha_fin',

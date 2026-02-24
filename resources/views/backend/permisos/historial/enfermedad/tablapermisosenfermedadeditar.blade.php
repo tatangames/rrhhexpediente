@@ -12,6 +12,7 @@
                                 <th style="width: 8%">Nombre</th>
                                 <th style="width: 7%">Unidad</th>
                                 <th style="width: 7%">Cargo</th>
+                                <th style="width: 7%">Razón</th>
                                 <th style="width: 4%">Opciones</th>
                             </tr>
                             </thead>
@@ -26,7 +27,6 @@
                                     <td data-order="{{ $ordenFecha }}">
                                         {{ $dato->fecha }}
                                     </td>
-
                                     <td>
                                         @if($dato->condicion == 0)
                                             Dias
@@ -37,6 +37,7 @@
                                     <td>{{ $dato->nombreEmpleado }}</td>
                                     <td>{{ $dato->unidad }}</td>
                                     <td>{{ $dato->cargo }}</td>
+                                    <td>{{ $dato->razon }}</td>
                                     <td>
                                         <button type="button"
                                                 class="btn btn-info btn-xs" onclick="informacion({{ $dato->id }})">
