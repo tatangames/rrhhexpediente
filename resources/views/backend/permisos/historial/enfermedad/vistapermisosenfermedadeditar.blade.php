@@ -566,16 +566,16 @@
             let extras = {};
 
             if (condicion == '1') { // fraccionado
-                const fechaSolicitud = $('#edit-fecha-solicitud').val();
+                const fechaFraccionado = $('#edit-fecha-solicitud').val();
                 const horaInicio     = $('#edit-hora-inicio').val();
                 const horaFin        = $('#edit-hora-fin').val();
                 const duracion       = $('#edit-duracion').val();
 
-                if (!fechaSolicitud || !horaInicio || !horaFin) {
+                if (!fechaFraccionado || !horaInicio || !horaFin) {
                     toastr.error('Complete todos los campos del permiso fraccionado');
                     return;
                 }
-                extras = { fecha_inicio: fechaSolicitud, hora_inicio: horaInicio, hora_fin: horaFin, duracion };
+                extras = { fecha_fraccionado: fechaFraccionado, hora_inicio: horaInicio, hora_fin: horaFin, duracion };
 
             } else { // completo
                 const fechaInicio = $('#edit-fecha-inicio').val();

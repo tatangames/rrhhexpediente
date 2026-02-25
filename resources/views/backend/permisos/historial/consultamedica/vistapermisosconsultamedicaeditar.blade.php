@@ -1,9 +1,9 @@
 @extends('adminlte::page')
 
-@section('title', 'Historial Permisos - Otros')
+@section('title', 'Historial Permisos - Consulta Medica')
 
 @section('content_header')
-    <h1>Historial Permisos - Otros</h1>
+    <h1>Historial Permisos - Consulta Medica</h1>
 @stop
 {{-- Activa plugins que necesitas --}}
 @section('plugins.Datatables', true)
@@ -63,7 +63,7 @@
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
                     <li class="breadcrumb-item">Permisos</li>
-                    <li class="breadcrumb-item active">Listado de Otros</li>
+                    <li class="breadcrumb-item active">Listado de Consulta Medica</li>
                 </ol>
             </div>
         </div>
@@ -143,7 +143,7 @@
                         <!-- Sección FRACCIONADO -->
                         <div id="edit-seccion-fraccionado" style="display:none;">
                             <div class="row">
-                                <div class="col-md-6">
+                                <div class="col-md-12">
                                     <div class="form-group">
                                         <label>Fecha del Permiso: <span class="text-danger">*</span></label>
                                         <input type="date" class="form-control" id="edit-fecha-solicitud">
@@ -257,8 +257,25 @@
                         <!-- Razón -->
                         <div class="form-group">
                             <label>Razón del Permiso:</label>
-                            <textarea class="form-control" rows="3" maxlength="800" id="edit-razon"
-                                      placeholder="Describa brevemente el motivo del permiso"></textarea>
+                            <textarea class="form-control" rows="3" maxlength="800" id="edit-razon"></textarea>
+                        </div>
+
+                        <!-- Unidad atención -->
+                        <div class="form-group">
+                            <label>Unidad atención:</label>
+                            <input class="form-control" maxlength="800" id="edit-unidadatencion">
+                        </div>
+
+                        <!-- especialidad -->
+                        <div class="form-group">
+                            <label>Especialidad:</label>
+                            <input class="form-control" maxlength="500" id="edit-especialidad">
+                        </div>
+
+                        <!-- condicion medica -->
+                        <div class="form-group">
+                            <label>Condición médica:</label>
+                            <textarea class="form-control" rows="3" maxlength="800" id="edit-condicionmedica"></textarea>
                         </div>
 
                     </form>
@@ -285,7 +302,7 @@
 
     <script>
         $(function () {
-            const ruta = "{{ url('/admin/historial/otros/tabla') }}";
+            const ruta = "{{ url('/admin/historial/consultamedica/tabla') }}";
 
             function initDataTable() {
                 // Si ya hay instancia, destrúyela antes de re-crear
@@ -347,7 +364,7 @@
     <script>
 
         function recargar() {
-            var ruta = "{{ url('/admin/historial/otros/tabla') }}";
+            var ruta = "{{ url('/admin/historial/consultamedica/tabla') }}";
             $('#tablaDatatable').load(ruta);
         }
 
@@ -383,7 +400,7 @@
             var formData = new FormData();
             formData.append('id', id);
 
-            axios.post(urlAdmin + '/admin/historial/otros/borrar', formData)
+            axios.post(urlAdmin + '/admin/historial/consultamedica/borrar', formData)
                 .then((response) => {
                     closeLoading();
 
@@ -477,18 +494,20 @@
             $('#edit-seccion-fraccionado, #edit-seccion-completo').hide();
             $('#edit-lista-empleados').hide();
 
-            axios.post(urlAdmin + '/admin/historial/otros/informacion', { id: id })
+            axios.post(urlAdmin + '/admin/historial/consultamedica/informacion', { id: id })
                 .then((response) => {
                     closeLoading();
                     if (response.data.success === 1) {
                         const info = response.data.info;
 
-
-
                         // IDs y fechas generales
                         $('#id-editar').val(info.id);
                         $('#edit-fechaEntrego').val(info.fecha);
                         $('#edit-razon').val(info.razon);
+
+                        $('#edit-unidadatencion').val(info.unidad_atencion);
+                        $('#edit-especialidad').val(info.especialidad);
+                        $('#edit-condicionmedica').val(info.condicion_medica);
 
                         // Empleado — usa nombre_empleado del backend
                         $('#edit-empleado-id').val(info.id_empleado);
@@ -535,6 +554,10 @@
             const fechaEntrego = $('#edit-fechaEntrego').val();
             const razon       = $('#edit-razon').val().trim();
 
+            const unidadAtencion     = $('#edit-unidadatencion').val().trim();
+            const especialidad       = $('#edit-especialidad').val().trim();
+            const condicionMedica    = $('#edit-condicionmedica').val().trim();
+
             // Validaciones generales
             if (!fechaEntrego)          { toastr.error('La fecha es requerida');       return; }
             if (!empleadoId)            { toastr.error('El empleado es requerido');    return; }
@@ -543,7 +566,6 @@
             let extras = {};
 
             if (condicion == '1') { // fraccionado
-
                 const fechaFraccionado = $('#edit-fecha-solicitud').val();
                 const horaInicio     = $('#edit-hora-inicio').val();
                 const horaFin        = $('#edit-hora-fin').val();
@@ -579,9 +601,13 @@
             formData.append('condicion',    condicion);
             formData.append('fechaEntrego', fechaEntrego);
             formData.append('razon',        razon);
+
+            formData.append('unidadAtencion', unidadAtencion);
+            formData.append('especialidad',   especialidad);
+            formData.append('condicionMedica', condicionMedica);
             Object.entries(extras).forEach(([k, v]) => formData.append(k, v ?? ''));
 
-            axios.post(urlAdmin + '/admin/historial/otros/actualizar', formData)
+            axios.post(urlAdmin + '/admin/historial/consultamedica/actualizar', formData)
                 .then((response) => {
                     closeLoading();
                     if (response.data.success === 1) {

@@ -449,6 +449,28 @@ return [
                     'route' => 'historial.permisos.enfermedad',
                     'can'   => 'sidebar.permisos',
                 ],
+
+                [
+                    'text'  => 'Consulta Medica',
+                    'icon'  => 'fas fa-file-alt',
+                    'route' => 'historial.permisos.consultamedica',
+                    'can'   => 'sidebar.permisos',
+                ],
+
+                [
+                    'text'  => 'Compensatorio',
+                    'icon'  => 'fas fa-file-alt',
+                    'route' => 'historial.permisos.compensatorio',
+                    'can'   => 'sidebar.permisos',
+                ],
+
+                [
+                    'text'  => 'Incapacidad',
+                    'icon'  => 'fas fa-file-alt',
+                    'route' => 'historial.permisos.incapacidad',
+                    'can'   => 'sidebar.permisos',
+                ],
+
             ],
         ],
 

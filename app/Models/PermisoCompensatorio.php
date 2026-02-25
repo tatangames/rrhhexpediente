@@ -19,6 +19,7 @@ class PermisoCompensatorio extends Model
         'cargo',
         'fecha',
         'condicion',
+        'fecha_fraccionado',
         'fecha_inicio',
         'fecha_fin',
         'hora_inicio',

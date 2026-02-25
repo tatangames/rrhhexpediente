@@ -80,7 +80,7 @@
                         </div>
                         <div class="card-body">
 
-                            <!-- Fecha del Permiso -->
+                            <!-- Fecha Entrego permiso -->
                             <div class="form-group col-md-4">
                                 <label>Fecha: <span class="text-danger">*</span></label>
                                 <input type="date" class="form-control" id="fecha-entrego">
@@ -386,10 +386,10 @@
                             if (!resp.data.permisos || resp.data.permisos.length === 0) {
 
                                 lista = `
-        <li class="list-group-item text-center text-muted">
-            No hay permisos registrados en este año
-        </li>
-    `;
+                                    <li class="list-group-item text-center text-muted">
+                                        No hay permisos registrados en este año
+                                    </li>
+                                `;
 
                             } else {
 
@@ -523,7 +523,6 @@
                     }
 
                     datosPermiso.fecha_fraccionado = fechaFraccionado;
-                    datosPermiso.fecha = fechaPermiso;
                     datosPermiso.hora_inicio = horaInicio;
                     datosPermiso.hora_fin = horaFin;
                     datosPermiso.duracion = duracion;

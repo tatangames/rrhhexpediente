@@ -1,9 +1,9 @@
 @extends('adminlte::page')
 
-@section('title', 'Historial Permisos - Otros')
+@section('title', 'Historial Permisos - Compensatorio')
 
 @section('content_header')
-    <h1>Historial Permisos - Otros</h1>
+    <h1>Historial Permisos - Compensatorio</h1>
 @stop
 {{-- Activa plugins que necesitas --}}
 @section('plugins.Datatables', true)
@@ -63,7 +63,7 @@
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
                     <li class="breadcrumb-item">Permisos</li>
-                    <li class="breadcrumb-item active">Listado de Otros</li>
+                    <li class="breadcrumb-item active">Listado de Compensatorio</li>
                 </ol>
             </div>
         </div>
@@ -285,7 +285,7 @@
 
     <script>
         $(function () {
-            const ruta = "{{ url('/admin/historial/otros/tabla') }}";
+            const ruta = "{{ url('/admin/historial/compensatorio/tabla') }}";
 
             function initDataTable() {
                 // Si ya hay instancia, destrúyela antes de re-crear
@@ -347,7 +347,7 @@
     <script>
 
         function recargar() {
-            var ruta = "{{ url('/admin/historial/otros/tabla') }}";
+            var ruta = "{{ url('/admin/historial/compensatorio/tabla') }}";
             $('#tablaDatatable').load(ruta);
         }
 
@@ -383,7 +383,7 @@
             var formData = new FormData();
             formData.append('id', id);
 
-            axios.post(urlAdmin + '/admin/historial/otros/borrar', formData)
+            axios.post(urlAdmin + '/admin/historial/compensatorio/borrar', formData)
                 .then((response) => {
                     closeLoading();
 
@@ -477,7 +477,7 @@
             $('#edit-seccion-fraccionado, #edit-seccion-completo').hide();
             $('#edit-lista-empleados').hide();
 
-            axios.post(urlAdmin + '/admin/historial/otros/informacion', { id: id })
+            axios.post(urlAdmin + '/admin/historial/compensatorio/informacion', { id: id })
                 .then((response) => {
                     closeLoading();
                     if (response.data.success === 1) {
@@ -581,7 +581,7 @@
             formData.append('razon',        razon);
             Object.entries(extras).forEach(([k, v]) => formData.append(k, v ?? ''));
 
-            axios.post(urlAdmin + '/admin/historial/otros/actualizar', formData)
+            axios.post(urlAdmin + '/admin/historial/compensatorio/actualizar', formData)
                 .then((response) => {
                     closeLoading();
                     if (response.data.success === 1) {

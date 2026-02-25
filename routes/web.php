@@ -197,7 +197,6 @@ Route::post('/admin/historial/otros/informacion', [HistorialPermisoController::c
 Route::post('/admin/historial/otros/actualizar', [HistorialPermisoController::class,'actualizarHistorialPermisoOtros']);
 Route::post('/admin/historial/otros/borrar', [HistorialPermisoController::class,'borrarHistorialPermisoOtros']);
 
-
 // HISTORIAL - ENFERMEDAD
 Route::get('/admin/historial/enfermedad/index', [HistorialPermisoController::class,'indexHistorialPermisoEnfermedad'])->name('historial.permisos.enfermedad');
 Route::get('/admin/historial/enfermedad/tabla', [HistorialPermisoController::class,'tablaHistorialPermisoEnfermedad']);
@@ -205,7 +204,26 @@ Route::post('/admin/historial/enfermedad/informacion', [HistorialPermisoControll
 Route::post('/admin/historial/enfermedad/actualizar', [HistorialPermisoController::class,'actualizarHistorialPermisoEnfermedad']);
 Route::post('/admin/historial/enfermedad/borrar', [HistorialPermisoController::class,'borrarHistorialPermisoEnfermedad']);
 
+// HISTORIAL - CONSULTA MEDICA
+Route::get('/admin/historial/consultamedica/index', [HistorialPermisoController::class,'indexHistorialPermisoConsultaMedica'])->name('historial.permisos.consultamedica');
+Route::get('/admin/historial/consultamedica/tabla', [HistorialPermisoController::class,'tablaHistorialPermisoConsultaMedica']);
+Route::post('/admin/historial/consultamedica/informacion', [HistorialPermisoController::class,'informacionHistorialPermisoConsultaMedica']);
+Route::post('/admin/historial/consultamedica/actualizar', [HistorialPermisoController::class,'actualizarHistorialPermisoConsultaMedica']);
+Route::post('/admin/historial/consultamedica/borrar', [HistorialPermisoController::class,'borrarHistorialPermisoConsultaMedica']);
 
+// HISTORIAL - COMPENSATORIO
+Route::get('/admin/historial/compensatorio/index', [HistorialPermisoController::class,'indexHistorialPermisoCompensatorio'])->name('historial.permisos.compensatorio');
+Route::get('/admin/historial/compensatorio/tabla', [HistorialPermisoController::class,'tablaHistorialPermisoCompensatorio']);
+Route::post('/admin/historial/compensatorio/informacion', [HistorialPermisoController::class,'informacionHistorialPermisoCompensatorio']);
+Route::post('/admin/historial/compensatorio/actualizar', [HistorialPermisoController::class,'actualizarHistorialPermisoCompensatorio']);
+Route::post('/admin/historial/compensatorio/borrar', [HistorialPermisoController::class,'borrarHistorialPermisoCompensatorio']);
+
+// HISTORIAL - INCAPACIDAD
+Route::get('/admin/historial/incapacidad/index', [HistorialPermisoController::class,'indexHistorialPermisoIncapacidad'])->name('historial.permisos.incapacidad');
+Route::get('/admin/historial/incapacidad/tabla', [HistorialPermisoController::class,'tablaHistorialPermisoIncapacidad']);
+Route::post('/admin/historial/incapacidad/informacion', [HistorialPermisoController::class,'informacionHistorialPermisoIncapacidad']);
+Route::post('/admin/historial/incapacidad/actualizar', [HistorialPermisoController::class,'actualizarHistorialPermisoIncapacidad']);
+Route::post('/admin/historial/incapacidad/borrar', [HistorialPermisoController::class,'borrarHistorialPermisoIncapacidad']);
 
 
 

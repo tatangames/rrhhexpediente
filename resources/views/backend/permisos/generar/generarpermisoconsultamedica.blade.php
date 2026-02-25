@@ -539,17 +539,17 @@
 
                 if (condicion === 1) { // fraccionado
 
-                    let fechaPermiso = $('#fecha-solicitud-permiso').val();
+                    let fecha_fraccionado = $('#fecha-solicitud-permiso').val();
                     let horaInicio = $('#hora-inicio-4').val();
                     let horaFin = $('#hora-fin-4').val();
                     let duracion = $('#horas-permiso-4').val();
 
-                    if (!fechaPermiso || !horaInicio || !horaFin) {
+                    if (!fecha_fraccionado || !horaInicio || !horaFin) {
                         toastr.error('Complete todos los campos del permiso fraccionado');
                         return;
                     }
 
-                    datosPermiso.fecha = fechaPermiso;
+                    datosPermiso.fecha_fraccionado = fecha_fraccionado;
                     datosPermiso.hora_inicio = horaInicio;
                     datosPermiso.hora_fin = horaFin;
                     datosPermiso.duracion = duracion;

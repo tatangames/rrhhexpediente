@@ -22,6 +22,8 @@ return new class extends Migration
 
             $table->date('fecha');
 
+            $table->date('fecha_fraccionado')->nullable();
+
             // 0: Dia completo
             // 1: Fraccionado
             $table->boolean('condicion');
