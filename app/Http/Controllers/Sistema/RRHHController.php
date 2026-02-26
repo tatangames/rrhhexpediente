@@ -10,12 +10,8 @@ use App\Models\FichaEmpleado;
 use App\Models\Media;
 use App\Models\NivelAcademico;
 use App\Models\Unidad;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Validator;
 
 class RRHHController extends Controller
 {

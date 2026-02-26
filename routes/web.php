@@ -225,6 +225,12 @@ Route::post('/admin/historial/incapacidad/informacion', [HistorialPermisoControl
 Route::post('/admin/historial/incapacidad/actualizar', [HistorialPermisoController::class,'actualizarHistorialPermisoIncapacidad']);
 Route::post('/admin/historial/incapacidad/borrar', [HistorialPermisoController::class,'borrarHistorialPermisoIncapacidad']);
 
+// HISTORIAL - PERSONAL
+Route::get('/admin/historial/personal/index', [HistorialPermisoController::class,'indexHistorialPermisoPersonal'])->name('historial.permisos.personal');
+Route::get('/admin/historial/personal/tabla', [HistorialPermisoController::class,'tablaHistorialPermisoPersonal']);
+Route::post('/admin/historial/personal/informacion', [HistorialPermisoController::class,'informacionHistorialPermisoPersonal']);
+Route::post('/admin/historial/personal/actualizar', [HistorialPermisoController::class,'actualizarHistorialPermisoPersonal']);
+Route::post('/admin/historial/personal/borrar', [HistorialPermisoController::class,'borrarHistorialPermisoPersonal']);
 
 
 // REPORTES - GENERAL

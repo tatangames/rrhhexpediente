@@ -3,14 +3,11 @@
 namespace App\Http\Controllers\Evaluacion;
 
 use App\Http\Controllers\Controller;
-use App\Models\Cargo;
-use App\Models\Distrito;
 use App\Models\Evaluacion;
 use App\Models\EvaluacionCargo;
 use App\Models\EvaluacionDependencias;
 use App\Models\EvaluacionDetalle;
 use App\Models\EvaluacionUnidad;
-use App\Models\Unidad;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;

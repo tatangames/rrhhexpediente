@@ -4,13 +4,11 @@ namespace App\Http\Controllers\Permiso;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cargo;
-use App\Models\Distrito;
 use App\Models\Empleado;
 use App\Models\Riesgo;
 use App\Models\TipoIncapacidad;
 use App\Models\TipoPermiso;
 use App\Models\Unidad;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;

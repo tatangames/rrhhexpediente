@@ -8,7 +8,6 @@ use App\Models\EvaluacionCargo;
 use App\Models\EvaluacionDependencias;
 use App\Models\EvaluacionUnidad;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 class JefeEvaluacionController extends Controller
 {

@@ -26,6 +26,8 @@ return new class extends Migration
             // 1: Fraccionado
             $table->boolean('condicion');
 
+            $table->date('fecha_fraccionado')->nullable();
+
             // 0: NO goce salarial
             // 1: SI goce salarial
             $table->boolean('goce');

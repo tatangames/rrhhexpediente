@@ -15,12 +15,10 @@ use App\Models\PermisoOtro;
 use App\Models\PermisoPersonal;
 use App\Models\Riesgo;
 use App\Models\TipoIncapacidad;
-use App\Models\TipoPermiso;
 use App\Models\Unidad;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Spatie\Permission\Exceptions\RoleDoesNotExist;
 use Spatie\Permission\Models\Permission;
@@ -974,7 +972,7 @@ class PermisoController extends Controller
 
 
 
-// MÉTODO: guardarPermisoPersonal
+    // MÉTODO: guardarPermisoPersonal
     public function guardarPermisoPersonal(Request $request)
     {
         $regla = array(
@@ -1132,6 +1130,7 @@ class PermisoController extends Controller
                 'cargo' => $nombreCargo,
                 'fecha' => $request->fechaEntrego,
                 'condicion' => $request->condicion,
+                'fecha_fraccionado' => $request->fecha_fraccionado,
                 'goce' => $request->goce_sueldo,
                 'fecha_inicio' => $request->fecha_inicio,
                 'fecha_fin' => $request->fecha_fin,

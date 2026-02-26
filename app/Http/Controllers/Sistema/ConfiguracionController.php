@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Sistema;
 use App\Http\Controllers\Controller;
 use App\Models\Cargo;
 use App\Models\Distrito;
-use App\Models\FichaEmpleado;
 use App\Models\NivelAcademico;
 use App\Models\Unidad;
 use Illuminate\Http\Request;

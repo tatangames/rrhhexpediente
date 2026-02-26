@@ -471,6 +471,13 @@ return [
                     'can'   => 'sidebar.permisos',
                 ],
 
+                [
+                    'text'  => 'Personal',
+                    'icon'  => 'fas fa-file-alt',
+                    'route' => 'historial.permisos.personal',
+                    'can'   => 'sidebar.permisos',
+                ],
+
             ],
         ],
 

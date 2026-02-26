@@ -4,9 +4,7 @@ namespace App\Http\Controllers\Permiso;
 
 use App\Http\Controllers\Controller;
 use App\Models\Empleado;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Spatie\Permission\Models\Role;
 
 class ReportesPermisoController extends Controller
 {
