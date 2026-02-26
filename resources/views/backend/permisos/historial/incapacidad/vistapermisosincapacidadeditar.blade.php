@@ -143,7 +143,8 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label>Días de Incapacidad: <span class="text-danger">*</span></label>
-                                    <input type="number" class="form-control" id="edit-dias" min="1" placeholder="Ingrese días">
+                                    <input type="number" class="form-control" id="edit-dias" min="1"
+                                           placeholder="Ingrese días">
                                 </div>
                             </div>
                         </div>
@@ -183,7 +184,7 @@
                             </div>
                         </div>
 
-                        <!-- Fechas Hospitalización (oculto por defecto) -->
+                        <!-- Fechas Hospitalización -->
                         <div id="edit-periodo-hospitalizacion-section" style="display:none;">
                             <div class="row">
                                 <div class="col-md-6">
@@ -280,6 +281,17 @@
         $(function () {
             const ruta = "{{ url('/admin/historial/incapacidad/tabla') }}";
 
+            // ===============================
+            // SELECT2 — inicializar UNA SOLA VEZ
+            // ===============================
+            $('.select2-modal').select2({
+                theme: 'bootstrap-5',
+                dropdownParent: $('#modalEditar')
+            });
+
+            // ===============================
+            // DATATABLE
+            // ===============================
             function initDataTable() {
                 if ($.fn.DataTable.isDataTable('#tabla')) {
                     $('#tabla').DataTable().destroy();
@@ -303,7 +315,12 @@
                         sInfoEmpty: "Mostrando 0 a 0 de 0 registros",
                         sInfoFiltered: "(filtrado de _MAX_ registros)",
                         sSearch: "Buscar:",
-                        oPaginate: {sFirst: "Primero", sLast: "Último", sNext: "Siguiente", sPrevious: "Anterior"},
+                        oPaginate: {
+                            sFirst: "Primero",
+                            sLast: "Último",
+                            sNext: "Siguiente",
+                            sPrevious: "Anterior"
+                        },
                     },
                     dom:
                         "<'row align-items-center'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6 text-md-right'f>>" +
@@ -325,16 +342,6 @@
             window.recargar = function () {
                 cargarTabla();
             };
-        });
-
-        // ===============================
-        // SELECT2 EN MODAL (se inicia al abrir)
-        // ===============================
-        $('#modalEditar').on('shown.bs.modal', function () {
-            $('.select2-modal').select2({
-                theme: 'bootstrap-5',
-                dropdownParent: $('#modalEditar')
-            });
         });
 
         // ===============================
@@ -395,7 +402,6 @@
             }
 
             let dias = parseInt(diasInput);
-
             if (isNaN(dias) || dias <= 0) {
                 $('#edit-fecha-fin').val('');
                 return;
@@ -443,14 +449,17 @@
         function informacion(id) {
             openLoading();
 
-            // Limpiar formulario antes de cargar
             document.getElementById('formulario-editar').reset();
             $('#edit-periodo-hospitalizacion-section').hide();
             $('#edit-bloque-buscar').hide();
             $('#edit-lista-empleados').hide();
             $('#edit-empleado-actual').show();
 
-            axios.post(urlAdmin + '/admin/historial/incapacidad/informacion', { id: id })
+            // Limpiar select2 también
+            $('#edit-tipo-incapacidad').val('').trigger('change');
+            $('#edit-riesgo').val('').trigger('change');
+
+            axios.post(urlAdmin + '/admin/historial/incapacidad/informacion', {id: id})
                 .then((response) => {
                     closeLoading();
 
@@ -466,7 +475,7 @@
                         $('#edit-diagnostico').val(info.diagnostico ?? '');
                         $('#edit-numero').val(info.numero ?? '');
 
-                        // Select2: tipo incapacidad y riesgo
+                        // Select2 — asignar ANTES de abrir el modal
                         $('#edit-tipo-incapacidad').val(info.id_tipo_incapacidad).trigger('change');
                         $('#edit-riesgo').val(info.id_riesgo).trigger('change');
 
@@ -485,6 +494,7 @@
                         $('#edit-unidad').val(info.unidad ?? '');
                         $('#edit-cargo').val(info.cargo ?? '');
 
+                        // Abrir modal AL FINAL
                         $('#modalEditar').modal('show');
 
                     } else {
@@ -516,12 +526,12 @@
             const fechaFinHosp    = $('#edit-fecha-fin-hosp').val();
 
             // Validaciones
-            if (!empleadoId)       { toastr.error('Debe seleccionar un empleado');           return; }
-            if (!fecha)            { toastr.error('Debe ingresar la fecha');                  return; }
-            if (!tipoIncapacidad)  { toastr.error('Debe seleccionar el tipo de incapacidad'); return; }
-            if (!riesgo)           { toastr.error('Debe seleccionar el riesgo');              return; }
-            if (!fechaInicio)      { toastr.error('Debe ingresar la fecha de inicio');        return; }
-            if (!dias || dias < 1) { toastr.error('Debe ingresar los días de incapacidad');   return; }
+            if (!empleadoId)       { toastr.error('Debe seleccionar un empleado');            return; }
+            if (!fecha)            { toastr.error('Debe ingresar la fecha');                   return; }
+            if (!tipoIncapacidad)  { toastr.error('Debe seleccionar el tipo de incapacidad');  return; }
+            if (!riesgo)           { toastr.error('Debe seleccionar el riesgo');               return; }
+            if (!fechaInicio)      { toastr.error('Debe ingresar la fecha de inicio');         return; }
+            if (!dias || dias < 1) { toastr.error('Debe ingresar los días de incapacidad');    return; }
 
             if (hospitalizacion === 1) {
                 if (!fechaInicioHosp || !fechaFinHosp) {
@@ -596,7 +606,7 @@
             const $input = $(this);
             $input.data('buscando', true);
 
-            axios.get(urlAdmin + '/admin/empleados/buscar', { params: { q: texto } })
+            axios.get(urlAdmin + '/admin/empleados/buscar', {params: {q: texto}})
                 .then(resp => {
                     let html = '';
                     resp.data.forEach(e => {
@@ -667,7 +677,7 @@
 
                 try {
                     saving = true;
-                    await axios.post(urlAdmin + '/admin/actualizar/tema', { tema: selectedMode === 'dark' ? 1 : 0 });
+                    await axios.post(urlAdmin + '/admin/actualizar/tema', {tema: selectedMode === 'dark' ? 1 : 0});
                     if (window.toastr) toastr.success('Tema actualizado');
                 } catch {
                     applyTheme(previousMode);

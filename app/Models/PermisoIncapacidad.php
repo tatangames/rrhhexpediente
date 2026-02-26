@@ -17,8 +17,8 @@ class PermisoIncapacidad extends Model
         'unidad',
         'cargo',
         'fecha',
-        'tipo_incapacidad_id',
-        'riesgo_id',
+        'id_tipo_incapacidad',
+        'id_riesgo',
         'fecha_inicio',
         'dias',
         'fecha_fin',
@@ -26,7 +26,7 @@ class PermisoIncapacidad extends Model
         'numero',
         'hospitalizacion',
         'fecha_inicio_hospitalizacion',
-        'fecha_fin_hospitalizacion'
+        'fecha_fin_hospitalizacion',
     ];
 
     // Relaciones

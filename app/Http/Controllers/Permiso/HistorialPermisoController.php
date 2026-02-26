@@ -15,6 +15,7 @@ use App\Models\TipoIncapacidad;
 use App\Models\Unidad;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class HistorialPermisoController extends Controller
@@ -619,6 +620,10 @@ class HistorialPermisoController extends Controller
     // Actualizar con los campos correctos de incapacidad
     public function actualizarHistorialPermisoIncapacidad(Request $request)
     {
+
+        Log::info($request->all());
+
+
         $validar = Validator::make($request->all(), [
             'id'          => 'required',
             'empleado_id' => 'required',
