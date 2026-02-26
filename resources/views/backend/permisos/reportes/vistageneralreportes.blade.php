@@ -27,7 +27,7 @@
 
                             <!-- Empleado -->
                             <div class="form-group">
-                                <label>Empleado: <span style="color:red">*</span></label>
+                                <label>Empleado:</label>
                                 <select class="form-control" id="select-empleado">
                                     <option value="">-- Todos los empleados --</option>
                                     @foreach($arrayEmpleados as $item)
@@ -53,34 +53,40 @@
                                 <!-- Fecha Desde -->
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label>Desde:</label>
+                                        <label>Desde: <span style="color:red">*</span></label>
                                         <input type="date" class="form-control" id="fecha-desde">
+                                        <small class="text-danger d-none" id="error-desde">
+                                            La fecha de inicio es requerida.
+                                        </small>
                                     </div>
                                 </div>
 
                                 <!-- Fecha Hasta -->
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label>Hasta:</label>
+                                        <label>Hasta: <span style="color:red">*</span></label>
                                         <input type="date" class="form-control" id="fecha-hasta">
+                                        <small class="text-danger d-none" id="error-hasta">
+                                            La fecha de fin es requerida.
+                                        </small>
                                     </div>
                                 </div>
                             </div>
 
+                            <!-- Error de rango de fechas -->
+                            <small class="text-danger d-none" id="error-rango">
+                                La fecha "Desde" no puede ser mayor que la fecha "Hasta".
+                            </small>
+
                         </div>
 
                         <div class="card-footer">
-                            <div style="display:flex; gap:12px;">
-
-                                <!-- Botón PDF -->
-                                <button type="button" onclick="generarPdf()"
-                                        class="btn btn-outline-danger d-flex align-items-center" id="btn-pdf">
-                                    <img src="{{ asset('images/logopdf.png') }}" width="28" height="28"
-                                         style="margin-right:8px;">
-                                    Generar PDF
-                                </button>
-
-                            </div>
+                            <button type="button" onclick="generarPdf()"
+                                    class="btn btn-outline-danger d-flex align-items-center" id="btn-pdf">
+                                <img src="{{ asset('images/logopdf.png') }}" width="28" height="28"
+                                     style="margin-right:8px;">
+                                Generar PDF
+                            </button>
                         </div>
 
                     </div>
@@ -97,12 +103,10 @@
     <script src="{{ asset('js/select2.min.js') }}"></script>
 
     <script>
-        // Inicializar Select2
+
         $('#select-empleado').select2({
             theme: "bootstrap-5",
-            language: {
-                noResults: () => "Búsqueda no encontrada"
-            }
+            language: { noResults: () => "Búsqueda no encontrada" }
         });
 
         $('#select-tipopermiso').select2({
@@ -110,33 +114,67 @@
             minimumResultsForSearch: Infinity
         });
 
+        // Limpiar errores al cambiar fechas
+        $('#fecha-desde').on('change', function () {
+            $('#error-desde, #error-rango').addClass('d-none');
+            $(this).removeClass('is-invalid');
+        });
+
+        $('#fecha-hasta').on('change', function () {
+            $('#error-hasta, #error-rango').addClass('d-none');
+            $(this).removeClass('is-invalid');
+        });
+
         // ──────────────────────────────────────────────────
-        //  Generar PDF: abre en nueva pestaña via POST form
+        //  Validación y generación del PDF
         // ──────────────────────────────────────────────────
         function generarPdf() {
-            const idEmpleado  = $('#select-empleado').val();
-            const tipoPerm    = $('#select-tipopermiso').val();
-            const fechaDesde  = $('#fecha-desde').val();
-            const fechaHasta  = $('#fecha-hasta').val();
+            const idEmpleado = $('#select-empleado').val();
+            const tipoPerm   = $('#select-tipopermiso').val();
+            const fechaDesde = $('#fecha-desde').val();
+            const fechaHasta = $('#fecha-hasta').val();
 
-            // Validación mínima
-            if (!tipoPerm) {
-                toastr.warning('Seleccione el tipo de permiso.');
-                return;
+            let valido = true;
+
+            // Limpiar estado anterior
+            $('#error-desde, #error-hasta, #error-rango').addClass('d-none');
+            $('#fecha-desde, #fecha-hasta').removeClass('is-invalid');
+
+            // Validar fecha desde
+            if (!fechaDesde) {
+                $('#error-desde').removeClass('d-none');
+                $('#fecha-desde').addClass('is-invalid');
+                valido = false;
             }
 
-            // Construir formulario dinámico y hacer POST
+            // Validar fecha hasta
+            if (!fechaHasta) {
+                $('#error-hasta').removeClass('d-none');
+                $('#fecha-hasta').addClass('is-invalid');
+                valido = false;
+            }
+
+            // Validar rango: desde <= hasta
+            if (fechaDesde && fechaHasta && fechaDesde > fechaHasta) {
+                $('#error-rango').removeClass('d-none');
+                $('#fecha-desde, #fecha-hasta').addClass('is-invalid');
+                valido = false;
+            }
+
+            if (!valido) return;
+
+            // Construir formulario dinámico POST → nueva pestaña
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = '{{ route("permiso.pdf.generar") }}';
-            form.target = '_blank';   // Nueva pestaña
+            form.target = '_blank';
 
             const fields = {
-                _token:        '{{ csrf_token() }}',
-                tipo_permiso:  tipoPerm,
-                id_empleado:   idEmpleado,
-                fecha_desde:   fechaDesde,
-                fecha_hasta:   fechaHasta,
+                _token:       '{{ csrf_token() }}',
+                tipo_permiso: tipoPerm,
+                id_empleado:  idEmpleado,
+                fecha_desde:  fechaDesde,
+                fecha_hasta:  fechaHasta,
             };
 
             Object.entries(fields).forEach(([name, value]) => {

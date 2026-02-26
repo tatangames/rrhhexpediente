@@ -26,4 +26,9 @@ class PermisoPersonal extends Model
         'razon',
         'goce'
     ];
+
+    public function empleado()
+    {
+        return $this->belongsTo(Empleado::class, 'id_empleado');
+    }
 }

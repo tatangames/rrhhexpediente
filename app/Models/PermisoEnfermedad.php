@@ -28,4 +28,9 @@ class PermisoEnfermedad extends Model
         'especialidad',
         'condicion_medica'
     ];
+
+    public function empleado()
+    {
+        return $this->belongsTo(Empleado::class, 'id_empleado');
+    }
 }

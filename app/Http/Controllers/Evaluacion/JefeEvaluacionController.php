@@ -8,12 +8,7 @@ use App\Models\EvaluacionCargo;
 use App\Models\EvaluacionDependencias;
 use App\Models\EvaluacionUnidad;
 use Illuminate\Http\Request;
-use App\Models\Empleado;
-use App\Models\PermisoPersonal;
-use App\Models\PermisoCompensatorio;
-use App\Models\PermisoEnfermedad;
-use App\Models\PermisoConsultaMedica;
-use App\Models\PermisoIncapacidad;
+
 
 class JefeEvaluacionController extends Controller
 {

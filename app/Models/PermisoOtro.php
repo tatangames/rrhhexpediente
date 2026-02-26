@@ -27,4 +27,8 @@ class PermisoOtro extends Model
         'razon'
     ];
 
+    public function empleado()
+    {
+        return $this->belongsTo(Empleado::class, 'id_empleado');
+    }
 }

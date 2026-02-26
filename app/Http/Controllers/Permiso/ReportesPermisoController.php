@@ -4,37 +4,78 @@ namespace App\Http\Controllers\Permiso;
 
 use App\Http\Controllers\Controller;
 use App\Models\Empleado;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\PermisoPersonal;
+use App\Models\PermisoCompensatorio;
+use App\Models\PermisoEnfermedad;
+use App\Models\PermisoConsultaMedica;
+use App\Models\PermisoIncapacidad;
+use App\Models\PermisoOtro;       // ← era el modelo faltante
 
 class ReportesPermisoController extends Controller
 {
-    public function __construct(){
+    public function __construct()
+    {
         $this->middleware('auth');
     }
 
-    private function getTemaPredeterminado(){
+    private function getTemaPredeterminado()
+    {
         return Auth::guard('admin')->user()->tema;
     }
 
+    public function indexReportesGeneral()
+    {
+        $temaPredeterminado = $this->getTemaPredeterminado();
+        $arrayEmpleados     = Empleado::orderBy('nombre', 'ASC')->get();
 
-    public function indexReportesGeneral(){
-        $temaPredeterminado =  $this->getTemaPredeterminado();
-
-        $arrayEmpleados = Empleado::orderBy('nombre', 'ASC')->get();
-
-        return view('backend.permisos.reportes.vistageneralreportes', compact('temaPredeterminado', 'arrayEmpleados'));
+        return view('backend.permisos.reportes.vistageneralreportes',
+            compact('temaPredeterminado', 'arrayEmpleados'));
     }
 
+    // ─────────────────────────────────────────────────────────────
+    //  RUTA PRINCIPAL: valida, detecta tipo y delega
+    // ─────────────────────────────────────────────────────────────
+    public function generarReportePermisoPDF(Request $request)
+    {
+        // Validación backend — las fechas son obligatorias
+        $request->validate([
+            'tipo_permiso' => 'required|integer|between:1,6',
+            'fecha_desde'  => 'required|date',
+            'fecha_hasta'  => 'required|date|after_or_equal:fecha_desde',
+            'id_empleado'  => 'nullable|integer|exists:empleados,id',
+        ], [
+            'fecha_desde.required'          => 'La fecha de inicio es requerida.',
+            'fecha_hasta.required'          => 'La fecha de fin es requerida.',
+            'fecha_hasta.after_or_equal'    => 'La fecha "Hasta" debe ser mayor o igual a "Desde".',
+            'tipo_permiso.required'         => 'Seleccione el tipo de permiso.',
+        ]);
+
+        $tipo       = (int) $request->tipo_permiso;
+        $idEmpleado = $request->id_empleado;
+        $desde      = $request->fecha_desde;
+        $hasta      = $request->fecha_hasta;
+
+        return match ($tipo) {
+            1 => $this->pdfPersonal($idEmpleado, $desde, $hasta),
+            2 => $this->pdfCompensatorio($idEmpleado, $desde, $hasta),
+            3 => $this->pdfEnfermedad($idEmpleado, $desde, $hasta),
+            4 => $this->pdfConsultaMedica($idEmpleado, $desde, $hasta),
+            5 => $this->pdfIncapacidad($idEmpleado, $desde, $hasta),
+            6 => $this->pdfOtros($idEmpleado, $desde, $hasta),
+        };
+    }
 
     // ─────────────────────────────────────────────────────────────
-    //  Helper: instancia mPDF en modo HORIZONTAL (LETTER-L)
+    //  Helper: mPDF en modo HORIZONTAL (LETTER-L)
     // ─────────────────────────────────────────────────────────────
     private function mpdfHorizontal(string $titulo = 'Reporte Permiso'): \Mpdf\Mpdf
     {
         $mpdf = new \Mpdf\Mpdf([
             'tempDir'       => sys_get_temp_dir(),
-            'format'        => 'LETTER-L',   // LETTER en modo landscape
+            'format'        => 'LETTER-L',
             'orientation'   => 'L',
             'margin_left'   => 12,
             'margin_right'  => 12,
@@ -46,12 +87,14 @@ class ReportesPermisoController extends Controller
     }
 
     // ─────────────────────────────────────────────────────────────
-    //  Helper: cabecera institucional (igual en todos los PDFs)
+    //  Helper: cabecera institucional
     // ─────────────────────────────────────────────────────────────
-    private function htmlCabecera(string $tituloPDF): string
+    private function htmlCabecera(string $tituloPDF, string $desde, string $hasta): string
     {
-        $logo = public_path('images/gobiernologo.jpg');
-        $fecha = now()->format('d/m/Y');
+        $logo        = public_path('images/logo.png');
+        $fechaDesde  = Carbon::parse($desde)->format('d/m/Y');
+        $fechaHasta  = Carbon::parse($hasta)->format('d/m/Y');
+        $fechaEmisio = now()->format('d/m/Y');
 
         return "
         <table width='100%' style='border-collapse:collapse; font-family:Arial,sans-serif;'>
@@ -70,7 +113,10 @@ class ReportesPermisoController extends Controller
                 </td>
                 <td style='width:56%; border-top:0.8px solid #000; border-bottom:0.8px solid #000;
                             padding:6px 8px; text-align:center; font-size:14px; font-weight:bold;'>
-                    {$tituloPDF}
+                    {$tituloPDF}<br>
+                    <span style='font-size:10px; font-weight:normal;'>
+                        Período: {$fechaDesde} — {$fechaHasta}
+                    </span>
                 </td>
                 <td style='width:22%; border:0.8px solid #000; padding:0; vertical-align:top;'>
                     <table width='100%' style='font-size:9px;'>
@@ -83,8 +129,8 @@ class ReportesPermisoController extends Controller
                             <td style='border-bottom:0.8px solid #000; padding:3px 5px; text-align:center;'>000</td>
                         </tr>
                         <tr>
-                            <td style='border-right:0.8px solid #000; padding:3px 5px;'><strong>Vigencia:</strong></td>
-                            <td style='padding:3px 5px; text-align:center;'>{$fecha}</td>
+                            <td style='border-right:0.8px solid #000; padding:3px 5px;'><strong>Emisión:</strong></td>
+                            <td style='padding:3px 5px; text-align:center;'>{$fechaEmisio}</td>
                         </tr>
                     </table>
                 </td>
@@ -93,94 +139,13 @@ class ReportesPermisoController extends Controller
     }
 
     // ─────────────────────────────────────────────────────────────
-    //  Helper: fila de condición (Día completo / Fraccionado)
+    //  Helper: pie con total de registros
     // ─────────────────────────────────────────────────────────────
-    private function htmlCondicion(object $permiso): string
+    private function htmlTotalRegistros(int $total): string
     {
-        $esDiaCompleto  = !$permiso->condicion;  // 0 = Día completo
-        $esFraccionado  = $permiso->condicion;   // 1 = Fraccionado
-
-        $checkDC = $esDiaCompleto ? '&#10003;' : '';
-        $checkFR = $esFraccionado ? '&#10003;' : '';
-
-        $desde  = $esDiaCompleto ? ($permiso->fecha_inicio ?? '-') : '-';
-        $hasta  = $esDiaCompleto ? ($permiso->fecha_fin    ?? '-') : '-';
-        $diaFR  = $esFraccionado ? ($permiso->fecha_fraccionado ?? '-') : '-';
-        $horaI  = $esFraccionado ? ($permiso->hora_inicio ?? '-') : '-';
-        $horaF  = $esFraccionado ? ($permiso->hora_fin    ?? '-') : '-';
-
-        return "
-        <table width='100%' border='1' cellpadding='4' style='border-collapse:collapse;font-size:9px;'>
-            <tr style='background:#e8e8e8; font-weight:bold; text-align:center;'>
-                <td width='5%'>CONDICIÓN</td>
-                <td width='20%'>FECHA INICIO</td>
-                <td width='20%'>FECHA FIN</td>
-                <td width='5%'>FRACCIONADO</td>
-                <td width='20%'>FECHA</td>
-                <td width='15%'>HORA INICIO</td>
-                <td width='15%'>HORA FIN</td>
-            </tr>
-            <tr style='text-align:center;'>
-                <td>{$checkDC} Día Completo</td>
-                <td>{$desde}</td>
-                <td>{$hasta}</td>
-                <td>{$checkFR} Sí</td>
-                <td>{$diaFR}</td>
-                <td>{$horaI}</td>
-                <td>{$horaF}</td>
-            </tr>
-        </table>";
-    }
-
-    // ─────────────────────────────────────────────────────────────
-    //  Helper: sección de firma
-    // ─────────────────────────────────────────────────────────────
-    private function htmlFirmas(): string
-    {
-        return "
-        <br><br>
-        <table width='100%' style='font-size:9px; font-family:Arial,sans-serif;'>
-            <tr>
-                <td width='30%' align='center'>
-                    <div style='border-top:1px solid #000; margin-top:40px; padding-top:4px;'>
-                        Firma del Empleado
-                    </div>
-                </td>
-                <td width='10%'></td>
-                <td width='30%' align='center'>
-                    <div style='border-top:1px solid #000; margin-top:40px; padding-top:4px;'>
-                        Jefe Inmediato
-                    </div>
-                </td>
-                <td width='10%'></td>
-                <td width='30%' align='center'>
-                    <div style='border-top:1px solid #000; margin-top:40px; padding-top:4px;'>
-                        Recursos Humanos
-                    </div>
-                </td>
-            </tr>
-        </table>";
-    }
-
-    // ─────────────────────────────────────────────────────────────
-    //  RUTA PRINCIPAL: detecta tipo y delega
-    // ─────────────────────────────────────────────────────────────
-    public function generarReportePermisoPDF(Request $request)
-    {
-        $tipo       = (int) $request->tipo_permiso;   // 1-6
-        $idEmpleado = $request->id_empleado;
-        $desde      = $request->fecha_desde;
-        $hasta      = $request->fecha_hasta;
-
-        return match ($tipo) {
-            1 => $this->pdfPersonal($idEmpleado, $desde, $hasta),
-            2 => $this->pdfCompensatorio($idEmpleado, $desde, $hasta),
-            3 => $this->pdfEnfermedad($idEmpleado, $desde, $hasta),
-            4 => $this->pdfConsultaMedica($idEmpleado, $desde, $hasta),
-            5 => $this->pdfIncapacidad($idEmpleado, $desde, $hasta),
-            6 => $this->pdfOtros($idEmpleado, $desde, $hasta),
-            default => abort(400, 'Tipo de permiso no válido'),
-        };
+        return "<br><p style='font-size:9px; text-align:right;'>
+                    <strong>Total de registros:</strong> {$total}
+                </p>";
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -188,42 +153,41 @@ class ReportesPermisoController extends Controller
     // ─────────────────────────────────────────────────────────────
     private function pdfPersonal($idEmpleado, $desde, $hasta)
     {
-        $query = PermisoPersonal::with('empleado')
+        $registros = PermisoPersonal::with('empleado')
             ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
-            ->when($desde,      fn($q) => $q->whereDate('fecha', '>=', $desde))
-            ->when($hasta,      fn($q) => $q->whereDate('fecha', '<=', $hasta))
+            ->whereDate('fecha', '>=', $desde)
+            ->whereDate('fecha', '<=', $hasta)
             ->orderBy('fecha')
             ->get();
 
         $mpdf = $this->mpdfHorizontal('Reporte - Permisos Personales');
-        $html = $this->htmlCabecera('REPORTE DE PERMISOS PERSONALES');
+        $html = $this->htmlCabecera('REPORTE DE PERMISOS PERSONALES', $desde, $hasta);
 
-        // Tabla resumen
         $html .= "
-        <table width='100%' border='1' cellpadding='5' style='border-collapse:collapse;font-size:9px;'>
-            <tr style='background:#104e8c; color:#fff; font-weight:bold; text-align:center;'>
-                <td>#</td>
-                <td>EMPLEADO</td>
-                <td>UNIDAD</td>
-                <td>CARGO</td>
-                <td>FECHA</td>
-                <td>CONDICIÓN</td>
-                <td>GOCE SALARIAL</td>
-                <td>FECHA INICIO</td>
-                <td>FECHA FIN</td>
-                <td>HORA INICIO</td>
-                <td>HORA FIN</td>
-                <td>RAZÓN</td>
+        <table width='100%' border='1' cellpadding='4' style='border-collapse:collapse;font-size:9px;'>
+            <tr style='background:#8a8f97; color:#fff; font-weight:bold; text-align:center;'>
+                <td width='3%'>#</td>
+                <td width='18%'>EMPLEADO</td>
+                <td width='12%'>UNIDAD</td>
+                <td width='12%'>CARGO</td>
+                <td width='7%'>FECHA DOC.</td>
+                <td width='9%'>CONDICIÓN</td>
+                <td width='8%'>GOCE SALARIAL</td>
+                <td width='8%'>FECHA INICIO</td>
+                <td width='8%'>FECHA FIN</td>
+                <td width='6%'>HORA INICIO</td>
+                <td width='6%'>HORA FIN</td>
+                <td width='10%'>RAZÓN</td>
             </tr>";
 
-        foreach ($query as $i => $p) {
-            $condicion    = $p->condicion ? 'Fraccionado' : 'Día Completo';
-            $goce         = $p->goce ? 'SÍ' : 'NO';
-            $fechaInicio  = $p->condicion ? ($p->fecha_fraccionado ?? '-') : ($p->fecha_inicio ?? '-');
-            $fechaFin     = $p->condicion ? '-'                            : ($p->fecha_fin    ?? '-');
-            $horaInicio   = $p->condicion ? ($p->hora_inicio ?? '-') : '-';
-            $horaFin      = $p->condicion ? ($p->hora_fin    ?? '-') : '-';
-            $bg           = $i % 2 === 0 ? '#f9f9f9' : '#fff';
+        foreach ($registros as $i => $p) {
+            $condicion   = $p->condicion ? 'Fraccionado' : 'Día Completo';
+            $goce        = $p->goce ? 'SÍ' : 'NO';
+            $fechaInicio = $p->condicion ? ($p->fecha_fraccionado ?? '-') : ($p->fecha_inicio ?? '-');
+            $fechaFin    = $p->condicion ? '-' : ($p->fecha_fin ?? '-');
+            $horaInicio  = $p->condicion ? ($p->hora_inicio ?? '-') : '-';
+            $horaFin     = $p->condicion ? ($p->hora_fin    ?? '-') : '-';
+            $bg          = $i % 2 === 0 ? '#f9f9f9' : '#fff';
 
             $html .= "
             <tr style='background:{$bg};'>
@@ -242,9 +206,7 @@ class ReportesPermisoController extends Controller
             </tr>";
         }
 
-        $html .= "</table>";
-        $html .= "<br><p style='font-size:9px;'><strong>Total de registros:</strong> " . count($query) . "</p>";
-
+        $html .= "</table>" . $this->htmlTotalRegistros(count($registros));
         $mpdf->WriteHTML($html);
         return $mpdf->Output('Reporte_Permisos_Personales.pdf', 'I');
     }
@@ -254,33 +216,33 @@ class ReportesPermisoController extends Controller
     // ─────────────────────────────────────────────────────────────
     private function pdfCompensatorio($idEmpleado, $desde, $hasta)
     {
-        $query = PermisoCompensatorio::with('empleado')
+        $registros = PermisoCompensatorio::with('empleado')
             ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
-            ->when($desde,      fn($q) => $q->whereDate('fecha', '>=', $desde))
-            ->when($hasta,      fn($q) => $q->whereDate('fecha', '<=', $hasta))
+            ->whereDate('fecha', '>=', $desde)
+            ->whereDate('fecha', '<=', $hasta)
             ->orderBy('fecha')
             ->get();
 
         $mpdf = $this->mpdfHorizontal('Reporte - Permisos Compensatorios');
-        $html = $this->htmlCabecera('REPORTE DE PERMISOS COMPENSATORIOS');
+        $html = $this->htmlCabecera('REPORTE DE PERMISOS COMPENSATORIOS', $desde, $hasta);
 
         $html .= "
-        <table width='100%' border='1' cellpadding='5' style='border-collapse:collapse;font-size:9px;'>
-            <tr style='background:#104e8c; color:#fff; font-weight:bold; text-align:center;'>
-                <td>#</td>
-                <td>EMPLEADO</td>
-                <td>UNIDAD</td>
-                <td>CARGO</td>
-                <td>FECHA</td>
-                <td>CONDICIÓN</td>
-                <td>FECHA INICIO</td>
-                <td>FECHA FIN</td>
-                <td>HORA INICIO</td>
-                <td>HORA FIN</td>
-                <td>RAZÓN</td>
+        <table width='100%' border='1' cellpadding='4' style='border-collapse:collapse;font-size:9px;'>
+            <tr style='background:#8a8f97; color:#fff; font-weight:bold; text-align:center;'>
+                <td width='3%'>#</td>
+                <td width='20%'>EMPLEADO</td>
+                <td width='13%'>UNIDAD</td>
+                <td width='13%'>CARGO</td>
+                <td width='8%'>FECHA DOC.</td>
+                <td width='10%'>CONDICIÓN</td>
+                <td width='9%'>FECHA INICIO</td>
+                <td width='9%'>FECHA FIN</td>
+                <td width='6%'>HORA INICIO</td>
+                <td width='6%'>HORA FIN</td>
+                <td width='10%'>RAZÓN</td>
             </tr>";
 
-        foreach ($query as $i => $p) {
+        foreach ($registros as $i => $p) {
             $condicion   = $p->condicion ? 'Fraccionado' : 'Día Completo';
             $fechaInicio = $p->condicion ? ($p->fecha_fraccionado ?? '-') : ($p->fecha_inicio ?? '-');
             $fechaFin    = $p->condicion ? '-' : ($p->fecha_fin ?? '-');
@@ -304,9 +266,7 @@ class ReportesPermisoController extends Controller
             </tr>";
         }
 
-        $html .= "</table>";
-        $html .= "<br><p style='font-size:9px;'><strong>Total de registros:</strong> " . count($query) . "</p>";
-
+        $html .= "</table>" . $this->htmlTotalRegistros(count($registros));
         $mpdf->WriteHTML($html);
         return $mpdf->Output('Reporte_Permisos_Compensatorios.pdf', 'I');
     }
@@ -316,35 +276,35 @@ class ReportesPermisoController extends Controller
     // ─────────────────────────────────────────────────────────────
     private function pdfEnfermedad($idEmpleado, $desde, $hasta)
     {
-        $query = PermisoEnfermedad::with('empleado')
+        $registros = PermisoEnfermedad::with('empleado')
             ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
-            ->when($desde,      fn($q) => $q->whereDate('fecha', '>=', $desde))
-            ->when($hasta,      fn($q) => $q->whereDate('fecha', '<=', $hasta))
+            ->whereDate('fecha', '>=', $desde)
+            ->whereDate('fecha', '<=', $hasta)
             ->orderBy('fecha')
             ->get();
 
         $mpdf = $this->mpdfHorizontal('Reporte - Permisos por Enfermedad');
-        $html = $this->htmlCabecera('REPORTE DE PERMISOS POR ENFERMEDAD');
+        $html = $this->htmlCabecera('REPORTE DE PERMISOS POR ENFERMEDAD', $desde, $hasta);
 
         $html .= "
-        <table width='100%' border='1' cellpadding='5' style='border-collapse:collapse;font-size:9px;'>
-            <tr style='background:#104e8c; color:#fff; font-weight:bold; text-align:center;'>
-                <td>#</td>
-                <td>EMPLEADO</td>
-                <td>UNIDAD</td>
-                <td>CARGO</td>
-                <td>FECHA</td>
-                <td>CONDICIÓN</td>
-                <td>UNIDAD ATENCIÓN</td>
-                <td>ESPECIALIDAD</td>
-                <td>CONDICIÓN MÉDICA</td>
-                <td>FECHA INICIO</td>
-                <td>FECHA FIN</td>
-                <td>HORA INICIO</td>
-                <td>HORA FIN</td>
+        <table width='100%' border='1' cellpadding='4' style='border-collapse:collapse;font-size:9px;'>
+            <tr style='background:#8a8f97; color:#fff; font-weight:bold; text-align:center;'>
+                <td width='3%'>#</td>
+                <td width='15%'>EMPLEADO</td>
+                <td width='10%'>UNIDAD</td>
+                <td width='10%'>CARGO</td>
+                <td width='7%'>FECHA DOC.</td>
+                <td width='8%'>CONDICIÓN</td>
+                <td width='10%'>UNIDAD ATENCIÓN</td>
+                <td width='10%'>ESPECIALIDAD</td>
+                <td width='10%'>COND. MÉDICA</td>
+                <td width='7%'>INICIO</td>
+                <td width='7%'>FIN</td>
+                <td width='6%'>H. INICIO</td>
+                <td width='6%'>H. FIN</td>
             </tr>";
 
-        foreach ($query as $i => $p) {
+        foreach ($registros as $i => $p) {
             $condicion   = $p->condicion ? 'Fraccionado' : 'Día Completo';
             $fechaInicio = $p->condicion ? ($p->fecha_fraccionado ?? '-') : ($p->fecha_inicio ?? '-');
             $fechaFin    = $p->condicion ? '-' : ($p->fecha_fin ?? '-');
@@ -370,9 +330,7 @@ class ReportesPermisoController extends Controller
             </tr>";
         }
 
-        $html .= "</table>";
-        $html .= "<br><p style='font-size:9px;'><strong>Total de registros:</strong> " . count($query) . "</p>";
-
+        $html .= "</table>" . $this->htmlTotalRegistros(count($registros));
         $mpdf->WriteHTML($html);
         return $mpdf->Output('Reporte_Permisos_Enfermedad.pdf', 'I');
     }
@@ -382,35 +340,35 @@ class ReportesPermisoController extends Controller
     // ─────────────────────────────────────────────────────────────
     private function pdfConsultaMedica($idEmpleado, $desde, $hasta)
     {
-        $query = PermisoConsultaMedica::with('empleado')
+        $registros = PermisoConsultaMedica::with('empleado')
             ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
-            ->when($desde,      fn($q) => $q->whereDate('fecha', '>=', $desde))
-            ->when($hasta,      fn($q) => $q->whereDate('fecha', '<=', $hasta))
+            ->whereDate('fecha', '>=', $desde)
+            ->whereDate('fecha', '<=', $hasta)
             ->orderBy('fecha')
             ->get();
 
         $mpdf = $this->mpdfHorizontal('Reporte - Consulta Médica');
-        $html = $this->htmlCabecera('REPORTE DE PERMISOS - CONSULTA MÉDICA');
+        $html = $this->htmlCabecera('REPORTE DE PERMISOS - CONSULTA MÉDICA', $desde, $hasta);
 
         $html .= "
-        <table width='100%' border='1' cellpadding='5' style='border-collapse:collapse;font-size:9px;'>
-            <tr style='background:#104e8c; color:#fff; font-weight:bold; text-align:center;'>
-                <td>#</td>
-                <td>EMPLEADO</td>
-                <td>UNIDAD</td>
-                <td>CARGO</td>
-                <td>FECHA</td>
-                <td>CONDICIÓN</td>
-                <td>UNIDAD ATENCIÓN</td>
-                <td>ESPECIALIDAD</td>
-                <td>CONDICIÓN MÉDICA</td>
-                <td>FECHA INICIO</td>
-                <td>FECHA FIN</td>
-                <td>HORA INICIO</td>
-                <td>HORA FIN</td>
+        <table width='100%' border='1' cellpadding='4' style='border-collapse:collapse;font-size:9px;'>
+            <tr style='background:#8a8f97; color:#fff; font-weight:bold; text-align:center;'>
+                <td width='3%'>#</td>
+                <td width='15%'>EMPLEADO</td>
+                <td width='10%'>UNIDAD</td>
+                <td width='10%'>CARGO</td>
+                <td width='7%'>FECHA DOC.</td>
+                <td width='8%'>CONDICIÓN</td>
+                <td width='10%'>UNIDAD ATENCIÓN</td>
+                <td width='10%'>ESPECIALIDAD</td>
+                <td width='10%'>COND. MÉDICA</td>
+                <td width='7%'>INICIO</td>
+                <td width='7%'>FIN</td>
+                <td width='6%'>H. INICIO</td>
+                <td width='6%'>H. FIN</td>
             </tr>";
 
-        foreach ($query as $i => $p) {
+        foreach ($registros as $i => $p) {
             $condicion   = $p->condicion ? 'Fraccionado' : 'Día Completo';
             $fechaInicio = $p->condicion ? ($p->fecha_fraccionado ?? '-') : ($p->fecha_inicio ?? '-');
             $fechaFin    = $p->condicion ? '-' : ($p->fecha_fin ?? '-');
@@ -436,9 +394,7 @@ class ReportesPermisoController extends Controller
             </tr>";
         }
 
-        $html .= "</table>";
-        $html .= "<br><p style='font-size:9px;'><strong>Total de registros:</strong> " . count($query) . "</p>";
-
+        $html .= "</table>" . $this->htmlTotalRegistros(count($registros));
         $mpdf->WriteHTML($html);
         return $mpdf->Output('Reporte_Consulta_Medica.pdf', 'I');
     }
@@ -448,37 +404,37 @@ class ReportesPermisoController extends Controller
     // ─────────────────────────────────────────────────────────────
     private function pdfIncapacidad($idEmpleado, $desde, $hasta)
     {
-        $query = PermisoIncapacidad::with(['empleado', 'tipoIncapacidad', 'riesgo'])
+        $registros = PermisoIncapacidad::with(['empleado', 'tipoIncapacidad', 'riesgo'])
             ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
-            ->when($desde,      fn($q) => $q->whereDate('fecha', '>=', $desde))
-            ->when($hasta,      fn($q) => $q->whereDate('fecha', '<=', $hasta))
+            ->whereDate('fecha', '>=', $desde)
+            ->whereDate('fecha', '<=', $hasta)
             ->orderBy('fecha')
             ->get();
 
         $mpdf = $this->mpdfHorizontal('Reporte - Incapacidades');
-        $html = $this->htmlCabecera('REPORTE DE PERMISOS POR INCAPACIDAD');
+        $html = $this->htmlCabecera('REPORTE DE PERMISOS POR INCAPACIDAD', $desde, $hasta);
 
         $html .= "
-        <table width='100%' border='1' cellpadding='5' style='border-collapse:collapse;font-size:9px;'>
-            <tr style='background:#104e8c; color:#fff; font-weight:bold; text-align:center;'>
-                <td>#</td>
-                <td>EMPLEADO</td>
-                <td>UNIDAD</td>
-                <td>CARGO</td>
-                <td>FECHA</td>
-                <td>TIPO INCAPACIDAD</td>
-                <td>RIESGO</td>
-                <td>DIAGNÓSTICO</td>
-                <td>N° DOC.</td>
-                <td>INICIO</td>
-                <td>FIN</td>
-                <td>DÍAS</td>
-                <td>HOSPITALIZACIÓN</td>
+        <table width='100%' border='1' cellpadding='4' style='border-collapse:collapse;font-size:9px;'>
+            <tr style='background:#8a8f97; color:#fff; font-weight:bold; text-align:center;'>
+                <td width='3%'>#</td>
+                <td width='17%'>EMPLEADO</td>
+                <td width='10%'>UNIDAD</td>
+                <td width='10%'>CARGO</td>
+                <td width='7%'>FECHA DOC.</td>
+                <td width='10%'>TIPO INCAPACIDAD</td>
+                <td width='8%'>RIESGO</td>
+                <td width='12%'>DIAGNÓSTICO</td>
+                <td width='5%'>N° DOC.</td>
+                <td width='7%'>INICIO</td>
+                <td width='7%'>FIN</td>
+                <td width='4%'>DÍAS</td>
+                <td width='10%'>HOSPITALIZACIÓN</td>
             </tr>";
 
-        foreach ($query as $i => $p) {
+        foreach ($registros as $i => $p) {
             $hospitaliza = $p->hospitalizacion
-                ? "SÍ ({$p->fecha_inicio_hospitalizacion} - {$p->fecha_fin_hospitalizacion})"
+                ? "SÍ ({$p->fecha_inicio_hospitalizacion} al {$p->fecha_fin_hospitalizacion})"
                 : 'NO';
             $bg = $i % 2 === 0 ? '#f9f9f9' : '#fff';
 
@@ -500,16 +456,20 @@ class ReportesPermisoController extends Controller
             </tr>";
         }
 
-        $totalDias = $query->sum('dias');
+        $totalDias = $registros->sum('dias');
+
         $html .= "</table>";
         $html .= "
         <br>
-        <table width='30%' border='1' cellpadding='4' style='border-collapse:collapse;font-size:9px;margin-left:auto;'>
-            <tr style='background:#e8e8e8;font-weight:bold;'>
-                <td>Total registros</td><td align='center'>" . count($query) . "</td>
+        <table width='28%' border='1' cellpadding='4'
+               style='border-collapse:collapse;font-size:9px;margin-left:auto;'>
+            <tr style='background:#e8e8e8; font-weight:bold;'>
+                <td>Total registros</td>
+                <td align='center'>" . count($registros) . "</td>
             </tr>
-            <tr style='background:#e8e8e8;font-weight:bold;'>
-                <td>Total días incapacidad</td><td align='center'>{$totalDias}</td>
+            <tr style='background:#e8e8e8; font-weight:bold;'>
+                <td>Total días incapacidad</td>
+                <td align='center'>{$totalDias}</td>
             </tr>
         </table>";
 
@@ -522,33 +482,33 @@ class ReportesPermisoController extends Controller
     // ─────────────────────────────────────────────────────────────
     private function pdfOtros($idEmpleado, $desde, $hasta)
     {
-        $query = PermisoOtros::with('empleado')
+        $registros = PermisoOtro::with('empleado')
             ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
-            ->when($desde,      fn($q) => $q->whereDate('fecha', '>=', $desde))
-            ->when($hasta,      fn($q) => $q->whereDate('fecha', '<=', $hasta))
+            ->whereDate('fecha', '>=', $desde)
+            ->whereDate('fecha', '<=', $hasta)
             ->orderBy('fecha')
             ->get();
 
         $mpdf = $this->mpdfHorizontal('Reporte - Otros Permisos');
-        $html = $this->htmlCabecera('REPORTE DE OTROS PERMISOS');
+        $html = $this->htmlCabecera('REPORTE DE OTROS PERMISOS', $desde, $hasta);
 
         $html .= "
-        <table width='100%' border='1' cellpadding='5' style='border-collapse:collapse;font-size:9px;'>
-            <tr style='background:#104e8c; color:#fff; font-weight:bold; text-align:center;'>
-                <td>#</td>
-                <td>EMPLEADO</td>
-                <td>UNIDAD</td>
-                <td>CARGO</td>
-                <td>FECHA</td>
-                <td>CONDICIÓN</td>
-                <td>FECHA INICIO</td>
-                <td>FECHA FIN</td>
-                <td>HORA INICIO</td>
-                <td>HORA FIN</td>
-                <td>RAZÓN</td>
+        <table width='100%' border='1' cellpadding='4' style='border-collapse:collapse;font-size:9px;'>
+            <tr style='background:#8a8f97; color:#fff; font-weight:bold; text-align:center;'>
+                <td width='3%'>#</td>
+                <td width='20%'>EMPLEADO</td>
+                <td width='13%'>UNIDAD</td>
+                <td width='13%'>CARGO</td>
+                <td width='8%'>FECHA DOC.</td>
+                <td width='10%'>CONDICIÓN</td>
+                <td width='9%'>FECHA INICIO</td>
+                <td width='9%'>FECHA FIN</td>
+                <td width='6%'>HORA INICIO</td>
+                <td width='6%'>HORA FIN</td>
+                <td width='10%'>RAZÓN</td>
             </tr>";
 
-        foreach ($query as $i => $p) {
+        foreach ($registros as $i => $p) {
             $condicion   = $p->condicion ? 'Fraccionado' : 'Día Completo';
             $fechaInicio = $p->condicion ? ($p->fecha_fraccionado ?? '-') : ($p->fecha_inicio ?? '-');
             $fechaFin    = $p->condicion ? '-' : ($p->fecha_fin ?? '-');
@@ -572,13 +532,8 @@ class ReportesPermisoController extends Controller
             </tr>";
         }
 
-        $html .= "</table>";
-        $html .= "<br><p style='font-size:9px;'><strong>Total de registros:</strong> " . count($query) . "</p>";
-
+        $html .= "</table>" . $this->htmlTotalRegistros(count($registros));
         $mpdf->WriteHTML($html);
         return $mpdf->Output('Reporte_Otros_Permisos.pdf', 'I');
     }
-
-
-
 }

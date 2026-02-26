@@ -26,4 +26,9 @@ class PermisoCompensatorio extends Model
         'hora_fin',
         'razon'
     ];
+
+    public function empleado()
+    {
+        return $this->belongsTo(Empleado::class, 'id_empleado');
+    }
 }
