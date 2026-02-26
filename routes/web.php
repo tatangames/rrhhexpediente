@@ -236,6 +236,8 @@ Route::post('/admin/historial/personal/borrar', [HistorialPermisoController::cla
 // REPORTES - GENERAL
 Route::get('/admin/reportes/general/index', [ReportesPermisoController::class,'indexReportesGeneral'])->name('reporte.general.index');
 
+// Generar Permiso PDF
+Route::post('/admin/reportes/permiso/pdf', [ReportesPermisoController::class, 'generarReportePermisoPDF'])->name('permiso.pdf.generar');
 
 
 

@@ -8,12 +8,15 @@ use App\Models\EvaluacionCargo;
 use App\Models\EvaluacionDependencias;
 use App\Models\EvaluacionUnidad;
 use Illuminate\Http\Request;
+use App\Models\Empleado;
+use App\Models\PermisoPersonal;
+use App\Models\PermisoCompensatorio;
+use App\Models\PermisoEnfermedad;
+use App\Models\PermisoConsultaMedica;
+use App\Models\PermisoIncapacidad;
 
 class JefeEvaluacionController extends Controller
 {
-
-
-
     public function indexLlenarEvaluacion()
     {
 
@@ -101,7 +104,7 @@ class JefeEvaluacionController extends Controller
 
         $mpdf->SetTitle('Evaluacion de Desempeño');
 
-        $logoalcaldia    = public_path('images/gobiernologo.jpg');
+        $logoalcaldia    = public_path('images/logo.png');
         $fechaEvaluacion = now()->format('d-m-Y');
 
         $html = "

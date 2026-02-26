@@ -474,6 +474,20 @@
         @media (min-width: 701px) and (max-width: 860px) {
             .form-grid-3col { grid-template-columns: 1fr; }
         }
+
+        .header-logo {
+            display: block;
+            margin: 0 auto 20px;
+            height: 105px;
+            width: auto;
+            object-fit: contain;
+            position: relative;
+            z-index: 1;
+        }
+
+        @media (max-width: 700px) {
+            .header-logo { height: 52px; }
+        }
     </style>
 </head>
 <body>
@@ -481,10 +495,17 @@
 <div class="top-bar"></div>
 
 <header class="page-header">
+    {{-- ── Logo ── --}}
+    <img src="{{ asset('images/logosantaananorte_blaco.png') }}"
+         alt="Logo Santa Ana"
+         class="header-logo">
+
     <div class="header-badge">TALENTO HUMANO</div>
     <h1>FICHA DE EVALUACION DE DESEMPEÑO</h1>
     <p>Complete todos los campos y seleccione una opción por cada criterio</p>
 </header>
+
+
 
 <div class="main-container">
 
@@ -705,7 +726,7 @@
     {{-- ── Botón Enviar ── --}}
     @if($evaluaciones->isNotEmpty())
         <button class="btn-submit" id="btn-enviar" onclick="enviarEvaluacion()">
-            Enviar Evaluación
+            VER EVALUACIÓN
         </button>
     @endif
 
