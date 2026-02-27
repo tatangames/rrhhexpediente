@@ -238,6 +238,7 @@ Route::get('/admin/reportes/general/index', [ReportesPermisoController::class,'i
 
 // Generar Permiso PDF
 Route::post('/admin/reportes/permiso/pdf', [ReportesPermisoController::class, 'generarReportePermisoPDF'])->name('permiso.pdf.generar');
+Route::post('/admin/reportes/permiso/excel', [ReportesPermisoController::class, 'generarReportePermisoEXCEL'])->name('permiso.excel.generar');
 
 
 

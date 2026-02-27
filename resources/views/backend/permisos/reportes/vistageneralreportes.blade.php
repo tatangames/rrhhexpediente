@@ -27,13 +27,16 @@
 
                             <!-- Empleado -->
                             <div class="form-group">
-                                <label>Empleado:</label>
+                                <label>Empleado: <span style="color:red">*</span></label>
                                 <select class="form-control" id="select-empleado">
-                                    <option value="">-- Todos los empleados --</option>
+                                    <option value="">-- Seleccione un empleado --</option>
                                     @foreach($arrayEmpleados as $item)
                                         <option value="{{ $item->id }}">{{ $item->nombre }}</option>
                                     @endforeach
                                 </select>
+                                <small class="text-danger d-none" id="error-empleado">
+                                    Debe seleccionar un empleado.
+                                </small>
                             </div>
 
                             <!-- Tipo de Permiso -->
@@ -80,12 +83,19 @@
 
                         </div>
 
-                        <div class="card-footer">
-                            <button type="button" onclick="generarPdf()"
+                        <div class="card-footer d-flex gap-2">
+                            <button type="button" onclick="generarReporte('pdf')"
                                     class="btn btn-outline-danger d-flex align-items-center" id="btn-pdf">
                                 <img src="{{ asset('images/logopdf.png') }}" width="28" height="28"
                                      style="margin-right:8px;">
                                 Generar PDF
+                            </button>
+
+                            <button style="margin-left: 15px" type="button" onclick="generarReporte('excel')"
+                                    class="btn btn-outline-success d-flex align-items-center" id="btn-excel">
+                                <img src="{{ asset('images/logoexcel.png') }}" width="28" height="28"
+                                     style="margin-right:8px;">
+                                Generar Excel
                             </button>
                         </div>
 
@@ -114,7 +124,11 @@
             minimumResultsForSearch: Infinity
         });
 
-        // Limpiar errores al cambiar fechas
+        // Limpiar errores al cambiar campos
+        $('#select-empleado').on('change', function () {
+            $('#error-empleado').addClass('d-none');
+        });
+
         $('#fecha-desde').on('change', function () {
             $('#error-desde, #error-rango').addClass('d-none');
             $(this).removeClass('is-invalid');
@@ -126,9 +140,9 @@
         });
 
         // ──────────────────────────────────────────────────
-        //  Validación y generación del PDF
+        //  Validación y generación del reporte (PDF / Excel)
         // ──────────────────────────────────────────────────
-        function generarPdf() {
+        function generarReporte(tipo) {
             const idEmpleado = $('#select-empleado').val();
             const tipoPerm   = $('#select-tipopermiso').val();
             const fechaDesde = $('#fecha-desde').val();
@@ -137,8 +151,14 @@
             let valido = true;
 
             // Limpiar estado anterior
-            $('#error-desde, #error-hasta, #error-rango').addClass('d-none');
+            $('#error-empleado, #error-desde, #error-hasta, #error-rango').addClass('d-none');
             $('#fecha-desde, #fecha-hasta').removeClass('is-invalid');
+
+            // Validar empleado
+            if (!idEmpleado) {
+                $('#error-empleado').removeClass('d-none');
+                valido = false;
+            }
 
             // Validar fecha desde
             if (!fechaDesde) {
@@ -163,10 +183,16 @@
 
             if (!valido) return;
 
+            // Definir la ruta según el tipo
+            const rutas = {
+                pdf:   '{{ route("permiso.pdf.generar") }}',
+                excel: '{{ route("permiso.excel.generar") }}'
+            };
+
             // Construir formulario dinámico POST → nueva pestaña
             const form = document.createElement('form');
             form.method = 'POST';
-            form.action = '{{ route("permiso.pdf.generar") }}';
+            form.action = rutas[tipo];
             form.target = '_blank';
 
             const fields = {

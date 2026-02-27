@@ -12,7 +12,7 @@ use App\Models\PermisoCompensatorio;
 use App\Models\PermisoEnfermedad;
 use App\Models\PermisoConsultaMedica;
 use App\Models\PermisoIncapacidad;
-use App\Models\PermisoOtro;       // ← era el modelo faltante
+use App\Models\PermisoOtro;
 
 class ReportesPermisoController extends Controller
 {
@@ -411,67 +411,70 @@ class ReportesPermisoController extends Controller
             ->orderBy('fecha')
             ->get();
 
+        // Helper: formatea fecha d-m-Y o retorna vacío si es null
+        $fmt = fn($fecha) => $fecha ? \Carbon\Carbon::parse($fecha)->format('d-m-Y') : '';
+
         $mpdf = $this->mpdfHorizontal('Reporte - Incapacidades');
         $html = $this->htmlCabecera('REPORTE DE PERMISOS POR INCAPACIDAD', $desde, $hasta);
 
         $html .= "
-        <table width='100%' border='1' cellpadding='4' style='border-collapse:collapse;font-size:9px;'>
-            <tr style='background:#8a8f97; color:#fff; font-weight:bold; text-align:center;'>
-                <td width='3%'>#</td>
-                <td width='17%'>EMPLEADO</td>
-                <td width='10%'>UNIDAD</td>
-                <td width='10%'>CARGO</td>
-                <td width='7%'>FECHA DOC.</td>
-                <td width='10%'>TIPO INCAPACIDAD</td>
-                <td width='8%'>RIESGO</td>
-                <td width='12%'>DIAGNÓSTICO</td>
-                <td width='5%'>N° DOC.</td>
-                <td width='7%'>INICIO</td>
-                <td width='7%'>FIN</td>
-                <td width='4%'>DÍAS</td>
-                <td width='10%'>HOSPITALIZACIÓN</td>
-            </tr>";
+    <table width='100%' border='1' cellpadding='4' style='border-collapse:collapse;font-size:9px;'>
+        <tr style='background:#8a8f97; color:#fff; font-weight:bold; text-align:center;'>
+            <td width='3%'>#</td>
+            <td width='17%'>EMPLEADO</td>
+            <td width='10%'>UNIDAD</td>
+            <td width='10%'>CARGO</td>
+            <td width='7%'>FECHA DOC.</td>
+            <td width='10%'>TIPO INCAPACIDAD</td>
+            <td width='8%'>RIESGO</td>
+            <td width='12%'>DIAGNÓSTICO</td>
+            <td width='5%'>N° DOC.</td>
+            <td width='7%'>INICIO</td>
+            <td width='7%'>FIN</td>
+            <td width='4%'>DÍAS</td>
+            <td width='10%'>HOSPITALIZACIÓN</td>
+        </tr>";
 
         foreach ($registros as $i => $p) {
             $hospitaliza = $p->hospitalizacion
-                ? "SÍ ({$p->fecha_inicio_hospitalizacion} al {$p->fecha_fin_hospitalizacion})"
+                ? "SÍ ({$fmt($p->fecha_inicio_hospitalizacion)} al {$fmt($p->fecha_fin_hospitalizacion)})"
                 : 'NO';
             $bg = $i % 2 === 0 ? '#f9f9f9' : '#fff';
 
             $html .= "
-            <tr style='background:{$bg};'>
-                <td align='center'>" . ($i + 1) . "</td>
-                <td>{$p->empleado->nombre}</td>
-                <td>{$p->unidad}</td>
-                <td>{$p->cargo}</td>
-                <td align='center'>{$p->fecha}</td>
-                <td>{$p->tipoIncapacidad->nombre}</td>
-                <td>{$p->riesgo->nombre}</td>
-                <td>{$p->diagnostico}</td>
-                <td align='center'>{$p->numero}</td>
-                <td align='center'>{$p->fecha_inicio}</td>
-                <td align='center'>{$p->fecha_fin}</td>
-                <td align='center'>{$p->dias}</td>
-                <td align='center'>{$hospitaliza}</td>
-            </tr>";
+        <tr style='background:{$bg};'>
+            <td align='center'>" . ($i + 1) . "</td>
+            <td>{$p->empleado?->nombre}</td>
+            <td>{$p->unidad}</td>
+            <td>{$p->cargo}</td>
+            <td align='center'>{$fmt($p->fecha)}</td>
+            <td>{$p->tipoIncapacidad?->nombre}</td>
+            <td>{$p->riesgo?->nombre}</td>
+            <td>{$p->diagnostico}</td>
+            <td align='center'>{$p->numero}</td>
+            <td align='center'>{$fmt($p->fecha_inicio)}</td>
+            <td align='center'>{$fmt($p->fecha_fin)}</td>
+            <td align='center'>{$p->dias}</td>
+            <td align='center'>{$hospitaliza}</td>
+        </tr>";
         }
 
         $totalDias = $registros->sum('dias');
 
         $html .= "</table>";
         $html .= "
-        <br>
-        <table width='28%' border='1' cellpadding='4'
-               style='border-collapse:collapse;font-size:9px;margin-left:auto;'>
-            <tr style='background:#e8e8e8; font-weight:bold;'>
-                <td>Total registros</td>
-                <td align='center'>" . count($registros) . "</td>
-            </tr>
-            <tr style='background:#e8e8e8; font-weight:bold;'>
-                <td>Total días incapacidad</td>
-                <td align='center'>{$totalDias}</td>
-            </tr>
-        </table>";
+            <br>
+            <table width='28%' border='1' cellpadding='4'
+                   style='border-collapse:collapse;font-size:9px;margin-left:auto;'>
+                <tr style='background:#e8e8e8; font-weight:bold;'>
+                    <td>Total registros</td>
+                    <td align='center'>" . count($registros) . "</td>
+                </tr>
+                <tr style='background:#e8e8e8; font-weight:bold;'>
+                    <td>Total días incapacidad</td>
+                    <td align='center'>{$totalDias}</td>
+                </tr>
+            </table>";
 
         $mpdf->WriteHTML($html);
         return $mpdf->Output('Reporte_Incapacidades.pdf', 'I');
