@@ -85,14 +85,14 @@
 
                         <div class="card-footer d-flex gap-2">
                             <button type="button" onclick="generarReporte('pdf')"
-                                    class="btn btn-outline-danger d-flex align-items-center" id="btn-pdf">
+                                    class="btn btn-outline-danger d-flex align-items-center">
                                 <img src="{{ asset('images/logopdf.png') }}" width="28" height="28"
                                      style="margin-right:8px;">
                                 Generar PDF
                             </button>
 
-                            <button style="margin-left: 15px" type="button" onclick="generarReporte('excel')"
-                                    class="btn btn-outline-success d-flex align-items-center" id="btn-excel">
+                            <button type="button" onclick="generarReporte('excel')"
+                                    class="btn btn-outline-success d-flex align-items-center">
                                 <img src="{{ asset('images/logoexcel.png') }}" width="28" height="28"
                                      style="margin-right:8px;">
                                 Generar Excel
@@ -124,7 +124,6 @@
             minimumResultsForSearch: Infinity
         });
 
-        // Limpiar errores al cambiar campos
         $('#select-empleado').on('change', function () {
             $('#error-empleado').addClass('d-none');
         });
@@ -139,9 +138,6 @@
             $(this).removeClass('is-invalid');
         });
 
-        // ──────────────────────────────────────────────────
-        //  Validación y generación del reporte (PDF / Excel)
-        // ──────────────────────────────────────────────────
         function generarReporte(tipo) {
             const idEmpleado = $('#select-empleado').val();
             const tipoPerm   = $('#select-tipopermiso').val();
@@ -150,31 +146,26 @@
 
             let valido = true;
 
-            // Limpiar estado anterior
             $('#error-empleado, #error-desde, #error-hasta, #error-rango').addClass('d-none');
             $('#fecha-desde, #fecha-hasta').removeClass('is-invalid');
 
-            // Validar empleado
             if (!idEmpleado) {
                 $('#error-empleado').removeClass('d-none');
                 valido = false;
             }
 
-            // Validar fecha desde
             if (!fechaDesde) {
                 $('#error-desde').removeClass('d-none');
                 $('#fecha-desde').addClass('is-invalid');
                 valido = false;
             }
 
-            // Validar fecha hasta
             if (!fechaHasta) {
                 $('#error-hasta').removeClass('d-none');
                 $('#fecha-hasta').addClass('is-invalid');
                 valido = false;
             }
 
-            // Validar rango: desde <= hasta
             if (fechaDesde && fechaHasta && fechaDesde > fechaHasta) {
                 $('#error-rango').removeClass('d-none');
                 $('#fecha-desde, #fecha-hasta').addClass('is-invalid');
@@ -183,13 +174,11 @@
 
             if (!valido) return;
 
-            // Definir la ruta según el tipo
             const rutas = {
                 pdf:   '{{ route("permiso.pdf.generar") }}',
                 excel: '{{ route("permiso.excel.generar") }}'
             };
 
-            // Construir formulario dinámico POST → nueva pestaña
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = rutas[tipo];

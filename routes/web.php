@@ -10,15 +10,14 @@ use App\Http\Controllers\Sistema\FichaController;
 use App\Http\Controllers\Sistema\ConfiguracionController;
 use App\Http\Controllers\Sistema\RRHHController;
 
-
 use App\Http\Controllers\Permiso\ConfigPermisoController;
 use App\Http\Controllers\Permiso\ReportesPermisoController;
 use App\Http\Controllers\Permiso\HistorialPermisoController;
 
-
 use App\Http\Controllers\Evaluacion\EvaluacionController;
 use App\Http\Controllers\Evaluacion\JefeEvaluacionController;
 
+use App\Http\Controllers\Permiso\ReportesExcelPermisoController;
 
 
 Route::get('/', [LoginController::class,'vistaLoginForm'])->name('login.admin');
@@ -236,9 +235,9 @@ Route::post('/admin/historial/personal/borrar', [HistorialPermisoController::cla
 // REPORTES - GENERAL
 Route::get('/admin/reportes/general/index', [ReportesPermisoController::class,'indexReportesGeneral'])->name('reporte.general.index');
 
-// Generar Permiso PDF
+// Generar Permiso PDF y EXCEL
 Route::post('/admin/reportes/permiso/pdf', [ReportesPermisoController::class, 'generarReportePermisoPDF'])->name('permiso.pdf.generar');
-Route::post('/admin/reportes/permiso/excel', [ReportesPermisoController::class, 'generarReportePermisoEXCEL'])->name('permiso.excel.generar');
+Route::post('/admin/reportes/permiso/excel', [ReportesExcelPermisoController::class, 'generarReportePermisoEXCEL'])->name('permiso.excel.generar');
 
 
 
@@ -266,9 +265,7 @@ Route::post('/admin/reportes/permiso/excel', [ReportesPermisoController::class, 
 
 // *-***************************************************************************************
 // ============================ MODULO EVALUACION ==========================================
-
-
-
+// *-***************************************************************************************
 
 
 // EVALUACION - REGISTRO
