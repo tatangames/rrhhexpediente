@@ -7,14 +7,14 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Run the migrations.
+     * MODULO PERMISOS
      */
     public function up(): void
     {
         Schema::create('permisos_consultamedica', function (Blueprint $table) {
             $table->id();
             // Nombre no cambia
-            $table->foreignId('id_empleado')->constrained('empleados');
+            $table->foreignId('id_empleado')->constrained('permisos_empleados');
 
             // Estos datos son copias porque si pueden cambiar
             $table->string('unidad', 100)->nullable();

@@ -7,11 +7,11 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * MODULO FICHA
+     * Run the migrations.
      */
     public function up(): void
     {
-        Schema::create('nivel_academico', function (Blueprint $table) {
+        Schema::create('permisos_riesgos', function (Blueprint $table) {
             $table->id();
             $table->string('nombre', 100);
         });
@@ -22,6 +22,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('nivel_academico');
+        Schema::dropIfExists('permisos_riesgos');
     }
 };

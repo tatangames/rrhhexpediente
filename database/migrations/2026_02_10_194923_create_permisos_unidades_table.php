@@ -7,15 +7,12 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * LISTADO DE EMPLEADOS
+     * Run the migrations.
      */
     public function up(): void
     {
-        Schema::create('empleados', function (Blueprint $table) {
+        Schema::create('permisos_unidades', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('id_unidad')->constrained('unidad');
-            $table->foreignId('id_cargo')->constrained('cargo');
-
             $table->string('nombre', 100);
         });
     }
@@ -25,6 +22,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('empleados');
+        Schema::dropIfExists('permisos_unidades');
     }
 };

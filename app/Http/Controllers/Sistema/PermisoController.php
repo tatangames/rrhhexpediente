@@ -4,8 +4,6 @@ namespace App\Http\Controllers\Sistema;
 
 use App\Http\Controllers\Controller;
 use App\Models\Administrador;
-use App\Models\Cargo;
-use App\Models\Empleado;
 use App\Models\FichaEmpleado;
 use App\Models\PermisoCompensatorio;
 use App\Models\PermisoConsultaMedica;
@@ -13,9 +11,11 @@ use App\Models\PermisoEnfermedad;
 use App\Models\PermisoIncapacidad;
 use App\Models\PermisoOtro;
 use App\Models\PermisoPersonal;
-use App\Models\Riesgo;
-use App\Models\TipoIncapacidad;
-use App\Models\Unidad;
+use App\Models\PermisoRiesgo;
+use App\Models\PermisosCargos;
+use App\Models\PermisosEmpleados;
+use App\Models\PermisosTipoIncapacidad;
+use App\Models\PermisosUnidades;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -230,7 +230,7 @@ class PermisoController extends Controller
     {
         $texto = $request->get('q');
 
-        $empleados = Empleado::where('nombre', 'LIKE', "%$texto%")
+        $empleados = PermisosEmpleados::where('nombre', 'LIKE', "%$texto%")
             ->with(['unidad', 'cargo'])
             ->limit(50)
             ->get()
@@ -346,7 +346,7 @@ class PermisoController extends Controller
 
         try {
 
-            $empleado = Empleado::find($request->empleado_id);
+            $empleado = PermisosEmpleados::find($request->empleado_id);
 
             if (!$empleado) {
                 return response()->json([
@@ -356,8 +356,8 @@ class PermisoController extends Controller
             }
 
             // 🔎 Buscar unidad y cargo
-            $unidad = Unidad::find($empleado->id_unidad);
-            $cargo = Cargo::find($empleado->id_cargo);
+            $unidad = PermisosUnidades::find($empleado->id_unidad);
+            $cargo = PermisosCargos::find($empleado->id_cargo);
 
             $nombreUnidad = $unidad->nombre ?? null;
             $nombreCargo = $cargo->nombre ?? null;
@@ -397,8 +397,8 @@ class PermisoController extends Controller
     {
         $temaPredeterminado = $this->getTemaPredeterminado();
 
-        $arrayTipoIncapacidad = TipoIncapacidad::orderBy('nombre', 'asc')->get();
-        $arrayRiesgo = Riesgo::orderBy('nombre', 'asc')->get();
+        $arrayTipoIncapacidad = PermisosTipoIncapacidad::orderBy('nombre', 'asc')->get();
+        $arrayRiesgo = PermisoRiesgo::orderBy('nombre', 'asc')->get();
 
         return view('backend.permisos.generar.generarpermisoincapacidad', compact('temaPredeterminado', 'arrayTipoIncapacidad', 'arrayRiesgo'));
     }
@@ -409,7 +409,7 @@ class PermisoController extends Controller
     {
         try {
 
-            $empleado = Empleado::find($request->empleado_id);
+            $empleado = PermisosEmpleados::find($request->empleado_id);
 
             if (!$empleado) {
                 return response()->json([
@@ -419,8 +419,8 @@ class PermisoController extends Controller
             }
 
             // 🔎 Buscar unidad y cargo
-            $unidad = Unidad::find($empleado->id_unidad);
-            $cargo = Cargo::find($empleado->id_cargo);
+            $unidad = PermisosUnidades::find($empleado->id_unidad);
+            $cargo = PermisosCargos::find($empleado->id_cargo);
 
             $nombreUnidad = $unidad->nombre ?? null;
             $nombreCargo = $cargo->nombre ?? null;
@@ -587,7 +587,7 @@ class PermisoController extends Controller
 
         try {
 
-            $empleado = Empleado::find($request->empleado_id);
+            $empleado = PermisosEmpleados::find($request->empleado_id);
 
             if (!$empleado) {
                 return response()->json([
@@ -597,8 +597,8 @@ class PermisoController extends Controller
             }
 
             // 🔎 Buscar unidad y cargo
-            $unidad = Unidad::find($empleado->id_unidad);
-            $cargo = Cargo::find($empleado->id_cargo);
+            $unidad = PermisosUnidades::find($empleado->id_unidad);
+            $cargo = PermisosCargos::find($empleado->id_cargo);
 
             $nombreUnidad = $unidad->nombre ?? null;
             $nombreCargo = $cargo->nombre ?? null;
@@ -742,7 +742,7 @@ class PermisoController extends Controller
 
         try {
 
-            $empleado = Empleado::find($request->empleado_id);
+            $empleado = PermisosEmpleados::find($request->empleado_id);
 
             if (!$empleado) {
                 return response()->json([
@@ -752,8 +752,8 @@ class PermisoController extends Controller
             }
 
             // 🔎 Buscar unidad y cargo
-            $unidad = Unidad::find($empleado->id_unidad);
-            $cargo = Cargo::find($empleado->id_cargo);
+            $unidad = PermisosUnidades::find($empleado->id_unidad);
+            $cargo = PermisosCargos::find($empleado->id_cargo);
 
             $nombreUnidad = $unidad->nombre ?? null;
             $nombreCargo = $cargo->nombre ?? null;
@@ -990,7 +990,7 @@ class PermisoController extends Controller
 
         try {
 
-            $empleado = Empleado::find($request->empleado_id);
+            $empleado = PermisosEmpleados::find($request->empleado_id);
 
             if (!$empleado) {
                 return response()->json([
@@ -1000,8 +1000,8 @@ class PermisoController extends Controller
             }
 
             // 🔎 Buscar unidad y cargo
-            $unidad = Unidad::find($empleado->id_unidad);
-            $cargo = Cargo::find($empleado->id_cargo);
+            $unidad = PermisosUnidades::find($empleado->id_unidad);
+            $cargo = PermisosCargos::find($empleado->id_cargo);
 
             $nombreUnidad = $unidad->nombre ?? null;
             $nombreCargo = $cargo->nombre ?? null;
@@ -1255,7 +1255,7 @@ class PermisoController extends Controller
 
         try {
 
-            $empleado = Empleado::find($request->empleado_id);
+            $empleado = PermisosEmpleados::find($request->empleado_id);
 
             if (!$empleado) {
                 return response()->json([
@@ -1265,8 +1265,8 @@ class PermisoController extends Controller
             }
 
             // 🔎 Buscar unidad y cargo
-            $unidad = Unidad::find($empleado->id_unidad);
-            $cargo = Cargo::find($empleado->id_cargo);
+            $unidad = PermisosUnidades::find($empleado->id_unidad);
+            $cargo = PermisosCargos::find($empleado->id_cargo);
 
             $nombreUnidad = $unidad->nombre ?? null;
             $nombreCargo = $cargo->nombre ?? null;

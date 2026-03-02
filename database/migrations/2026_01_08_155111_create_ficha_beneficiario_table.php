@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     *
+     * MODULO FICHA
      */
     public function up(): void
     {

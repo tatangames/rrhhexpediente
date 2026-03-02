@@ -1,9 +1,9 @@
 @extends('adminlte::page')
 
-@section('title', 'Empleados')
+@section('title', 'Unidades')
 
 @section('content_header')
-    <h1>Empleados</h1>
+    <h1>Unidades</h1>
 @stop
 {{-- Activa plugins que necesitas --}}
 @section('plugins.Datatables', true)
@@ -61,14 +61,14 @@
                         onclick="modalAgregar()"
                         class="btn btn-primary btn-sm">
                     <i class="fas fa-pencil-alt"></i>
-                    Nuevo Empleado
+                    Nueva Unidad
                 </button>
             </div>
 
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
-                    <li class="breadcrumb-item">Empleado</li>
-                    <li class="breadcrumb-item active">Listado de Empleados</li>
+                    <li class="breadcrumb-item">Unidad</li>
+                    <li class="breadcrumb-item active">Listado de Unidades</li>
                 </ol>
             </div>
         </div>
@@ -93,10 +93,10 @@
     </section>
 
     <div class="modal fade" id="modalAgregar">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog ">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title">Nuevo Empleado</h4>
+                    <h4 class="modal-title">Nueva Unidad</h4>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -108,30 +108,11 @@
                                 <div class="col-md-12">
 
                                     <div class="form-group">
-                                        <label>Nombre: <span style="color: red">*</span></label>
-                                        <input type="text" maxlength="100" class="form-control" id="nombre-nuevo"
+                                        <label>Unidad</label>
+                                        <input type="text" maxlength="100" class="form-control" id="unidad-nuevo"
                                                autocomplete="off">
                                     </div>
 
-                                    <div class="form-group">
-                                        <label>Unidad: <span style="color: red">*</span></label>
-                                        <br>
-                                        <select width="100%" class="form-control" id="select-unidad">
-                                            @foreach($arrayUnidad as $item)
-                                                <option value="{{ $item->id }}">{{ $item->nombre }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label>Cargo: <span style="color: red">*</span></label>
-                                        <br>
-                                        <select width="100%" class="form-control" id="select-cargo">
-                                            @foreach($arrayCargo as $item)
-                                                <option value="{{ $item->id }}">{{ $item->nombre }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
 
                                 </div>
                             </div>
@@ -150,10 +131,10 @@
 
     <!-- modal editar -->
     <div class="modal fade" id="modalEditar">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title">Editar Empleado</h4>
+                    <h4 class="modal-title">Editar Unidad</h4>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -169,25 +150,10 @@
                                     </div>
 
                                     <div class="form-group">
-                                        <label>Nombre: <span style="color: red">*</span></label>
-                                        <input type="text" maxlength="100" class="form-control" id="nombre-editar"
+                                        <label>Unidad</label>
+                                        <input type="text" maxlength="100" class="form-control" id="unidad-editar"
                                                autocomplete="off">
                                     </div>
-
-                                    <div class="form-group">
-                                        <label>Unidad: <span style="color: red">*</span></label>
-                                        <br>
-                                        <select width="100%" class="form-control" id="select-unidad-editar">
-                                        </select>
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label>Cargo: <span style="color: red">*</span></label>
-                                        <br>
-                                        <select width="100%" class="form-control" id="select-cargo-editar">
-                                        </select>
-                                    </div>
-
 
                                 </div>
                             </div>
@@ -214,7 +180,7 @@
     <script src="{{ asset('js/select2.min.js') }}" type="text/javascript"></script>
     <script>
         $(function () {
-            const ruta = "{{ url('/admin/empleados/tabla') }}";
+            const ruta = "{{ url('/admin/permisos/unidad/tabla') }}";
 
             function initDataTable() {
                 // Si ya hay instancia, destrúyela antes de re-crear
@@ -273,10 +239,11 @@
         });
     </script>
 
+
     <script>
 
         function recargar() {
-            var ruta = "{{ url('/admin/empleados/tabla') }}";
+            var ruta = "{{ url('/admin/permisos/unidad/tabla') }}";
             $('#tablaDatatable').load(ruta);
         }
 
@@ -287,30 +254,18 @@
         }
 
         function nuevo() {
-            var nombre = document.getElementById('nombre-nuevo').value;
-            var unidad = document.getElementById('select-unidad').value;
-            var cargo = document.getElementById('select-cargo').value;
+            var nombre = document.getElementById('unidad-nuevo').value;
 
             if (nombre === '') {
                 toastr.error('Nombre es requerido');
-                return;
-            }
-            if (unidad === '') {
-                toastr.error('Unidad es requerido');
-                return;
-            }
-            if (cargo === '') {
-                toastr.error('Cargo es requerido');
                 return;
             }
 
             openLoading();
             var formData = new FormData();
             formData.append('nombre', nombre);
-            formData.append('unidad', unidad);
-            formData.append('cargo', cargo);
 
-            axios.post(urlAdmin + '/admin/empleados/nuevo', formData, {})
+            axios.post(urlAdmin + '/admin/permisos/unidad/nuevo', formData, {})
                 .then((response) => {
                     closeLoading();
                     if (response.data.success === 1) {
@@ -331,19 +286,7 @@
             openLoading();
             document.getElementById("formulario-editar").reset();
 
-            // Destruir Select2 antes de limpiar para evitar duplicados
-            if ($('#select-unidad-editar').hasClass('select2-hidden-accessible')) {
-                $('#select-unidad-editar').select2('destroy');
-            }
-            if ($('#select-cargo-editar').hasClass('select2-hidden-accessible')) {
-                $('#select-cargo-editar').select2('destroy');
-            }
-
-            // Limpiar opciones
-            $('#select-unidad-editar').empty();
-            $('#select-cargo-editar').empty();
-
-            axios.post(urlAdmin + '/admin/empleados/informacion', {
+            axios.post(urlAdmin + '/admin/permisos/unidad/informacion', {
                 'id': id
             })
                 .then((response) => {
@@ -351,40 +294,7 @@
                     if (response.data.success === 1) {
                         $('#modalEditar').modal('show');
                         $('#id-editar').val(id);
-                        $('#nombre-editar').val(response.data.info.nombre);
-
-                        $.each(response.data.arrayUnidad, function( key, val ){
-                            if(response.data.info.id_unidad == val.id){
-                                $('#select-unidad-editar').append('<option value="' +val.id +'" selected="selected">'+ val.nombre +'</option>');
-                            }else{
-                                $('#select-unidad-editar').append('<option value="' +val.id +'">'+ val.nombre +'</option>');
-                            }
-                        });
-
-                        $.each(response.data.arrayCargo, function( key, val ){
-                            if(response.data.info.id_cargo == val.id){
-                                $('#select-cargo-editar').append('<option value="' +val.id +'" selected="selected">'+ val.nombre +'</option>');
-                            }else{
-                                $('#select-cargo-editar').append('<option value="' +val.id +'">'+ val.nombre +'</option>');
-                            }
-                        });
-
-                        // Inicializar Select2 con buscador en el modal editar
-                        $('#select-unidad-editar').select2({
-                            theme: 'bootstrap-5',
-                            dropdownParent: $('#modalEditar'),
-                            placeholder: 'Seleccione una unidad',
-                            allowClear: true,
-                            width: '100%'
-                        });
-
-                        $('#select-cargo-editar').select2({
-                            theme: 'bootstrap-5',
-                            dropdownParent: $('#modalEditar'),
-                            placeholder: 'Seleccione un cargo',
-                            allowClear: true,
-                            width: '100%'
-                        });
+                        $('#unidad-editar').val(response.data.info.nombre);
 
                     } else {
                         toastr.error('Información no encontrada');
@@ -398,20 +308,10 @@
 
         function editar() {
             var id = document.getElementById('id-editar').value;
-            var nombre = document.getElementById('nombre-editar').value;
-            var unidad = $('#select-unidad-editar').val();
-            var cargo = $('#select-cargo-editar').val();
+            var nombre = document.getElementById('unidad-editar').value;
 
             if (nombre === '') {
                 toastr.error('Nombre es requerido');
-                return;
-            }
-            if (!unidad) {
-                toastr.error('Unidad es requerido');
-                return;
-            }
-            if (!cargo) {
-                toastr.error('Cargo es requerido');
                 return;
             }
 
@@ -419,10 +319,8 @@
             var formData = new FormData();
             formData.append('id', id);
             formData.append('nombre', nombre);
-            formData.append('unidad', unidad);
-            formData.append('cargo', cargo);
 
-            axios.post(urlAdmin + '/admin/empleados/editar', formData, {})
+            axios.post(urlAdmin + '/admin/permisos/unidad/editar', formData, {})
                 .then((response) => {
                     closeLoading();
 
@@ -517,3 +415,25 @@
     </script>
 
 @endsection
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Permiso;
 
 use App\Http\Controllers\Controller;
-use App\Models\Empleado;
+use App\Models\PermisosEmpleados;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -29,7 +29,7 @@ class ReportesPermisoController extends Controller
     public function indexReportesGeneral()
     {
         $temaPredeterminado = $this->getTemaPredeterminado();
-        $arrayEmpleados     = Empleado::orderBy('nombre', 'ASC')->get();
+        $arrayEmpleados     = PermisosEmpleados::orderBy('nombre', 'ASC')->get();
 
         return view('backend.permisos.reportes.vistageneralreportes',
             compact('temaPredeterminado', 'arrayEmpleados'));
@@ -45,7 +45,7 @@ class ReportesPermisoController extends Controller
             'tipo_permiso' => 'required|integer|between:1,6',
             'fecha_desde'  => 'required|date',
             'fecha_hasta'  => 'required|date|after_or_equal:fecha_desde',
-            'id_empleado'  => 'nullable|integer|exists:empleados,id',
+            'id_empleado'  => 'nullable|integer|exists:permisos_empleados,id',
         ], [
             'fecha_desde.required'          => 'La fecha de inicio es requerida.',
             'fecha_hasta.required'          => 'La fecha de fin es requerida.',

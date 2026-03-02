@@ -7,14 +7,14 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Run the migrations.
+     * MODULO PERMISOS
      */
     public function up(): void
     {
         Schema::create('permisos_incapacidad', function (Blueprint $table) {
             $table->id();
             // Relación con empleado
-            $table->foreignId('id_empleado')->constrained('empleados');
+            $table->foreignId('id_empleado')->constrained('permisos_empleados');
 
             // Datos copiados del empleado (pueden cambiar)
             $table->string('unidad', 100)->nullable();
@@ -24,8 +24,8 @@ return new class extends Migration
             $table->date('fecha');
 
             // Tipo y riesgo
-            $table->foreignId('id_tipo_incapacidad')->constrained('tipo_incapacidad');
-            $table->foreignId('id_riesgo')->constrained('riesgos');
+            $table->foreignId('id_tipo_incapacidad')->constrained('permisos_tipoincapacidad');
+            $table->foreignId('id_riesgo')->constrained('permisos_riesgos');
 
             // Período de incapacidad
             $table->date('fecha_inicio');

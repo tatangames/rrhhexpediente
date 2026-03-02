@@ -128,7 +128,7 @@ class ReportesExcelPermisoController extends Controller
             'tipo_permiso' => 'required|integer|between:1,6',
             'fecha_desde'  => 'required|date',
             'fecha_hasta'  => 'required|date|after_or_equal:fecha_desde',
-            'id_empleado'  => 'nullable|integer|exists:empleados,id',
+            'id_empleado'  => 'nullable|integer|exists:permisos_empleados,id',
         ]);
 
         $tipo       = (int) $request->tipo_permiso;

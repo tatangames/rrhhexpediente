@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('riesgos', function (Blueprint $table) {
+        Schema::create('permisos_tipoincapacidad', function (Blueprint $table) {
             $table->id();
             $table->string('nombre', 100);
         });
@@ -22,6 +22,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('riesgos');
+        Schema::dropIfExists('permisos_tipoincapacidad');
     }
 };

@@ -3,17 +3,17 @@
 namespace App\Http\Controllers\Permiso;
 
 use App\Http\Controllers\Controller;
-use App\Models\Cargo;
-use App\Models\Empleado;
 use App\Models\PermisoCompensatorio;
 use App\Models\PermisoConsultaMedica;
 use App\Models\PermisoEnfermedad;
 use App\Models\PermisoIncapacidad;
 use App\Models\PermisoOtro;
 use App\Models\PermisoPersonal;
-use App\Models\Riesgo;
-use App\Models\TipoIncapacidad;
-use App\Models\Unidad;
+use App\Models\PermisoRiesgo;
+use App\Models\PermisosCargos;
+use App\Models\PermisosEmpleados;
+use App\Models\PermisosTipoIncapacidad;
+use App\Models\PermisosUnidades;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -47,10 +47,9 @@ class HistorialPermisoController extends Controller
         $arrayPermisos = PermisoOtro::orderBy('fecha', 'asc')->get()
             ->map(function ($item) {
 
-
                 $item->fecha = date('d-m-Y', strtotime($item->fecha));
 
-                $infoEmpleado = Empleado::find($item->id_empleado);
+                $infoEmpleado = PermisosEmpleados::find($item->id_empleado);
                 $nombreEmpleado = $infoEmpleado->nombre;
 
                 $item->nombreEmpleado = $nombreEmpleado;
@@ -76,10 +75,10 @@ class HistorialPermisoController extends Controller
         $info = PermisoOtro::where('id', $request->id)->first();
 
         // Agregar nombre del empleado
-        $empleado = Empleado::find($info->id_empleado);
+        $empleado = PermisosEmpleados::find($info->id_empleado);
         $info->nombre_empleado = $empleado->nombre ?? 'Sin nombre';
 
-        $arrayEmpleados = Empleado::orderBy('nombre', 'asc')->get();
+        $arrayEmpleados = PermisosEmpleados::orderBy('nombre', 'asc')->get();
 
         return ['success' => 1, 'info' => $info, 'arrayEmpleados' => $arrayEmpleados];
     }
@@ -108,14 +107,14 @@ class HistorialPermisoController extends Controller
                 return response()->json(['success' => 0, 'message' => 'Registro no encontrado']);
             }
 
-            $empleado = Empleado::find($request->empleado_id);
+            $empleado = PermisosEmpleados::find($request->empleado_id);
 
             if (!$empleado) {
                 return response()->json(['success' => 0, 'message' => 'Empleado no encontrado']);
             }
 
-            $unidad = Unidad::find($empleado->id_unidad);
-            $cargo  = Cargo::find($empleado->id_cargo);
+            $unidad = PermisosUnidades::find($empleado->id_unidad);
+            $cargo  = PermisosCargos::find($empleado->id_cargo);
 
             $permiso->update([
                 'id_empleado' => $request->empleado_id,
@@ -178,7 +177,7 @@ class HistorialPermisoController extends Controller
 
                 $item->fecha = date('d-m-Y', strtotime($item->fecha));
 
-                $infoEmpleado = Empleado::find($item->id_empleado);
+                $infoEmpleado = PermisosEmpleados::find($item->id_empleado);
                 $nombreEmpleado = $infoEmpleado->nombre;
 
                 $item->nombreEmpleado = $nombreEmpleado;
@@ -204,10 +203,10 @@ class HistorialPermisoController extends Controller
         $info = PermisoEnfermedad::where('id', $request->id)->first();
 
         // Agregar nombre del empleado
-        $empleado = Empleado::find($info->id_empleado);
+        $empleado = PermisosEmpleados::find($info->id_empleado);
         $info->nombre_empleado = $empleado->nombre ?? 'Sin nombre';
 
-        $arrayEmpleados = Empleado::orderBy('nombre', 'asc')->get();
+        $arrayEmpleados = PermisosEmpleados::orderBy('nombre', 'asc')->get();
 
         return ['success' => 1, 'info' => $info, 'arrayEmpleados' => $arrayEmpleados];
     }
@@ -238,14 +237,14 @@ class HistorialPermisoController extends Controller
                 return response()->json(['success' => 0, 'message' => 'Registro no encontrado']);
             }
 
-            $empleado = Empleado::find($request->empleado_id);
+            $empleado = PermisosEmpleados::find($request->empleado_id);
 
             if (!$empleado) {
                 return response()->json(['success' => 0, 'message' => 'Empleado no encontrado']);
             }
 
-            $unidad = Unidad::find($empleado->id_unidad);
-            $cargo  = Cargo::find($empleado->id_cargo);
+            $unidad = PermisosUnidades::find($empleado->id_unidad);
+            $cargo  = PermisosCargos::find($empleado->id_cargo);
 
             $permiso->update([
                 'id_empleado' => $request->empleado_id,
@@ -313,7 +312,7 @@ class HistorialPermisoController extends Controller
 
                 $item->fecha = date('d-m-Y', strtotime($item->fecha));
 
-                $infoEmpleado = Empleado::find($item->id_empleado);
+                $infoEmpleado = PermisosEmpleados::find($item->id_empleado);
                 $nombreEmpleado = $infoEmpleado->nombre;
 
                 $item->nombreEmpleado = $nombreEmpleado;
@@ -339,10 +338,10 @@ class HistorialPermisoController extends Controller
         $info = PermisoConsultaMedica::where('id', $request->id)->first();
 
         // Agregar nombre del empleado
-        $empleado = Empleado::find($info->id_empleado);
+        $empleado = PermisosEmpleados::find($info->id_empleado);
         $info->nombre_empleado = $empleado->nombre ?? 'Sin nombre';
 
-        $arrayEmpleados = Empleado::orderBy('nombre', 'asc')->get();
+        $arrayEmpleados = PermisosEmpleados::orderBy('nombre', 'asc')->get();
 
         return ['success' => 1, 'info' => $info, 'arrayEmpleados' => $arrayEmpleados];
     }
@@ -373,14 +372,14 @@ class HistorialPermisoController extends Controller
                 return response()->json(['success' => 0, 'message' => 'Registro no encontrado']);
             }
 
-            $empleado = Empleado::find($request->empleado_id);
+            $empleado = PermisosEmpleados::find($request->empleado_id);
 
             if (!$empleado) {
                 return response()->json(['success' => 0, 'message' => 'Empleado no encontrado']);
             }
 
-            $unidad = Unidad::find($empleado->id_unidad);
-            $cargo  = Cargo::find($empleado->id_cargo);
+            $unidad = PermisosUnidades::find($empleado->id_unidad);
+            $cargo  = PermisosCargos::find($empleado->id_cargo);
 
             $permiso->update([
                 'id_empleado' => $request->empleado_id,
@@ -449,7 +448,7 @@ class HistorialPermisoController extends Controller
 
                 $item->fecha = date('d-m-Y', strtotime($item->fecha));
 
-                $infoEmpleado = Empleado::find($item->id_empleado);
+                $infoEmpleado = PermisosEmpleados::find($item->id_empleado);
                 $nombreEmpleado = $infoEmpleado->nombre;
 
                 $item->nombreEmpleado = $nombreEmpleado;
@@ -475,10 +474,10 @@ class HistorialPermisoController extends Controller
         $info = PermisoCompensatorio::where('id', $request->id)->first();
 
         // Agregar nombre del empleado
-        $empleado = Empleado::find($info->id_empleado);
+        $empleado = PermisosEmpleados::find($info->id_empleado);
         $info->nombre_empleado = $empleado->nombre ?? 'Sin nombre';
 
-        $arrayEmpleados = Empleado::orderBy('nombre', 'asc')->get();
+        $arrayEmpleados = PermisosEmpleados::orderBy('nombre', 'asc')->get();
 
         return ['success' => 1, 'info' => $info, 'arrayEmpleados' => $arrayEmpleados];
     }
@@ -507,14 +506,14 @@ class HistorialPermisoController extends Controller
                 return response()->json(['success' => 0, 'message' => 'Registro no encontrado']);
             }
 
-            $empleado = Empleado::find($request->empleado_id);
+            $empleado = PermisosEmpleados::find($request->empleado_id);
 
             if (!$empleado) {
                 return response()->json(['success' => 0, 'message' => 'Empleado no encontrado']);
             }
 
-            $unidad = Unidad::find($empleado->id_unidad);
-            $cargo  = Cargo::find($empleado->id_cargo);
+            $unidad = PermisosUnidades::find($empleado->id_unidad);
+            $cargo  = PermisosCargos::find($empleado->id_cargo);
 
             $permiso->update([
                 'id_empleado' => $request->empleado_id,
@@ -569,8 +568,8 @@ class HistorialPermisoController extends Controller
     public function indexHistorialPermisoIncapacidad()
     {
         $temaPredeterminado   = $this->getTemaPredeterminado();
-        $arrayTipoIncapacidad = TipoIncapacidad::orderBy('nombre', 'asc')->get();
-        $arrayRiesgo          = Riesgo::orderBy('nombre', 'asc')->get();
+        $arrayTipoIncapacidad = PermisosTipoIncapacidad::orderBy('nombre', 'asc')->get();
+        $arrayRiesgo          = PermisoRiesgo::orderBy('nombre', 'asc')->get();
 
         return view('backend.permisos.historial.incapacidad.vistapermisosincapacidadeditar',
             compact('temaPredeterminado', 'arrayTipoIncapacidad', 'arrayRiesgo'));
@@ -583,7 +582,7 @@ class HistorialPermisoController extends Controller
 
                 $item->fecha = date('d-m-Y', strtotime($item->fecha));
 
-                $infoEmpleado = Empleado::find($item->id_empleado);
+                $infoEmpleado = PermisosEmpleados::find($item->id_empleado);
                 $nombreEmpleado = $infoEmpleado->nombre;
 
                 $item->nombreEmpleado = $nombreEmpleado;
@@ -609,10 +608,10 @@ class HistorialPermisoController extends Controller
         $info = PermisoIncapacidad::where('id', $request->id)->first();
 
         // Agregar nombre del empleado
-        $empleado = Empleado::find($info->id_empleado);
+        $empleado = PermisosEmpleados::find($info->id_empleado);
         $info->nombre_empleado = $empleado->nombre ?? 'Sin nombre';
 
-        $arrayEmpleados = Empleado::orderBy('nombre', 'asc')->get();
+        $arrayEmpleados = PermisosEmpleados::orderBy('nombre', 'asc')->get();
 
         return ['success' => 1, 'info' => $info, 'arrayEmpleados' => $arrayEmpleados];
     }
@@ -637,13 +636,13 @@ class HistorialPermisoController extends Controller
                 return response()->json(['success' => 0, 'message' => 'Registro no encontrado']);
             }
 
-            $empleado = Empleado::find($request->empleado_id);
+            $empleado = PermisosEmpleados::find($request->empleado_id);
             if (!$empleado) {
                 return response()->json(['success' => 0, 'message' => 'Empleado no encontrado']);
             }
 
-            $unidad = Unidad::find($empleado->id_unidad);
-            $cargo  = Cargo::find($empleado->id_cargo);
+            $unidad = PermisosUnidades::find($empleado->id_unidad);
+            $cargo  = PermisosCargos::find($empleado->id_cargo);
 
             $permiso->update([
                 'id_empleado'                  => $request->empleado_id,
@@ -711,7 +710,7 @@ class HistorialPermisoController extends Controller
 
                 $item->fecha = date('d-m-Y', strtotime($item->fecha));
 
-                $infoEmpleado = Empleado::find($item->id_empleado);
+                $infoEmpleado = PermisosEmpleados::find($item->id_empleado);
                 $nombreEmpleado = $infoEmpleado->nombre;
 
                 $item->nombreEmpleado = $nombreEmpleado;
@@ -738,7 +737,7 @@ class HistorialPermisoController extends Controller
             return response()->json(['success' => 0, 'message' => 'Registro no encontrado']);
         }
 
-        $empleado = Empleado::find($info->id_empleado);
+        $empleado = PermisosEmpleados::find($info->id_empleado);
         $info->nombre_empleado = $empleado->nombre ?? 'Sin nombre';
 
         // ✅ Ya no necesitas el mapeo, fecha_fraccionado existe en la tabla
@@ -770,14 +769,14 @@ class HistorialPermisoController extends Controller
                 return response()->json(['success' => 0, 'message' => 'Registro no encontrado']);
             }
 
-            $empleado = Empleado::find($request->empleado_id);
+            $empleado = PermisosEmpleados::find($request->empleado_id);
 
             if (!$empleado) {
                 return response()->json(['success' => 0, 'message' => 'Empleado no encontrado']);
             }
 
-            $unidad = Unidad::find($empleado->id_unidad);
-            $cargo  = Cargo::find($empleado->id_cargo);
+            $unidad = PermisosUnidades::find($empleado->id_unidad);
+            $cargo  = PermisosCargos::find($empleado->id_cargo);
 
             $anio = Carbon::parse($request->fechaEntrego)->year;
 

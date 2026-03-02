@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+// MODULO FICHA
+
 class NivelAcademico extends Model
 {
     use HasFactory;

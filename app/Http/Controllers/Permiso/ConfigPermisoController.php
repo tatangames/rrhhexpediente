@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Permiso;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cargo;
-use App\Models\Empleado;
-use App\Models\Riesgo;
-use App\Models\TipoIncapacidad;
-use App\Models\TipoPermiso;
+use App\Models\PermisoRiesgo;
+use App\Models\PermisosCargos;
+use App\Models\PermisosEmpleados;
+use App\Models\PermisosTipoIncapacidad;
+use App\Models\PermisosUnidades;
+use App\Models\PermisoTipoPermisos;
 use App\Models\Unidad;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -35,7 +37,7 @@ class ConfigPermisoController extends Controller
 
     public function tablaTipoPermiso()
     {
-        $arrayTipoPermiso = TipoPermiso::orderBy('nombre', 'ASC')->get();
+        $arrayTipoPermiso = PermisoTipoPermisos::orderBy('nombre', 'ASC')->get();
         return view('backend.permisos.config.tipopermiso.tablatipopermiso', compact('arrayTipoPermiso'));
     }
 
@@ -53,7 +55,7 @@ class ConfigPermisoController extends Controller
         DB::beginTransaction();
 
         try {
-            $dato = new TipoPermiso();
+            $dato = new PermisoTipoPermisos();
             $dato->nombre = $request->nombre;
             $dato->save();
 
@@ -78,7 +80,7 @@ class ConfigPermisoController extends Controller
             return ['success' => 0];
         }
 
-        $info = TipoPermiso::where('id', $request->id)->first();
+        $info = PermisoTipoPermisos::where('id', $request->id)->first();
 
         return ['success' => 1, 'info' => $info];
     }
@@ -96,7 +98,7 @@ class ConfigPermisoController extends Controller
             return ['success' => 0];
         }
 
-        TipoPermiso::where('id', $request->id)->update([
+        PermisoTipoPermisos::where('id', $request->id)->update([
             'nombre' => $request->nombre,
         ]);
 
@@ -118,7 +120,7 @@ class ConfigPermisoController extends Controller
 
     public function tablaRiesgos()
     {
-        $arrayRiesgos = Riesgo::orderBy('nombre', 'ASC')->get();
+        $arrayRiesgos = PermisoRiesgo::orderBy('nombre', 'ASC')->get();
         return view('backend.permisos.config.riesgos.tablariesgos', compact('arrayRiesgos'));
     }
 
@@ -136,7 +138,7 @@ class ConfigPermisoController extends Controller
         DB::beginTransaction();
 
         try {
-            $dato = new Riesgo();
+            $dato = new PermisoRiesgo();
             $dato->nombre = $request->nombre;
             $dato->save();
 
@@ -161,7 +163,7 @@ class ConfigPermisoController extends Controller
             return ['success' => 0];
         }
 
-        $info = Riesgo::where('id', $request->id)->first();
+        $info = PermisoRiesgo::where('id', $request->id)->first();
 
         return ['success' => 1, 'info' => $info];
     }
@@ -179,7 +181,7 @@ class ConfigPermisoController extends Controller
             return ['success' => 0];
         }
 
-        Riesgo::where('id', $request->id)->update([
+        PermisoRiesgo::where('id', $request->id)->update([
             'nombre' => $request->nombre,
         ]);
 
@@ -199,7 +201,7 @@ class ConfigPermisoController extends Controller
 
     public function tablaTipoIncapacidad()
     {
-        $arrayTipoIncapacidad = TipoIncapacidad::orderBy('nombre', 'ASC')->get();
+        $arrayTipoIncapacidad = PermisosTipoIncapacidad::orderBy('nombre', 'ASC')->get();
         return view('backend.permisos.config.tipoincapacidad.tablaincapacidad', compact('arrayTipoIncapacidad'));
     }
 
@@ -217,7 +219,7 @@ class ConfigPermisoController extends Controller
         DB::beginTransaction();
 
         try {
-            $dato = new TipoIncapacidad();
+            $dato = new PermisosTipoIncapacidad();
             $dato->nombre = $request->nombre;
             $dato->save();
 
@@ -242,7 +244,7 @@ class ConfigPermisoController extends Controller
             return ['success' => 0];
         }
 
-        $info = TipoIncapacidad::where('id', $request->id)->first();
+        $info = PermisosTipoIncapacidad::where('id', $request->id)->first();
 
         return ['success' => 1, 'info' => $info];
     }
@@ -260,12 +262,182 @@ class ConfigPermisoController extends Controller
             return ['success' => 0];
         }
 
-        TipoIncapacidad::where('id', $request->id)->update([
+        PermisosTipoIncapacidad::where('id', $request->id)->update([
             'nombre' => $request->nombre,
         ]);
 
         return ['success' => 1];
     }
+
+
+
+
+
+    public function vistaCargoPermisos()
+    {
+        $temaPredeterminado = $this->getTemaPredeterminado();
+        return view('backend.permisos.config.cargo.vistacargo', compact('temaPredeterminado'));
+    }
+
+    public function tablaCargoPermisos()
+    {
+        $listado = PermisosCargos::orderBy('nombre', 'ASC')->get();
+
+        return view('backend.permisos.config.cargo.tablacargo', compact('listado'));
+    }
+
+    public function nuevoCargoPermisos(Request $request)
+    {
+        $regla = array(
+            'nombre' => 'required'
+        );
+
+        $validar = Validator::make($request->all(), $regla);
+
+        if ($validar->fails()) {
+            return ['success' => 0];
+        }
+        DB::beginTransaction();
+
+        try {
+            $dato = new PermisosCargos();
+            $dato->nombre = $request->nombre;
+            $dato->save();
+
+            DB::commit();
+            return ['success' => 1];
+        } catch (\Throwable $e) {
+            Log::info('error ' . $e);
+            DB::rollback();
+            return ['success' => 99];
+        }
+    }
+
+    public function infoCargoPermisos(Request $request){
+        $regla = array(
+            'id' => 'required'
+        );
+
+        $validar = Validator::make($request->all(), $regla);
+
+        if ($validar->fails()) {
+            return ['success' => 0];
+        }
+
+        $info = PermisosCargos::where('id', $request->id)->first();
+
+        return ['success' => 1, 'info' => $info];
+    }
+
+
+    public function actualizarCargoPermisos(Request $request)
+    {
+        $regla = array(
+            'id' => 'required',
+            'nombre' => 'required',
+        );
+
+        $validar = Validator::make($request->all(), $regla);
+
+        if ($validar->fails()) {
+            return ['success' => 0];
+        }
+
+        PermisosCargos::where('id', $request->id)->update([
+            'nombre' => $request->nombre,
+        ]);
+
+        return ['success' => 1];
+    }
+
+
+
+
+    // =================== UNIDAD ==========================================
+
+
+    public function indexUnidadPermisos()
+    {
+        $temaPredeterminado =  $this->getTemaPredeterminado();
+        return view('backend.permisos.config.unidad.vistaunidad', compact('temaPredeterminado'));
+    }
+
+    public function tablaUnidadPermisos()
+    {
+        $arrayUnidades = PermisosUnidades::orderBy('nombre', 'ASC')->get();
+        return view('backend.permisos.config.unidad.tablaunidad', compact('arrayUnidades'));
+    }
+
+
+    public function nuevoUnidadPermisos(Request $request)
+    {
+        $regla = array(
+            'nombre' => 'required'
+        );
+
+        $validar = Validator::make($request->all(), $regla);
+
+        if ($validar->fails()) {
+            return ['success' => 0];
+        }
+        DB::beginTransaction();
+
+        try {
+            $dato = new PermisosUnidades();
+            $dato->nombre = $request->nombre;
+            $dato->save();
+
+            DB::commit();
+            return ['success' => 1];
+        } catch (\Throwable $e) {
+            Log::info('error ' . $e);
+            DB::rollback();
+            return ['success' => 99];
+        }
+    }
+
+    public function informacionUnidadPermisos(Request $request)
+    {
+        $regla = array(
+            'id' => 'required'
+        );
+
+        $validar = Validator::make($request->all(), $regla);
+
+        if ($validar->fails()) {
+            return ['success' => 0];
+        }
+
+        $info = PermisosUnidades::where('id', $request->id)->first();
+
+        return ['success' => 1, 'info' => $info];
+    }
+
+    public function actualizarUnidadPermisos(Request $request)
+    {
+        $regla = array(
+            'id' => 'required',
+            'nombre' => 'required',
+        );
+
+        $validar = Validator::make($request->all(), $regla);
+
+        if ($validar->fails()) {
+            return ['success' => 0];
+        }
+
+        PermisosUnidades::where('id', $request->id)->update([
+            'nombre' => $request->nombre,
+        ]);
+
+        return ['success' => 1];
+    }
+
+
+
+
+
+
 
 
 
@@ -277,18 +449,18 @@ class ConfigPermisoController extends Controller
     {
         $temaPredeterminado = $this->getTemaPredeterminado();
 
-        $arrayCargo = Cargo::orderBy('nombre', 'ASC')->get();
-        $arrayUnidad = Unidad::orderBy('nombre', 'ASC')->get();
+        $arrayCargo = PermisosCargos::orderBy('nombre', 'ASC')->get();
+        $arrayUnidad = PermisosUnidades::orderBy('nombre', 'ASC')->get();
 
         return view('backend.permisos.empleados.vistaempleados', compact('temaPredeterminado', 'arrayCargo', 'arrayUnidad'));
     }
 
     public function tablaEmpleados()
     {
-        $arrayEmpleados = Empleado::orderBy('nombre', 'ASC')
+        $arrayEmpleados = PermisosEmpleados::with(['unidad', 'cargo'])
+            ->orderBy('nombre', 'ASC')
             ->get()
             ->map(function ($item) {
-
                 return [
                     'id' => $item->id,
                     'nombre' => $item->nombre,
@@ -316,7 +488,7 @@ class ConfigPermisoController extends Controller
         DB::beginTransaction();
 
         try {
-            $dato = new Empleado();
+            $dato = new PermisosEmpleados();
             $dato->nombre = $request->nombre;
             $dato->id_unidad = $request->unidad;
             $dato->id_cargo = $request->cargo;
@@ -343,9 +515,9 @@ class ConfigPermisoController extends Controller
             return ['success' => 0];
         }
 
-        $info = Empleado::where('id', $request->id)->first();
-        $arrayUnidad = Unidad::orderBy('nombre', 'ASC')->get();
-        $arrayCargo = Cargo::orderBy('nombre', 'ASC')->get();
+        $info = PermisosEmpleados::where('id', $request->id)->first();
+        $arrayUnidad = PermisosUnidades::orderBy('nombre', 'ASC')->get();
+        $arrayCargo = PermisosCargos::orderBy('nombre', 'ASC')->get();
 
         return ['success' => 1, 'info' => $info, 'arrayUnidad' => $arrayUnidad, 'arrayCargo' => $arrayCargo];
     }
@@ -365,7 +537,7 @@ class ConfigPermisoController extends Controller
             return ['success' => 0];
         }
 
-        Empleado::where('id', $request->id)->update([
+        PermisosEmpleados::where('id', $request->id)->update([
             'nombre' => $request->nombre,
             'id_unidad' => $request->unidad,
             'id_cargo' => $request->cargo,

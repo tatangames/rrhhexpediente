@@ -543,6 +543,9 @@
                 axios.get(urlAdmin + '/admin/empleados/buscar', {
                     params: { q: texto }
                 }).then(resp => {
+
+                    console.log(resp)
+
                     let html = '';
                     resp.data.forEach(e => {
                         html += `

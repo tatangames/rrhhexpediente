@@ -583,14 +583,14 @@ return [
                 [
                     'text'  => 'Cargos',
                     'icon'  => 'fas fa-file-alt',
-                    'route' => 'admin.cargo.index',
+                    'route' => 'admin.permisos.cargo.index',
                     'can'   => 'sidebar.permisos',
                 ],
 
                 [
                     'text'  => 'Unidades',
                     'icon'  => 'fas fa-file-alt',
-                    'route' => 'admin.unidad.index',
+                    'route' => 'admin.permisos.unidad.index',
                     'can'   => 'sidebar.permisos',
                 ],
 

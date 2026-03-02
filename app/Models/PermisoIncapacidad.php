@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+// MODULO PERMISOS
+
 class PermisoIncapacidad extends Model
 {
     use HasFactory;
@@ -31,18 +33,18 @@ class PermisoIncapacidad extends Model
 
     public function empleado()
     {
-        return $this->belongsTo(Empleado::class, 'id_empleado');
+        return $this->belongsTo(PermisosEmpleados::class, 'id_empleado');
     }
 
     // 'id_tipo_incapacidad' → tabla 'tipo_incapacidad'
     public function tipoIncapacidad()
     {
-        return $this->belongsTo(TipoIncapacidad::class, 'id_tipo_incapacidad');
+        return $this->belongsTo(PermisosTipoIncapacidad::class, 'id_tipo_incapacidad');
     }
 
     // 'id_riesgo' → tabla 'riesgos'
     public function riesgo()
     {
-        return $this->belongsTo(Riesgo::class, 'id_riesgo');
+        return $this->belongsTo(PermisoRiesgo::class, 'id_riesgo');
     }
 }

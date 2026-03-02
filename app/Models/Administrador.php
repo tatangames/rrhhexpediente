@@ -8,8 +8,11 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 
+
+// PANEL ADMINISTRATIVO
 class Administrador extends Authenticatable
 {
+
     use HasFactory, Notifiable;
     use HasRoles;
 

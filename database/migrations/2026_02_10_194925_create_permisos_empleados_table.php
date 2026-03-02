@@ -11,9 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('evaluacion_dependencia_jerar', function (Blueprint $table) {
+        Schema::create('permisos_empleados', function (Blueprint $table) {
             $table->id();
-            $table->timestamps();
+            $table->string('nombre', 100);
+
+            $table->foreignId('id_unidad')->constrained('permisos_unidades');
+            $table->foreignId('id_cargo')->constrained('permisos_cargos');
         });
     }
 
@@ -22,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('evaluacion_dependencia_jerar');
+        Schema::dropIfExists('permisos_empleados');
     }
 };

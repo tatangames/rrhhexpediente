@@ -5,10 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class EvaluacionDependenciasJerarquica extends Model
+// MODULO PERMISOS
+
+class PermisoTipoPermisos extends Model
 {
     use HasFactory;
 
-    protected $table = 'evaluacion_dependencia_jerar';
+    protected $table = 'permisos_tipopermisos';
     public $timestamps = false;
 }

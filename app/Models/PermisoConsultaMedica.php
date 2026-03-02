@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+// MODULO PERMISOS
+
 class PermisoConsultaMedica extends Model
 {
     use HasFactory;
@@ -31,6 +33,6 @@ class PermisoConsultaMedica extends Model
 
     public function empleado()
     {
-        return $this->belongsTo(Empleado::class, 'id_empleado');
+        return $this->belongsTo(PermisosEmpleados::class, 'id_empleado');
     }
 }

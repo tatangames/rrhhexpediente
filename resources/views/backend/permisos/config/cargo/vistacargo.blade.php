@@ -1,9 +1,9 @@
 @extends('adminlte::page')
 
-@section('title', 'Empleados')
+@section('title', 'Cargo')
 
 @section('content_header')
-    <h1>Empleados</h1>
+    <h1>Cargo</h1>
 @stop
 {{-- Activa plugins que necesitas --}}
 @section('plugins.Datatables', true)
@@ -61,14 +61,14 @@
                         onclick="modalAgregar()"
                         class="btn btn-primary btn-sm">
                     <i class="fas fa-pencil-alt"></i>
-                    Nuevo Empleado
+                    Nuevo Cargo
                 </button>
             </div>
 
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
-                    <li class="breadcrumb-item">Empleado</li>
-                    <li class="breadcrumb-item active">Listado de Empleados</li>
+                    <li class="breadcrumb-item">Cargo</li>
+                    <li class="breadcrumb-item active">Listado de Cargos</li>
                 </ol>
             </div>
         </div>
@@ -93,10 +93,10 @@
     </section>
 
     <div class="modal fade" id="modalAgregar">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog ">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title">Nuevo Empleado</h4>
+                    <h4 class="modal-title">Nuevo Cargo</h4>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -108,29 +108,9 @@
                                 <div class="col-md-12">
 
                                     <div class="form-group">
-                                        <label>Nombre: <span style="color: red">*</span></label>
-                                        <input type="text" maxlength="100" class="form-control" id="nombre-nuevo"
+                                        <label>Cargo</label>
+                                        <input type="text" maxlength="100" class="form-control" id="cargo-nuevo"
                                                autocomplete="off">
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label>Unidad: <span style="color: red">*</span></label>
-                                        <br>
-                                        <select width="100%" class="form-control" id="select-unidad">
-                                            @foreach($arrayUnidad as $item)
-                                                <option value="{{ $item->id }}">{{ $item->nombre }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label>Cargo: <span style="color: red">*</span></label>
-                                        <br>
-                                        <select width="100%" class="form-control" id="select-cargo">
-                                            @foreach($arrayCargo as $item)
-                                                <option value="{{ $item->id }}">{{ $item->nombre }}</option>
-                                            @endforeach
-                                        </select>
                                     </div>
 
                                 </div>
@@ -150,10 +130,10 @@
 
     <!-- modal editar -->
     <div class="modal fade" id="modalEditar">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title">Editar Empleado</h4>
+                    <h4 class="modal-title">Editar Cargo</h4>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -169,25 +149,10 @@
                                     </div>
 
                                     <div class="form-group">
-                                        <label>Nombre: <span style="color: red">*</span></label>
-                                        <input type="text" maxlength="100" class="form-control" id="nombre-editar"
+                                        <label>Cargo</label>
+                                        <input type="text" maxlength="100" class="form-control" id="cargo-editar"
                                                autocomplete="off">
                                     </div>
-
-                                    <div class="form-group">
-                                        <label>Unidad: <span style="color: red">*</span></label>
-                                        <br>
-                                        <select width="100%" class="form-control" id="select-unidad-editar">
-                                        </select>
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label>Cargo: <span style="color: red">*</span></label>
-                                        <br>
-                                        <select width="100%" class="form-control" id="select-cargo-editar">
-                                        </select>
-                                    </div>
-
 
                                 </div>
                             </div>
@@ -212,9 +177,20 @@
     <script src="{{ asset('js/axios.min.js') }}" type="text/javascript"></script>
     <script src="{{ asset('js/alertaPersonalizada.js') }}"></script>
     <script src="{{ asset('js/select2.min.js') }}" type="text/javascript"></script>
+    <script src="{{ asset('js/sweetalert2.all.min.js') }}" type="text/javascript"></script>
+
+    <script>
+        window.AppConfig = {
+            themeDefault: {{ $temaPredeterminado }}, // 0 light | 1 dark
+            updateThemeUrl: "{{ route('admin.tema.update') }}",
+        };
+    </script>
+
+    <script src="{{ asset('js/theme.js') }}"></script>
+
     <script>
         $(function () {
-            const ruta = "{{ url('/admin/empleados/tabla') }}";
+            const ruta = "{{ url('/admin/permisos/cargo/tabla') }}";
 
             function initDataTable() {
                 // Si ya hay instancia, destrúyela antes de re-crear
@@ -273,10 +249,11 @@
         });
     </script>
 
+
     <script>
 
         function recargar() {
-            var ruta = "{{ url('/admin/empleados/tabla') }}";
+            var ruta = "{{ url('/admin/permisos/cargo/tabla') }}";
             $('#tablaDatatable').load(ruta);
         }
 
@@ -287,30 +264,18 @@
         }
 
         function nuevo() {
-            var nombre = document.getElementById('nombre-nuevo').value;
-            var unidad = document.getElementById('select-unidad').value;
-            var cargo = document.getElementById('select-cargo').value;
+            var nombre = document.getElementById('cargo-nuevo').value;
 
             if (nombre === '') {
                 toastr.error('Nombre es requerido');
-                return;
-            }
-            if (unidad === '') {
-                toastr.error('Unidad es requerido');
-                return;
-            }
-            if (cargo === '') {
-                toastr.error('Cargo es requerido');
                 return;
             }
 
             openLoading();
             var formData = new FormData();
             formData.append('nombre', nombre);
-            formData.append('unidad', unidad);
-            formData.append('cargo', cargo);
 
-            axios.post(urlAdmin + '/admin/empleados/nuevo', formData, {})
+            axios.post(urlAdmin + '/admin/permisos/cargo/nuevo', formData, {})
                 .then((response) => {
                     closeLoading();
                     if (response.data.success === 1) {
@@ -331,19 +296,7 @@
             openLoading();
             document.getElementById("formulario-editar").reset();
 
-            // Destruir Select2 antes de limpiar para evitar duplicados
-            if ($('#select-unidad-editar').hasClass('select2-hidden-accessible')) {
-                $('#select-unidad-editar').select2('destroy');
-            }
-            if ($('#select-cargo-editar').hasClass('select2-hidden-accessible')) {
-                $('#select-cargo-editar').select2('destroy');
-            }
-
-            // Limpiar opciones
-            $('#select-unidad-editar').empty();
-            $('#select-cargo-editar').empty();
-
-            axios.post(urlAdmin + '/admin/empleados/informacion', {
+            axios.post(urlAdmin + '/admin/permisos/cargo/informacion', {
                 'id': id
             })
                 .then((response) => {
@@ -351,40 +304,8 @@
                     if (response.data.success === 1) {
                         $('#modalEditar').modal('show');
                         $('#id-editar').val(id);
-                        $('#nombre-editar').val(response.data.info.nombre);
+                        $('#cargo-editar').val(response.data.info.nombre);
 
-                        $.each(response.data.arrayUnidad, function( key, val ){
-                            if(response.data.info.id_unidad == val.id){
-                                $('#select-unidad-editar').append('<option value="' +val.id +'" selected="selected">'+ val.nombre +'</option>');
-                            }else{
-                                $('#select-unidad-editar').append('<option value="' +val.id +'">'+ val.nombre +'</option>');
-                            }
-                        });
-
-                        $.each(response.data.arrayCargo, function( key, val ){
-                            if(response.data.info.id_cargo == val.id){
-                                $('#select-cargo-editar').append('<option value="' +val.id +'" selected="selected">'+ val.nombre +'</option>');
-                            }else{
-                                $('#select-cargo-editar').append('<option value="' +val.id +'">'+ val.nombre +'</option>');
-                            }
-                        });
-
-                        // Inicializar Select2 con buscador en el modal editar
-                        $('#select-unidad-editar').select2({
-                            theme: 'bootstrap-5',
-                            dropdownParent: $('#modalEditar'),
-                            placeholder: 'Seleccione una unidad',
-                            allowClear: true,
-                            width: '100%'
-                        });
-
-                        $('#select-cargo-editar').select2({
-                            theme: 'bootstrap-5',
-                            dropdownParent: $('#modalEditar'),
-                            placeholder: 'Seleccione un cargo',
-                            allowClear: true,
-                            width: '100%'
-                        });
 
                     } else {
                         toastr.error('Información no encontrada');
@@ -398,20 +319,10 @@
 
         function editar() {
             var id = document.getElementById('id-editar').value;
-            var nombre = document.getElementById('nombre-editar').value;
-            var unidad = $('#select-unidad-editar').val();
-            var cargo = $('#select-cargo-editar').val();
+            var nombre = document.getElementById('cargo-editar').value;
 
             if (nombre === '') {
                 toastr.error('Nombre es requerido');
-                return;
-            }
-            if (!unidad) {
-                toastr.error('Unidad es requerido');
-                return;
-            }
-            if (!cargo) {
-                toastr.error('Cargo es requerido');
                 return;
             }
 
@@ -419,10 +330,8 @@
             var formData = new FormData();
             formData.append('id', id);
             formData.append('nombre', nombre);
-            formData.append('unidad', unidad);
-            formData.append('cargo', cargo);
 
-            axios.post(urlAdmin + '/admin/empleados/editar', formData, {})
+            axios.post(urlAdmin + '/admin/permisos/cargo/editar', formData, {})
                 .then((response) => {
                     closeLoading();
 
@@ -442,78 +351,28 @@
     </script>
 
 
-    <script>
-        (function () {
-            // ===== Config inicial =====
-            const SERVER_DEFAULT = {{ $temaPredeterminado }}; // 0 = light, 1 = dark
-            const iconEl = document.getElementById('theme-icon');
 
-            // CSRF para axios
-            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-            if (token) axios.defaults.headers.common['X-CSRF-TOKEN'] = token;
-
-            // ===== Funciones =====
-            function applyTheme(mode) {
-                const dark = mode === 'dark';
-
-                // AdminLTE v3
-                document.body.classList.toggle('dark-mode', dark);
-
-                // AdminLTE v4
-                document.documentElement.setAttribute('data-bs-theme', dark ? 'dark' : 'light');
-
-                // Icono
-                if (iconEl) {
-                    iconEl.classList.remove('fa-sun', 'fa-moon');
-                    iconEl.classList.add(dark ? 'fa-moon' : 'fa-sun');
-                }
-            }
-
-            function themeToInt(mode) {
-                return mode === 'dark' ? 1 : 0;
-            }
-
-            function intToTheme(v) {
-                return v === 1 ? 'dark' : 'light';
-            }
-
-            // ===== Aplicar tema inicial desde servidor =====
-            applyTheme(intToTheme(SERVER_DEFAULT));
-
-            // ===== Manejo de clicks y POST a backend =====
-            let saving = false;
-
-            document.addEventListener('click', async (e) => {
-                const a = e.target.closest('.dropdown-item[data-theme]');
-                if (!a) return;
-                e.preventDefault();
-                if (saving) return;
-
-                const selectedMode = a.dataset.theme; // 'dark' | 'light'
-                const newValue = themeToInt(selectedMode);
-
-                // Modo optimista: aplicar de una vez
-                const previousMode = document.documentElement.getAttribute('data-bs-theme') === 'dark' ? 'dark' : 'light';
-                applyTheme(selectedMode);
-
-                try {
-                    saving = true;
-                    await axios.post(urlAdmin + '/admin/actualizar/tema', {tema: newValue});
-                    // Si querés, mostrar un toast:
-                    if (window.toastr) toastr.success('Tema actualizado');
-                } catch (err) {
-                    // Revertir si falló
-                    applyTheme(previousMode);
-                    if (window.toastr) {
-                        toastr.error('No se pudo actualizar el tema');
-                    } else {
-                        alert('No se pudo actualizar el tema');
-                    }
-                } finally {
-                    saving = false;
-                }
-            });
-        })();
-    </script>
 
 @endsection
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

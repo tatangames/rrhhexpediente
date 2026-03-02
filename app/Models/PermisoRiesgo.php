@@ -5,12 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-// MODULO EVALUACION
+// MODULO PERMISOS
 
-class EvaluacionCargo extends Model
+class PermisoRiesgo extends Model
 {
     use HasFactory;
 
-    protected $table = 'evaluacion_cargo';
+    protected $table = 'permisos_riesgos';
     public $timestamps = false;
 }

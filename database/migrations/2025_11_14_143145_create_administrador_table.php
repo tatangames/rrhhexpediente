@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Run the migrations.
+     * PANEL ADMINISTRADOR
      */
     public function up(): void
     {
