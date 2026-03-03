@@ -494,7 +494,7 @@
             var formData = new FormData();
             formData.append('id', id);
 
-            axios.post(urlAdmin + '/admin/borrar/historial/permiso/personal', formData)
+            axios.post(urlAdmin + '/admin/historial/personal/borrar', formData)
                 .then((response) => {
                     closeLoading();
                     if (response.data.success === 1) {
