@@ -27,22 +27,20 @@
 
                             <!-- Empleado -->
                             <div class="form-group">
-                                <label>Empleado: <span style="color:red">*</span></label>
+                                <label>Empleado:</label>
                                 <select class="form-control" id="select-empleado">
-                                    <option value="">-- Seleccione un empleado --</option>
+                                    <option value="0">-- TODOS --</option>
                                     @foreach($arrayEmpleados as $item)
                                         <option value="{{ $item->id }}">{{ $item->nombre }}</option>
                                     @endforeach
                                 </select>
-                                <small class="text-danger d-none" id="error-empleado">
-                                    Debe seleccionar un empleado.
-                                </small>
                             </div>
 
                             <!-- Tipo de Permiso -->
                             <div class="form-group">
                                 <label>Tipo de Permiso: <span style="color:red">*</span></label>
                                 <select class="form-control" id="select-tipopermiso">
+                                    <option value="0">-- TODOS --</option>
                                     <option value="1">Personal</option>
                                     <option value="2">Compensatorio</option>
                                     <option value="3">Enfermedad</option>
@@ -124,10 +122,6 @@
             minimumResultsForSearch: Infinity
         });
 
-        $('#select-empleado').on('change', function () {
-            $('#error-empleado').addClass('d-none');
-        });
-
         $('#fecha-desde').on('change', function () {
             $('#error-desde, #error-rango').addClass('d-none');
             $(this).removeClass('is-invalid');
@@ -146,13 +140,8 @@
 
             let valido = true;
 
-            $('#error-empleado, #error-desde, #error-hasta, #error-rango').addClass('d-none');
+            $('#error-desde, #error-hasta, #error-rango').addClass('d-none');
             $('#fecha-desde, #fecha-hasta').removeClass('is-invalid');
-
-            if (!idEmpleado) {
-                $('#error-empleado').removeClass('d-none');
-                valido = false;
-            }
 
             if (!fechaDesde) {
                 $('#error-desde').removeClass('d-none');
