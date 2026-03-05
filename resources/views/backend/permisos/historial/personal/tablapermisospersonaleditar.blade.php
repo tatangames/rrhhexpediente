@@ -13,6 +13,7 @@
                                 <th style="width: 7%">Unidad</th>
                                 <th style="width: 7%">Cargo</th>
                                 <th style="width: 7%">Razón</th>
+                                <th style="width: 7%">Goce Salarial</th>
                                 <th style="width: 4%">Opciones</th>
                             </tr>
                             </thead>
@@ -39,6 +40,13 @@
                                     <td>{{ $dato->unidad }}</td>
                                     <td>{{ $dato->cargo }}</td>
                                     <td>{{ $dato->razon }}</td>
+                                    <td>
+                                        @if($dato->goce == 0)
+                                            <span class="badge bg-danger">NO</span>
+                                        @else
+                                            <span class="badge bg-success">SI</span>
+                                        @endif
+                                    </td>
                                     <td>
                                         <button type="button"
                                                 class="btn btn-info btn-xs" onclick="informacion({{ $dato->id }})">

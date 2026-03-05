@@ -42,20 +42,37 @@ class HistorialPermisoController extends Controller
         return view('backend.permisos.historial.otros.vistapermisosotroseditar', compact('temaPredeterminado'));
     }
 
-    public function tablaHistorialPermisoOtros()
+    public function tablaHistorialPermisoOtros(Request $request)
     {
-        $arrayPermisos = PermisoOtro::orderBy('fecha', 'asc')->get()
-            ->map(function ($item) {
+        $query = PermisoOtro::orderBy('fecha', 'asc');
 
-                $item->fecha = date('d-m-Y', strtotime($item->fecha));
+        // Filtro por empleado
+        if ($request->filled('empleado_id')) {
+            $query->where('id_empleado', $request->empleado_id);
+        }
 
-                $infoEmpleado = PermisosEmpleados::find($item->id_empleado);
-                $nombreEmpleado = $infoEmpleado->nombre;
+        // Filtro por rango de fechas
+        if ($request->filled('fecha_desde')) {
+            $query->whereDate('fecha', '>=', $request->fecha_desde);
+        }
+        if ($request->filled('fecha_hasta')) {
+            $query->whereDate('fecha', '<=', $request->fecha_hasta);
+        }
 
-                $item->nombreEmpleado = $nombreEmpleado;
+        // Filtro por condición (1 = fraccionado, 0 = completo)
+        if ($request->filled('condicion') && $request->condicion !== '') {
+            $query->where('condicion', $request->condicion);
+        }
 
-                return $item;
-            });
+        $arrayPermisos = $query->get()->map(function ($item) {
+
+            $item->fecha = date('d-m-Y', strtotime($item->fecha));
+
+            $infoEmpleado        = PermisosEmpleados::find($item->id_empleado);
+            $item->nombreEmpleado = $infoEmpleado->nombre ?? 'Sin nombre';
+
+            return $item;
+        });
 
         return view('backend.permisos.historial.otros.tablapermisosotroseditar', compact('arrayPermisos'));
     }
@@ -170,20 +187,37 @@ class HistorialPermisoController extends Controller
         return view('backend.permisos.historial.enfermedad.vistapermisosenfermedadeditar', compact('temaPredeterminado'));
     }
 
-    public function tablaHistorialPermisoEnfermedad()
+    public function tablaHistorialPermisoEnfermedad(Request $request)
     {
-        $arrayPermisos = PermisoEnfermedad::orderBy('fecha', 'asc')->get()
-            ->map(function ($item) {
+        $query = PermisoEnfermedad::orderBy('fecha', 'asc');
 
-                $item->fecha = date('d-m-Y', strtotime($item->fecha));
+        // Filtro por empleado
+        if ($request->filled('empleado_id')) {
+            $query->where('id_empleado', $request->empleado_id);
+        }
 
-                $infoEmpleado = PermisosEmpleados::find($item->id_empleado);
-                $nombreEmpleado = $infoEmpleado->nombre;
+        // Filtro por rango de fechas
+        if ($request->filled('fecha_desde')) {
+            $query->whereDate('fecha', '>=', $request->fecha_desde);
+        }
+        if ($request->filled('fecha_hasta')) {
+            $query->whereDate('fecha', '<=', $request->fecha_hasta);
+        }
 
-                $item->nombreEmpleado = $nombreEmpleado;
+        // Filtro por condición (1 = fraccionado, 0 = días completos)
+        if ($request->filled('condicion') && $request->condicion !== '') {
+            $query->where('condicion', $request->condicion);
+        }
 
-                return $item;
-            });
+        $arrayPermisos = $query->get()->map(function ($item) {
+
+            $item->fecha = date('d-m-Y', strtotime($item->fecha));
+
+            $infoEmpleado         = PermisosEmpleados::find($item->id_empleado);
+            $item->nombreEmpleado = $infoEmpleado->nombre ?? 'Sin nombre';
+
+            return $item;
+        });
 
         return view('backend.permisos.historial.enfermedad.tablapermisosenfermedadeditar', compact('arrayPermisos'));
     }
@@ -305,20 +339,37 @@ class HistorialPermisoController extends Controller
         return view('backend.permisos.historial.consultamedica.vistapermisosconsultamedicaeditar', compact('temaPredeterminado'));
     }
 
-    public function tablaHistorialPermisoConsultaMedica()
+    public function tablaHistorialPermisoConsultaMedica(Request $request)
     {
-        $arrayPermisos = PermisoConsultaMedica::orderBy('fecha', 'asc')->get()
-            ->map(function ($item) {
+        $query = PermisoConsultaMedica::orderBy('fecha', 'asc');
 
-                $item->fecha = date('d-m-Y', strtotime($item->fecha));
+        // Filtro por empleado
+        if ($request->filled('empleado_id')) {
+            $query->where('id_empleado', $request->empleado_id);
+        }
 
-                $infoEmpleado = PermisosEmpleados::find($item->id_empleado);
-                $nombreEmpleado = $infoEmpleado->nombre;
+        // Filtro por rango de fechas
+        if ($request->filled('fecha_desde')) {
+            $query->whereDate('fecha', '>=', $request->fecha_desde);
+        }
+        if ($request->filled('fecha_hasta')) {
+            $query->whereDate('fecha', '<=', $request->fecha_hasta);
+        }
 
-                $item->nombreEmpleado = $nombreEmpleado;
+        // Filtro por condición (1 = fraccionado, 0 = días completos)
+        if ($request->filled('condicion') && $request->condicion !== '') {
+            $query->where('condicion', $request->condicion);
+        }
 
-                return $item;
-            });
+        $arrayPermisos = $query->get()->map(function ($item) {
+
+            $item->fecha = date('d-m-Y', strtotime($item->fecha));
+
+            $infoEmpleado         = PermisosEmpleados::find($item->id_empleado);
+            $item->nombreEmpleado = $infoEmpleado->nombre ?? 'Sin nombre';
+
+            return $item;
+        });
 
         return view('backend.permisos.historial.consultamedica.tablapermisosconsultamedicaeditar', compact('arrayPermisos'));
     }
@@ -440,21 +491,37 @@ class HistorialPermisoController extends Controller
         return view('backend.permisos.historial.compensatorio.vistapermisoscompensatorioeditar', compact('temaPredeterminado'));
     }
 
-    public function tablaHistorialPermisoCompensatorio()
+    public function tablaHistorialPermisoCompensatorio(Request $request)
     {
-        $arrayPermisos = PermisoCompensatorio::orderBy('fecha', 'asc')->get()
-            ->map(function ($item) {
+        $query = PermisoCompensatorio::orderBy('fecha', 'asc');
 
+        // Filtro por empleado
+        if ($request->filled('empleado_id')) {
+            $query->where('id_empleado', $request->empleado_id);
+        }
 
-                $item->fecha = date('d-m-Y', strtotime($item->fecha));
+        // Filtro por rango de fechas
+        if ($request->filled('fecha_desde')) {
+            $query->whereDate('fecha', '>=', $request->fecha_desde);
+        }
+        if ($request->filled('fecha_hasta')) {
+            $query->whereDate('fecha', '<=', $request->fecha_hasta);
+        }
 
-                $infoEmpleado = PermisosEmpleados::find($item->id_empleado);
-                $nombreEmpleado = $infoEmpleado->nombre;
+        // Filtro por condición (1 = fraccionado, 0 = días completos)
+        if ($request->filled('condicion') && $request->condicion !== '') {
+            $query->where('condicion', $request->condicion);
+        }
 
-                $item->nombreEmpleado = $nombreEmpleado;
+        $arrayPermisos = $query->get()->map(function ($item) {
 
-                return $item;
-            });
+            $item->fecha = date('d-m-Y', strtotime($item->fecha));
+
+            $infoEmpleado         = PermisosEmpleados::find($item->id_empleado);
+            $item->nombreEmpleado = $infoEmpleado->nombre ?? 'Sin nombre';
+
+            return $item;
+        });
 
         return view('backend.permisos.historial.compensatorio.tablapermisoscompensatorioeditar', compact('arrayPermisos'));
     }
@@ -575,20 +642,42 @@ class HistorialPermisoController extends Controller
             compact('temaPredeterminado', 'arrayTipoIncapacidad', 'arrayRiesgo'));
     }
 
-    public function tablaHistorialPermisoIncapacidad()
+    public function tablaHistorialPermisoIncapacidad(Request $request)
     {
-        $arrayPermisos = PermisoIncapacidad::orderBy('fecha', 'asc')->get()
-            ->map(function ($item) {
+        $query = PermisoIncapacidad::orderBy('fecha', 'asc');
 
-                $item->fecha = date('d-m-Y', strtotime($item->fecha));
+        // Filtro por empleado
+        if ($request->filled('empleado_id')) {
+            $query->where('id_empleado', $request->empleado_id);
+        }
 
-                $infoEmpleado = PermisosEmpleados::find($item->id_empleado);
-                $nombreEmpleado = $infoEmpleado->nombre;
+        // Filtro por rango de fechas
+        if ($request->filled('fecha_desde')) {
+            $query->whereDate('fecha', '>=', $request->fecha_desde);
+        }
+        if ($request->filled('fecha_hasta')) {
+            $query->whereDate('fecha', '<=', $request->fecha_hasta);
+        }
 
-                $item->nombreEmpleado = $nombreEmpleado;
+        // Filtro por tipo de incapacidad
+        if ($request->filled('tipo')) {
+            $query->where('id_tipo_incapacidad', $request->tipo);
+        }
 
-                return $item;
-            });
+        // Filtro por hospitalización (0 o 1)
+        if ($request->filled('hospitalizacion') && $request->hospitalizacion !== '') {
+            $query->where('hospitalizacion', $request->hospitalizacion);
+        }
+
+        $arrayPermisos = $query->get()->map(function ($item) {
+
+            $item->fecha = date('d-m-Y', strtotime($item->fecha));
+
+            $infoEmpleado         = PermisosEmpleados::find($item->id_empleado);
+            $item->nombreEmpleado = $infoEmpleado->nombre ?? 'Sin nombre';
+
+            return $item;
+        });
 
         return view('backend.permisos.historial.incapacidad.tablapermisosincapacidadeditar', compact('arrayPermisos'));
     }
@@ -702,21 +791,42 @@ class HistorialPermisoController extends Controller
         return view('backend.permisos.historial.personal.vistapermisospersonaleditar', compact('temaPredeterminado'));
     }
 
-    public function tablaHistorialPermisoPersonal()
+    public function tablaHistorialPermisoPersonal(Request $request)
     {
-        $arrayPermisos = PermisoPersonal::orderBy('fecha', 'asc')->get()
-            ->map(function ($item) {
+        $query = PermisoPersonal::orderBy('fecha', 'asc');
 
+        // Filtro por empleado
+        if ($request->filled('empleado_id')) {
+            $query->where('id_empleado', $request->empleado_id);
+        }
 
-                $item->fecha = date('d-m-Y', strtotime($item->fecha));
+        // Filtro por rango de fechas
+        if ($request->filled('fecha_desde')) {
+            $query->whereDate('fecha', '>=', $request->fecha_desde);
+        }
+        if ($request->filled('fecha_hasta')) {
+            $query->whereDate('fecha', '<=', $request->fecha_hasta);
+        }
 
-                $infoEmpleado = PermisosEmpleados::find($item->id_empleado);
-                $nombreEmpleado = $infoEmpleado->nombre;
+        // Filtro por condición (1 = fraccionado, 0 = días completos)
+        if ($request->filled('condicion') && $request->condicion !== '') {
+            $query->where('condicion', $request->condicion);
+        }
 
-                $item->nombreEmpleado = $nombreEmpleado;
+        // Filtro por goce de sueldo (1 = con goce, 0 = sin goce)
+        if ($request->filled('goce') && $request->goce !== '') {
+            $query->where('goce', $request->goce);
+        }
 
-                return $item;
-            });
+        $arrayPermisos = $query->get()->map(function ($item) {
+
+            $item->fecha = date('d-m-Y', strtotime($item->fecha));
+
+            $infoEmpleado         = PermisosEmpleados::find($item->id_empleado);
+            $item->nombreEmpleado = $infoEmpleado->nombre ?? 'Sin nombre';
+
+            return $item;
+        });
 
         return view('backend.permisos.historial.personal.tablapermisospersonaleditar', compact('arrayPermisos'));
     }

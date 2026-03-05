@@ -53,6 +53,114 @@
 
     <section class="content">
         <div class="container-fluid">
+
+            {{-- ======================== PANEL DE FILTROS ======================== --}}
+            <div class="card card-outline card-secondary mb-3">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-filter mr-1"></i> Filtros
+                    </h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-end">
+
+                        {{-- Empleado con autocomplete --}}
+                        <div class="col-md-3">
+                            <div class="form-group mb-0">
+                                <label class="mb-1"><i class="fas fa-user mr-1 text-muted"></i> Empleado</label>
+                                <div style="position: relative;">
+                                    <input type="text"
+                                           class="form-control form-control-sm"
+                                           id="filtro-buscar-empleado"
+                                           placeholder="Escriba un nombre..."
+                                           autocomplete="off">
+                                    <input type="hidden" id="filtro-empleado-id">
+
+                                    <span id="filtro-limpiar-empleado"
+                                          style="display:none; position:absolute; right:8px; top:50%;
+                                                 transform:translateY(-50%); cursor:pointer; color:#999;">
+                                        <i class="fas fa-times-circle"></i>
+                                    </span>
+
+                                    <div id="filtro-lista-empleados"
+                                         class="list-group shadow"
+                                         style="display:none; position:absolute; z-index:9999;
+                                                max-height:200px; overflow-y:auto;
+                                                width:100%; top:100%; left:0;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Fecha Desde --}}
+                        <div class="col-md-2">
+                            <div class="form-group mb-0">
+                                <label class="mb-1"><i class="fas fa-calendar-alt mr-1 text-muted"></i> Fecha Desde</label>
+                                <input type="date" class="form-control form-control-sm" id="filtro-fecha-desde">
+                            </div>
+                        </div>
+
+                        {{-- Fecha Hasta --}}
+                        <div class="col-md-2">
+                            <div class="form-group mb-0">
+                                <label class="mb-1"><i class="fas fa-calendar-check mr-1 text-muted"></i> Fecha Hasta</label>
+                                <input type="date" class="form-control form-control-sm" id="filtro-fecha-hasta">
+                            </div>
+                        </div>
+
+                        {{-- Tipo (condicion) --}}
+                        <div class="col-md-1">
+                            <div class="form-group mb-0">
+                                <label class="mb-1"><i class="fas fa-tag mr-1 text-muted"></i> Tipo</label>
+                                <select class="form-control form-control-sm" id="filtro-condicion">
+                                    <option value="">Todos</option>
+                                    <option value="1">Fraccionado</option>
+                                    <option value="0">Dias</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {{-- Goce de sueldo --}}
+                        <div class="col-md-2">
+                            <div class="form-group mb-0">
+                                <label class="mb-1"><i class="fas fa-dollar-sign mr-1 text-muted"></i> Goce de Sueldo</label>
+                                <select class="form-control form-control-sm" id="filtro-goce">
+                                    <option value="">Todos</option>
+                                    <option value="1">Con goce</option>
+                                    <option value="0">Sin goce</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {{-- Botones --}}
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-primary btn-sm btn-block" onclick="aplicarFiltros()">
+                                <i class="fas fa-search mr-1"></i> Filtrar
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm btn-block mt-1" onclick="limpiarFiltros()">
+                                <i class="fas fa-times mr-1"></i> Limpiar
+                            </button>
+                        </div>
+
+                    </div>
+
+                    {{-- Badges filtros activos --}}
+                    <div class="row mt-2" id="filtros-activos-row" style="display:none !important;">
+                        <div class="col-12">
+                            <small class="text-muted">Filtros activos: </small>
+                            <span id="filtros-activos-badges"></span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            {{-- ======================== FIN PANEL DE FILTROS ======================== --}}
+
             <div class="card card-blue">
                 <div class="card-header">
                     <h3 class="card-title">Listado</h3>
@@ -60,17 +168,17 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-12">
-                            <div id="tablaDatatable">
-                            </div>
+                            <div id="tablaDatatable"></div>
                         </div>
                     </div>
                 </div>
             </div>
+
         </div>
     </section>
 
 
-    <!-- modal editar -->
+    <!-- ======================== MODAL EDITAR ======================== -->
     <div class="modal fade" id="modalEditar">
         <div class="modal-dialog modal-xl">
             <div class="modal-content">
@@ -99,14 +207,12 @@
                                     </div>
                                     <div class="card-body">
 
-                                        <!-- Fecha -->
                                         <div class="form-group col-md-5 px-0">
                                             <label>Fecha: <span class="text-danger">*</span></label>
                                             <input type="date" class="form-control" id="edit-fecha-entrego">
                                         </div>
                                         <br>
 
-                                        <!-- Goce de Sueldo -->
                                         <div class="form-group">
                                             <label>Goce de Sueldo: <span class="text-danger">*</span></label>
                                             <div class="d-flex align-items-center" style="gap: 20px;">
@@ -133,7 +239,6 @@
 
                                         <hr>
 
-                                        <!-- Condicion -->
                                         <div class="form-group">
                                             <label>Condicion del Permiso: <span class="text-danger">*</span></label>
                                             <div class="d-flex align-items-center" style="gap: 20px;">
@@ -141,7 +246,7 @@
                                                     <input class="custom-control-input" type="radio"
                                                            id="edit-radio-fraccionado" name="edit-condicion" value="1">
                                                     <label for="edit-radio-fraccionado" class="custom-control-label">
-                                                        <strong>Fraccionado</strong> (Por horas)
+                                                        <strong>Fraccionado</strong> (Por horas/minutos)
                                                     </label>
                                                 </div>
                                                 <div class="custom-control custom-radio">
@@ -223,7 +328,6 @@
 
                                         <hr>
 
-                                        <!-- Razon -->
                                         <div class="form-group">
                                             <label>Razon del Permiso:</label>
                                             <textarea class="form-control" rows="3" maxlength="800"
@@ -246,7 +350,6 @@
                                         <div class="form-group" style="position:relative;">
                                             <label>Buscar empleado por nombre: <span class="text-danger">*</span></label>
 
-                                            <!-- Empleado actual (readonly) -->
                                             <div class="input-group" id="edit-empleado-actual">
                                                 <input type="text" class="form-control" id="edit-empleado-nombre" readonly
                                                        placeholder="Cargando empleado...">
@@ -258,7 +361,6 @@
                                                 </div>
                                             </div>
 
-                                            <!-- Buscador (oculto por defecto) -->
                                             <div id="edit-bloque-buscar" style="display:none; position:relative;">
                                                 <div class="input-group">
                                                     <input type="text" class="form-control" id="edit-buscar-empleado"
@@ -396,6 +498,13 @@
     <script src="{{ asset('js/sweetalert2.all.min.js') }}" type="text/javascript"></script>
 
     <script>
+
+        function formatearFecha(fecha) {
+            if (!fecha) return '';
+            const [y, m, d] = fecha.split('-');
+            return `${d}-${m}-${y}`;
+        }
+
         $(function () {
             const ruta = "{{ url('/admin/historial/personal/tabla') }}";
 
@@ -403,7 +512,6 @@
                 if ($.fn.DataTable.isDataTable('#tabla')) {
                     $('#tabla').DataTable().destroy();
                 }
-
                 $('#tabla').DataTable({
                     paging: true,
                     lengthChange: true,
@@ -415,14 +523,14 @@
                     pagingType: "full_numbers",
                     lengthMenu: [[100, 150, -1], [100, 150, "Todo"]],
                     language: {
-                        sProcessing: "Procesando...",
-                        sLengthMenu: "Mostrar _MENU_ registros",
-                        sZeroRecords: "No se encontraron resultados",
-                        sEmptyTable: "Ningun dato disponible en esta tabla",
-                        sInfo: "Mostrando _START_ a _END_ de _TOTAL_ registros",
-                        sInfoEmpty: "Mostrando 0 a 0 de 0 registros",
+                        sProcessing:   "Procesando...",
+                        sLengthMenu:   "Mostrar _MENU_ registros",
+                        sZeroRecords:  "No se encontraron resultados",
+                        sEmptyTable:   "Ningun dato disponible en esta tabla",
+                        sInfo:         "Mostrando _START_ a _END_ de _TOTAL_ registros",
+                        sInfoEmpty:    "Mostrando 0 a 0 de 0 registros",
                         sInfoFiltered: "(filtrado de _MAX_ registros)",
-                        sSearch: "Buscar:",
+                        sSearch:       "Buscar:",
                         oPaginate: { sFirst: "Primero", sLast: "Ultimo", sNext: "Siguiente", sPrevious: "Anterior" },
                         oAria: { sSortAscending: ": Orden ascendente", sSortDescending: ": Orden descendente" }
                     },
@@ -431,48 +539,160 @@
                         "tr" +
                         "<'row align-items-center'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>"
                 });
-
                 $('#tabla_length select').addClass('form-control form-control-sm');
                 $('#tabla_filter input').addClass('form-control form-control-sm').css('display', 'inline-block');
             }
 
-            function cargarTabla() {
-                $('#tablaDatatable').load(ruta, function () {
+            window.cargarTabla = function (params = {}) {
+                openLoading();
+                $.get(ruta, params, function (html) {
+                    $('#tablaDatatable').html(html);
                     initDataTable();
+                    closeLoading();
                 });
-            }
+            };
 
-            // Primera carga
-            cargarTabla();
-
-            // Exponer para recargar desde otras funciones
             window.recargar = function () {
+                aplicarFiltros();
+            };
+
+            window.aplicarFiltros = function () {
+                const params = {
+                    empleado_id: $('#filtro-empleado-id').val() || '',
+                    fecha_desde: $('#filtro-fecha-desde').val() || '',
+                    fecha_hasta: $('#filtro-fecha-hasta').val() || '',
+                    condicion:   $('#filtro-condicion').val()   || '',
+                    goce:        $('#filtro-goce').val()        || '',
+                };
+                mostrarBadgesFiltros(params);
+                cargarTabla(params);
+            };
+
+            window.limpiarFiltros = function () {
+                $('#filtro-buscar-empleado').val('');
+                $('#filtro-empleado-id').val('');
+                $('#filtro-limpiar-empleado').hide();
+                $('#filtro-fecha-desde').val('');
+                $('#filtro-fecha-hasta').val('');
+                $('#filtro-condicion').val('');
+                $('#filtro-goce').val('');
+                $('#filtros-activos-row').hide();
+                $('#filtros-activos-badges').html('');
                 cargarTabla();
             };
+
+            function mostrarBadgesFiltros(params) {
+                let badges = '', hay = false;
+
+                if (params.empleado_id) {
+                    badges += `<span class="badge badge-primary mr-1"><i class="fas fa-user mr-1"></i>${$('#filtro-buscar-empleado').val()}</span>`;
+                    hay = true;
+                }
+                if (params.fecha_desde) {
+                    badges += `<span class="badge badge-info mr-1"><i class="fas fa-calendar mr-1"></i>Desde: ${formatearFecha(params.fecha_desde)}</span>`;
+                    hay = true;
+                }
+                if (params.fecha_hasta) {
+                    badges += `<span class="badge badge-info mr-1"><i class="fas fa-calendar-check mr-1"></i>Hasta: ${formatearFecha(params.fecha_hasta)}</span>`;
+                    hay = true;
+                }
+                if (params.condicion !== '') {
+                    const label = params.condicion == '1' ? 'Fraccionado' : 'Dias completo(s)';
+                    badges += `<span class="badge badge-warning mr-1"><i class="fas fa-tag mr-1"></i>${label}</span>`;
+                    hay = true;
+                }
+                if (params.goce !== '') {
+                    const label = params.goce == '1' ? 'Con goce' : 'Sin goce';
+                    const color = params.goce == '1' ? 'badge-success' : 'badge-danger';
+                    badges += `<span class="badge ${color} mr-1"><i class="fas fa-dollar-sign mr-1"></i>${label}</span>`;
+                    hay = true;
+                }
+
+                if (hay) {
+                    $('#filtros-activos-badges').html(badges);
+                    $('#filtros-activos-row').show();
+                } else {
+                    $('#filtros-activos-row').hide();
+                    $('#filtros-activos-badges').html('');
+                }
+            }
+
+            // Autocomplete filtro empleado
+            let filtroTimeout = null;
+
+            $(document).on('keyup', '#filtro-buscar-empleado', function () {
+                const texto = $(this).val();
+                if (texto.length === 0) {
+                    $('#filtro-empleado-id').val('');
+                    $('#filtro-limpiar-empleado').hide();
+                    $('#filtro-lista-empleados').hide().html('');
+                    return;
+                }
+                if (texto.length < 2) { $('#filtro-lista-empleados').hide().html(''); return; }
+
+                clearTimeout(filtroTimeout);
+                filtroTimeout = setTimeout(function () {
+                    axios.get(urlAdmin + '/admin/empleados/buscar', { params: { q: texto } })
+                        .then(resp => {
+                            let html = resp.data.length === 0
+                                ? `<div class="list-group-item text-muted small"><i class="fas fa-info-circle mr-1"></i>Sin resultados</div>`
+                                : resp.data.map(e => `
+                                    <button type="button"
+                                        class="list-group-item list-group-item-action py-1 filtro-empleado-item"
+                                        data-id="${e.id}" data-nombre="${e.nombre}">
+                                        <strong>${e.nombre}</strong>
+                                        <small class="text-muted d-block">${e.cargo ?? ''} — ${e.unidad ?? ''}</small>
+                                    </button>`).join('');
+                            $('#filtro-lista-empleados').html(html).show();
+                        })
+                        .catch(() => toastr.error('Error al buscar empleados'));
+                }, 300);
+            });
+
+            $(document).on('click', '.filtro-empleado-item', function () {
+                $('#filtro-empleado-id').val($(this).data('id'));
+                $('#filtro-buscar-empleado').val($(this).data('nombre'));
+                $('#filtro-limpiar-empleado').show();
+                $('#filtro-lista-empleados').hide();
+            });
+
+            $(document).on('click', '#filtro-limpiar-empleado', function () {
+                $('#filtro-empleado-id').val('');
+                $('#filtro-buscar-empleado').val('').focus();
+                $(this).hide();
+                $('#filtro-lista-empleados').hide().html('');
+            });
+
+            $(document).on('keypress', '#filtro-buscar-empleado', function (e) {
+                if (e.which === 13) aplicarFiltros();
+            });
+
+            $(document).on('click', function (e) {
+                if (!$(e.target).closest('#filtro-buscar-empleado, #filtro-lista-empleados').length) {
+                    $('#filtro-lista-empleados').hide();
+                }
+            });
+
+            cargarTabla();
         });
-    </script>
 
-    <script>
 
-        function recargar(){
-            var ruta = "{{ url('/admin/historial/personal/tabla') }}";
-            $('#tablaDatatable').load(ruta);
-        }
-
+        // ===================================================
+        // ELIMINAR
+        // ===================================================
         function informacionBorrar(id) {
             Swal.fire({
                 title: 'Borrar Registro',
-                text: '',
-                icon: 'info',
+                text: '¿Esta seguro que desea eliminar este permiso?',
+                icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#007bff',
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
                 allowOutsideClick: false,
-                confirmButtonText: 'OK',
+                confirmButtonText: 'Si, borrar',
                 cancelButtonText: 'Cancelar'
             }).then((result) => {
-                if (result.isConfirmed) {
-                    borrarRegistro(id);
-                }
+                if (result.isConfirmed) borrarRegistro(id);
             });
         }
 
@@ -480,23 +700,18 @@
             openLoading();
             var formData = new FormData();
             formData.append('id', id);
-
             axios.post(urlAdmin + '/admin/historial/personal/borrar', formData)
                 .then((response) => {
                     closeLoading();
-                    if (response.data.success === 1) {
-                        toastr.success('Borrado correctamente');
-                        recargar();
-                    } else {
-                        toastr.error('Error al borrar');
-                    }
+                    if (response.data.success === 1) { toastr.success('Borrado correctamente'); recargar(); }
+                    else toastr.error('Error al borrar');
                 })
-                .catch(() => {
-                    toastr.error('Error al borrar');
-                    closeLoading();
-                });
+                .catch(() => { toastr.error('Error al borrar'); closeLoading(); });
         }
 
+        // ===================================================
+        // ABRIR MODAL
+        // ===================================================
         function informacion(id) {
             openLoading();
             document.getElementById("formulario-editar").reset();
@@ -510,10 +725,8 @@
                         const info = response.data.info;
 
                         $('#edit-permiso-id').val(info.id);
-                        $('#edit-permiso-id-titulo').text('#' + info.id);
                         $('#edit-fecha-entrego').val(info.fecha);
                         $('#edit-razon').val(info.razon ?? '');
-
                         $('input[name="edit-goce-sueldo"][value="' + info.goce + '"]').prop('checked', true);
 
                         $('#edit-empleado-id').val(info.id_empleado);
@@ -530,32 +743,22 @@
                             $('#edit-fecha-fraccionado').val(info.fecha_fraccionado ?? '');
                             $('#edit-hora-inicio').val(info.hora_inicio ? info.hora_inicio.substring(0, 5) : '');
                             $('#edit-hora-fin').val(info.hora_fin ? info.hora_fin.substring(0, 5) : '');
-                            if (info.hora_inicio && info.hora_fin) {
-                                $('#edit-hora-fin').trigger('change');
-                            }
+                            if (info.hora_inicio && info.hora_fin) $('#edit-hora-fin').trigger('change');
                         } else {
                             $('#edit-fecha-inicio-comp').val(info.fecha_inicio ?? '');
                             $('#edit-fecha-fin-comp').val(info.fecha_fin ?? '');
-                            if (info.fecha_inicio && info.fecha_fin) {
-                                $('#edit-fecha-fin-comp').trigger('change');
-                            }
+                            if (info.fecha_inicio && info.fecha_fin) $('#edit-fecha-fin-comp').trigger('change');
                         }
 
                         $('#modalEditar').modal('show');
-
                     } else {
                         toastr.error('Informacion no encontrada');
                     }
                 })
-                .catch(() => {
-                    closeLoading();
-                    toastr.error('Error al obtener informacion');
-                });
+                .catch(() => { closeLoading(); toastr.error('Error al obtener informacion'); });
         }
 
-        $(document).on('change', 'input[name="edit-condicion"]', function () {
-            toggleEditCondicion($(this).val());
-        });
+        $(document).on('change', 'input[name="edit-condicion"]', function () { toggleEditCondicion($(this).val()); });
 
         function toggleEditCondicion(val) {
             if (val == '1') {
@@ -570,22 +773,15 @@
         }
 
         $(document).on('change', '#edit-hora-inicio, #edit-hora-fin', function () {
-            let horaInicio = $('#edit-hora-inicio').val();
-            let horaFin    = $('#edit-hora-fin').val();
-
-            if (horaInicio && horaFin) {
-                let [hI, mI] = horaInicio.split(':');
-                let [hF, mF] = horaFin.split(':');
-
-                let ini = new Date(); ini.setHours(parseInt(hI), parseInt(mI), 0, 0);
-                let fin = new Date(); fin.setHours(parseInt(hF), parseInt(mF), 0, 0);
-
+            let hi = $('#edit-hora-inicio').val(), hf = $('#edit-hora-fin').val();
+            if (hi && hf) {
+                let [hI, mI] = hi.split(':'), [hF, mF] = hf.split(':');
+                let ini = new Date(); ini.setHours(+hI, +mI, 0, 0);
+                let fin = new Date(); fin.setHours(+hF, +mF, 0, 0);
                 let diff = (fin - ini) / (1000 * 60);
-
                 if (diff > 0) {
                     $('#edit-minutos-permiso').val(diff);
-                    let h = Math.floor(diff / 60), m = diff % 60;
-                    let t = '';
+                    let h = Math.floor(diff / 60), m = diff % 60, t = '';
                     if (h > 0) t += h + (h === 1 ? ' hora' : ' horas');
                     if (m > 0) { if (t) t += ' y '; t += m + ' minutos'; }
                     $('#edit-horas-permiso').val(t);
@@ -597,14 +793,16 @@
         });
 
         $(document).on('change', '#edit-fecha-inicio-comp, #edit-fecha-fin-comp', function () {
-            let fi = $('#edit-fecha-inicio-comp').val();
-            let ff = $('#edit-fecha-fin-comp').val();
+            let fi = $('#edit-fecha-inicio-comp').val(), ff = $('#edit-fecha-fin-comp').val();
             if (fi && ff) {
-                let diferencia = Math.ceil((new Date(ff) - new Date(fi)) / (1000 * 60 * 60 * 24)) + 1;
-                $('#edit-dias-solicitados').val(diferencia > 0 ? diferencia : '');
+                let d = Math.ceil((new Date(ff) - new Date(fi)) / (1000 * 60 * 60 * 24)) + 1;
+                $('#edit-dias-solicitados').val(d > 0 ? d : '');
             }
         });
 
+        // ===================================================
+        // GUARDAR EDICIÓN
+        // ===================================================
         function editar() {
             const id           = $('#edit-permiso-id').val();
             const empleadoId   = $('#edit-empleado-id').val();
@@ -617,7 +815,6 @@
             if (!empleadoId)              { toastr.error('El empleado es requerido');   return; }
             if (condicion === undefined)  { toastr.error('La condicion es requerida');  return; }
             if (goceSueldo === undefined) { toastr.error('Seleccione goce de sueldo');  return; }
-            if (razon.length > 800)       { toastr.error('La razon no puede exceder los 800 caracteres'); return; }
 
             const formData = new FormData();
             formData.append('id',           id);
@@ -628,36 +825,23 @@
             formData.append('razon',        razon);
 
             if (condicion == '1') {
-                const fechaFrac  = $('#edit-fecha-fraccionado').val();
-                const horaInicio = $('#edit-hora-inicio').val();
-                const horaFin    = $('#edit-hora-fin').val();
-                const minutos    = $('#edit-minutos-permiso').val();
-
-                if (!fechaFrac || !horaInicio || !horaFin) {
-                    toastr.error('Complete todos los campos del permiso fraccionado'); return;
-                }
-                if (!minutos || minutos == 0) {
-                    toastr.error('El permiso debe ser de al menos 1 minuto'); return;
-                }
-
+                const fechaFrac = $('#edit-fecha-fraccionado').val();
+                const horaIni   = $('#edit-hora-inicio').val();
+                const horaFin   = $('#edit-hora-fin').val();
+                const minutos   = $('#edit-minutos-permiso').val();
+                if (!fechaFrac || !horaIni || !horaFin) { toastr.error('Complete todos los campos del permiso fraccionado'); return; }
+                if (!minutos || minutos == 0) { toastr.error('El permiso debe ser de al menos 1 minuto'); return; }
                 formData.append('fecha_fraccionado', fechaFrac);
-                formData.append('hora_inicio',       horaInicio);
+                formData.append('hora_inicio',       horaIni);
                 formData.append('hora_fin',          horaFin);
                 formData.append('duracion_minutos',  parseInt(minutos));
-
             } else {
-                const fechaInicio = $('#edit-fecha-inicio-comp').val();
-                const fechaFin    = $('#edit-fecha-fin-comp').val();
-                const dias        = $('#edit-dias-solicitados').val();
-
-                if (!fechaInicio || !fechaFin) {
-                    toastr.error('Complete todos los campos del permiso completo'); return;
-                }
-                if (new Date(fechaFin) < new Date(fechaInicio)) {
-                    toastr.error('La fecha fin no puede ser menor que la fecha inicio'); return;
-                }
-
-                formData.append('fecha_inicio',     fechaInicio);
+                const fechaIni = $('#edit-fecha-inicio-comp').val();
+                const fechaFin = $('#edit-fecha-fin-comp').val();
+                const dias     = $('#edit-dias-solicitados').val();
+                if (!fechaIni || !fechaFin) { toastr.error('Complete todos los campos del permiso completo'); return; }
+                if (new Date(fechaFin) < new Date(fechaIni)) { toastr.error('La fecha fin no puede ser menor que la fecha inicio'); return; }
+                formData.append('fecha_inicio',     fechaIni);
                 formData.append('fecha_fin',        fechaFin);
                 formData.append('dias_solicitados', dias);
             }
@@ -672,24 +856,14 @@
                         $('#modalEditar').modal('hide');
                         recargar();
                     } else {
-                        if (response.data.tipo === 'limite_excedido' && response.data.data) {
-                            mostrarModalLimite(response.data.data);
-                        } else {
-                            toastr.error(response.data.message ?? 'Error al actualizar');
-                        }
+                        if (response.data.tipo === 'limite_excedido' && response.data.data) mostrarModalLimite(response.data.data);
+                        else toastr.error(response.data.message ?? 'Error al actualizar');
                     }
                 })
                 .catch((err) => {
                     closeLoading();
-                    if (err.response && err.response.data) {
-                        if (err.response.data.tipo === 'limite_excedido' && err.response.data.data) {
-                            mostrarModalLimite(err.response.data.data);
-                        } else {
-                            toastr.error(err.response.data.message || 'Error al actualizar');
-                        }
-                    } else {
-                        toastr.error('Error al actualizar');
-                    }
+                    if (err.response?.data?.tipo === 'limite_excedido' && err.response.data.data) mostrarModalLimite(err.response.data.data);
+                    else toastr.error(err.response?.data?.message || 'Error al actualizar');
                 });
         }
 
@@ -705,17 +879,18 @@
 
         function formatearTiempo(minutos) {
             if (minutos < 60) return minutos + ' min';
-            const dias  = Math.floor(minutos / 480);
-            const rest  = minutos % 480;
-            const horas = Math.floor(rest / 60);
-            const mins  = rest % 60;
+            const dias = Math.floor(minutos / 480), rest = minutos % 480;
+            const h = Math.floor(rest / 60), m = rest % 60;
             let r = '';
-            if (dias  > 0) r += dias  + (dias  === 1 ? ' dia'  : ' dias');
-            if (horas > 0) { if (r) r += ', '; r += horas + (horas === 1 ? ' hora'  : ' horas'); }
-            if (mins  > 0) { if (r) r += ', '; r += mins  + ' min'; }
+            if (dias > 0) r += dias + (dias === 1 ? ' dia' : ' dias');
+            if (h > 0)    { if (r) r += ', '; r += h + (h === 1 ? ' hora' : ' horas'); }
+            if (m > 0)    { if (r) r += ', '; r += m + ' min'; }
             return r || '0 min';
         }
 
+        // ===================================================
+        // MODAL EDITAR — BUSCAR EMPLEADO
+        // ===================================================
         $(document).on('click', '#btn-cambiar-empleado', function () {
             $('#edit-empleado-actual').hide();
             $('#edit-bloque-buscar').show();
@@ -731,38 +906,23 @@
 
         $(document).on('keyup', '#edit-buscar-empleado', function () {
             let texto = $(this).val();
-
-            if (texto.length < 2) {
-                $('#edit-lista-empleados').hide().html('');
-                return;
-            }
-
+            if (texto.length < 2) { $('#edit-lista-empleados').hide().html(''); return; }
             if ($(this).data('buscando')) return;
             const $input = $(this);
             $input.data('buscando', true);
-
             axios.get(urlAdmin + '/admin/empleados/buscar', { params: { q: texto } })
                 .then(resp => {
                     let html = '';
                     resp.data.forEach(e => {
-                        html += '<button type="button"' +
-                            ' class="list-group-item list-group-item-action edit-empleado-item"' +
-                            ' data-id="' + e.id + '"' +
-                            ' data-unidad="' + e.unidad + '"' +
-                            ' data-cargo="' + e.cargo + '"' +
-                            ' data-nombre="' + e.nombre + '">' +
+                        html += '<button type="button" class="list-group-item list-group-item-action edit-empleado-item"' +
+                            ' data-id="' + e.id + '" data-unidad="' + e.unidad + '" data-cargo="' + e.cargo + '" data-nombre="' + e.nombre + '">' +
                             '<strong>' + e.nombre + '</strong>' +
-                            '<small class="text-muted d-block">' + (e.cargo ?? '') + ' - ' + (e.unidad ?? '') + '</small>' +
-                            '</button>';
+                            '<small class="text-muted d-block">' + (e.cargo ?? '') + ' - ' + (e.unidad ?? '') + '</small></button>';
                     });
                     $('#edit-lista-empleados').html(html).show();
                 })
-                .catch(() => {
-                    toastr.error('Error al buscar empleados');
-                })
-                .finally(() => {
-                    $input.data('buscando', false);
-                });
+                .catch(() => toastr.error('Error al buscar empleados'))
+                .finally(() => $input.data('buscando', false));
         });
 
         $(document).on('click', '.edit-empleado-item', function () {
@@ -782,6 +942,5 @@
         });
 
     </script>
-
 
 @endsection

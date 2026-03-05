@@ -39,10 +39,6 @@
 
 @section('content')
 
-    <link href="{{ asset('css/toastr.min.css') }}" type="text/css" rel="stylesheet"/>
-    <link href="{{ asset('css/select2.min.css') }}" type="text/css" rel="stylesheet">
-    <link href="{{ asset('css/select2-bootstrap-5-theme.min.css') }}" type="text/css" rel="stylesheet">
-
     <section class="content-header">
         <div class="row mb-2">
             <div class="col-sm-6"></div>
@@ -57,6 +53,115 @@
 
     <section class="content">
         <div class="container-fluid">
+
+            {{-- ======================== PANEL DE FILTROS ======================== --}}
+            <div class="card card-outline card-secondary mb-3">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-filter mr-1"></i> Filtros
+                    </h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-end">
+
+                        {{-- Empleado con autocomplete --}}
+                        <div class="col-md-3">
+                            <div class="form-group mb-0">
+                                <label class="mb-1"><i class="fas fa-user mr-1 text-muted"></i> Empleado</label>
+                                <div style="position: relative;">
+                                    <input type="text"
+                                           class="form-control form-control-sm"
+                                           id="filtro-buscar-empleado"
+                                           placeholder="Escriba un nombre..."
+                                           autocomplete="off">
+                                    <input type="hidden" id="filtro-empleado-id">
+
+                                    <span id="filtro-limpiar-empleado"
+                                          style="display:none; position:absolute; right:8px; top:50%;
+                                                 transform:translateY(-50%); cursor:pointer; color:#999;">
+                                        <i class="fas fa-times-circle"></i>
+                                    </span>
+
+                                    <div id="filtro-lista-empleados"
+                                         class="list-group shadow"
+                                         style="display:none; position:absolute; z-index:9999;
+                                                max-height:200px; overflow-y:auto;
+                                                width:100%; top:100%; left:0;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Fecha Desde --}}
+                        <div class="col-md-2">
+                            <div class="form-group mb-0">
+                                <label class="mb-1"><i class="fas fa-calendar-alt mr-1 text-muted"></i> Fecha Desde</label>
+                                <input type="date" class="form-control form-control-sm" id="filtro-fecha-desde">
+                            </div>
+                        </div>
+
+                        {{-- Fecha Hasta --}}
+                        <div class="col-md-2">
+                            <div class="form-group mb-0">
+                                <label class="mb-1"><i class="fas fa-calendar-check mr-1 text-muted"></i> Fecha Hasta</label>
+                                <input type="date" class="form-control form-control-sm" id="filtro-fecha-hasta">
+                            </div>
+                        </div>
+
+                        {{-- Tipo Incapacidad --}}
+                        <div class="col-md-2">
+                            <div class="form-group mb-0">
+                                <label class="mb-1"><i class="fas fa-notes-medical mr-1 text-muted"></i> Tipo</label>
+                                <select class="form-control form-control-sm" id="filtro-tipo">
+                                    <option value="">Todos</option>
+                                    @foreach($arrayTipoIncapacidad as $tipo)
+                                        <option value="{{ $tipo->id }}">{{ $tipo->nombre }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
+                        {{-- Hospitalización --}}
+                        <div class="col-md-1">
+                            <div class="form-group mb-0">
+                                <label class="mb-1"><i class="fas fa-hospital mr-1 text-muted"></i> Hosp.</label>
+                                <select class="form-control form-control-sm" id="filtro-hospitalizacion">
+                                    <option value="">Todos</option>
+                                    <option value="1">Sí</option>
+                                    <option value="0">No</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {{-- Botones --}}
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-primary btn-sm btn-block" onclick="aplicarFiltros()">
+                                <i class="fas fa-search mr-1"></i> Filtrar
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm btn-block mt-1" onclick="limpiarFiltros()">
+                                <i class="fas fa-times mr-1"></i> Limpiar
+                            </button>
+                        </div>
+
+                    </div>
+
+                    {{-- Badges de filtros activos --}}
+                    <div class="row mt-2" id="filtros-activos-row" style="display:none !important;">
+                        <div class="col-12">
+                            <small class="text-muted">Filtros activos: </small>
+                            <span id="filtros-activos-badges"></span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            {{-- ======================== FIN PANEL DE FILTROS ======================== --}}
+
             <div class="card card-primary">
                 <div class="card-header">
                     <h3 class="card-title">Listado</h3>
@@ -69,8 +174,10 @@
                     </div>
                 </div>
             </div>
+
         </div>
     </section>
+
 
     <!-- ===================== MODAL EDITAR ===================== -->
     <div class="modal fade" id="modalEditar" tabindex="-1">
@@ -195,7 +302,6 @@
                             <label>Empleado: <span class="text-danger">*</span></label>
                             <input type="hidden" id="edit-empleado-id">
 
-                            <!-- Empleado actual (readonly) -->
                             <div class="input-group" id="edit-empleado-actual">
                                 <input type="text" class="form-control" id="edit-empleado-nombre" readonly
                                        placeholder="Cargando empleado...">
@@ -206,7 +312,6 @@
                                 </div>
                             </div>
 
-                            <!-- Buscador (oculto por defecto) -->
                             <div id="edit-bloque-buscar" style="display:none; position:relative;">
                                 <div class="input-group">
                                     <input type="text" class="form-control" id="edit-buscar-empleado"
@@ -264,11 +369,21 @@
     <script src="{{ asset('js/sweetalert2.all.min.js') }}"></script>
 
     <script>
+
+        // ===================================================
+        // HELPERS
+        // ===================================================
+        function formatearFecha(fecha) {
+            if (!fecha) return '';
+            const [y, m, d] = fecha.split('-');
+            return `${d}-${m}-${y}`;
+        }
+
         $(function () {
             const ruta = "{{ url('/admin/historial/incapacidad/tabla') }}";
 
             // ===============================
-            // SELECT2 — inicializar UNA SOLA VEZ
+            // SELECT2
             // ===============================
             $('.select2-modal').select2({
                 theme: 'bootstrap-5',
@@ -293,18 +408,18 @@
                     pagingType: "full_numbers",
                     lengthMenu: [[100, 150, -1], [100, 150, "Todo"]],
                     language: {
-                        sProcessing: "Procesando...",
-                        sLengthMenu: "Mostrar _MENU_ registros",
-                        sZeroRecords: "No se encontraron resultados",
-                        sEmptyTable: "Ningún dato disponible en esta tabla",
-                        sInfo: "Mostrando _START_ a _END_ de _TOTAL_ registros",
-                        sInfoEmpty: "Mostrando 0 a 0 de 0 registros",
+                        sProcessing:   "Procesando...",
+                        sLengthMenu:   "Mostrar _MENU_ registros",
+                        sZeroRecords:  "No se encontraron resultados",
+                        sEmptyTable:   "Ningún dato disponible en esta tabla",
+                        sInfo:         "Mostrando _START_ a _END_ de _TOTAL_ registros",
+                        sInfoEmpty:    "Mostrando 0 a 0 de 0 registros",
                         sInfoFiltered: "(filtrado de _MAX_ registros)",
-                        sSearch: "Buscar:",
+                        sSearch:       "Buscar:",
                         oPaginate: {
-                            sFirst: "Primero",
-                            sLast: "Último",
-                            sNext: "Siguiente",
+                            sFirst:    "Primero",
+                            sLast:     "Último",
+                            sNext:     "Siguiente",
                             sPrevious: "Anterior"
                         },
                     },
@@ -317,37 +432,187 @@
                 $('#tabla_filter input').addClass('form-control form-control-sm').css('display', 'inline-block');
             }
 
-            function cargarTabla() {
-                $('#tablaDatatable').load(ruta, function () {
+            // ===================================================
+            // CARGAR TABLA (con o sin filtros)
+            // ===================================================
+            window.cargarTabla = function (params = {}) {
+                openLoading();
+                $.get(ruta, params, function (html) {
+                    $('#tablaDatatable').html(html);
                     initDataTable();
+                    closeLoading();
                 });
-            }
+            };
 
-            cargarTabla();
-
+            // Recarga respetando los filtros activos
             window.recargar = function () {
+                aplicarFiltros();
+            };
+
+            // ===================================================
+            // APLICAR FILTROS
+            // ===================================================
+            window.aplicarFiltros = function () {
+                const params = {
+                    empleado_id:     $('#filtro-empleado-id').val()      || '',
+                    fecha_desde:     $('#filtro-fecha-desde').val()      || '',
+                    fecha_hasta:     $('#filtro-fecha-hasta').val()      || '',
+                    tipo:            $('#filtro-tipo').val()              || '',
+                    hospitalizacion: $('#filtro-hospitalizacion').val()  || '',
+                };
+                mostrarBadgesFiltros(params);
+                cargarTabla(params);
+            };
+
+            // ===================================================
+            // LIMPIAR FILTROS
+            // ===================================================
+            window.limpiarFiltros = function () {
+                $('#filtro-buscar-empleado').val('');
+                $('#filtro-empleado-id').val('');
+                $('#filtro-limpiar-empleado').hide();
+                $('#filtro-fecha-desde').val('');
+                $('#filtro-fecha-hasta').val('');
+                $('#filtro-tipo').val('');
+                $('#filtro-hospitalizacion').val('');
+                $('#filtros-activos-row').hide();
+                $('#filtros-activos-badges').html('');
                 cargarTabla();
             };
-        });
 
-        // ===============================
-        // RECARGAR TABLA
-        // ===============================
-        function recargar() {
-            $('#tablaDatatable').load("{{ url('/admin/historial/incapacidad/tabla') }}");
-        }
+            // ===================================================
+            // BADGES DE FILTROS ACTIVOS
+            // ===================================================
+            function mostrarBadgesFiltros(params) {
+                let badges    = '';
+                let hayFiltro = false;
 
-        // ===============================
+                if (params.empleado_id) {
+                    const nombre = $('#filtro-buscar-empleado').val();
+                    badges += `<span class="badge badge-primary mr-1"><i class="fas fa-user mr-1"></i>${nombre}</span>`;
+                    hayFiltro = true;
+                }
+                if (params.fecha_desde) {
+                    badges += `<span class="badge badge-info mr-1"><i class="fas fa-calendar mr-1"></i>Desde: ${formatearFecha(params.fecha_desde)}</span>`;
+                    hayFiltro = true;
+                }
+                if (params.fecha_hasta) {
+                    badges += `<span class="badge badge-info mr-1"><i class="fas fa-calendar-check mr-1"></i>Hasta: ${formatearFecha(params.fecha_hasta)}</span>`;
+                    hayFiltro = true;
+                }
+                if (params.tipo) {
+                    const tipoLabel = $('#filtro-tipo option:selected').text();
+                    badges += `<span class="badge badge-warning mr-1"><i class="fas fa-notes-medical mr-1"></i>${tipoLabel}</span>`;
+                    hayFiltro = true;
+                }
+                if (params.hospitalizacion !== '') {
+                    const hospLabel = params.hospitalizacion == '1' ? 'Con hospitalización' : 'Sin hospitalización';
+                    badges += `<span class="badge badge-secondary mr-1"><i class="fas fa-hospital mr-1"></i>${hospLabel}</span>`;
+                    hayFiltro = true;
+                }
+
+                if (hayFiltro) {
+                    $('#filtros-activos-badges').html(badges);
+                    $('#filtros-activos-row').show();
+                } else {
+                    $('#filtros-activos-row').hide();
+                    $('#filtros-activos-badges').html('');
+                }
+            }
+
+            // ===================================================
+            // AUTOCOMPLETE — FILTRO EMPLEADO
+            // ===================================================
+            let filtroTimeout = null;
+
+            $(document).on('keyup', '#filtro-buscar-empleado', function () {
+                const texto = $(this).val();
+
+                if (texto.length === 0) {
+                    $('#filtro-empleado-id').val('');
+                    $('#filtro-limpiar-empleado').hide();
+                    $('#filtro-lista-empleados').hide().html('');
+                    return;
+                }
+
+                if (texto.length < 2) {
+                    $('#filtro-lista-empleados').hide().html('');
+                    return;
+                }
+
+                clearTimeout(filtroTimeout);
+                filtroTimeout = setTimeout(function () {
+                    axios.get(urlAdmin + '/admin/empleados/buscar', { params: { q: texto } })
+                        .then(resp => {
+                            let html = '';
+                            if (resp.data.length === 0) {
+                                html = `<div class="list-group-item text-muted small">
+                                            <i class="fas fa-info-circle mr-1"></i>Sin resultados
+                                        </div>`;
+                            } else {
+                                resp.data.forEach(e => {
+                                    html += `
+                                        <button type="button"
+                                            class="list-group-item list-group-item-action py-1 filtro-empleado-item"
+                                            data-id="${e.id}"
+                                            data-nombre="${e.nombre}">
+                                            <strong>${e.nombre}</strong>
+                                            <small class="text-muted d-block">${e.cargo ?? ''} — ${e.unidad ?? ''}</small>
+                                        </button>`;
+                                });
+                            }
+                            $('#filtro-lista-empleados').html(html).show();
+                        })
+                        .catch(() => toastr.error('Error al buscar empleados'));
+                }, 300);
+            });
+
+            $(document).on('click', '.filtro-empleado-item', function () {
+                $('#filtro-empleado-id').val($(this).data('id'));
+                $('#filtro-buscar-empleado').val($(this).data('nombre'));
+                $('#filtro-limpiar-empleado').show();
+                $('#filtro-lista-empleados').hide();
+            });
+
+            $(document).on('click', '#filtro-limpiar-empleado', function () {
+                $('#filtro-empleado-id').val('');
+                $('#filtro-buscar-empleado').val('').focus();
+                $(this).hide();
+                $('#filtro-lista-empleados').hide().html('');
+            });
+
+            $(document).on('keypress', '#filtro-buscar-empleado', function (e) {
+                if (e.which === 13) aplicarFiltros();
+            });
+
+            // Cerrar lista si clic afuera
+            $(document).on('click', function (e) {
+                if (!$(e.target).closest('#filtro-buscar-empleado, #filtro-lista-empleados').length) {
+                    $('#filtro-lista-empleados').hide();
+                }
+            });
+
+            // ===================================================
+            // CARGA INICIAL — sin filtros, muestra TODO
+            // ===================================================
+            cargarTabla();
+
+        }); // end document ready
+
+
+        // ===================================================
         // BORRAR
-        // ===============================
+        // ===================================================
         function informacionBorrar(id) {
             Swal.fire({
                 title: 'Borrar Registro',
-                icon: 'info',
+                text: '¿Está seguro que desea eliminar este registro?',
+                icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#007bff',
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
                 allowOutsideClick: false,
-                confirmButtonText: 'OK',
+                confirmButtonText: 'Sí, borrar',
                 cancelButtonText: 'Cancelar'
             }).then((result) => {
                 if (result.isConfirmed) borrarRegistro(id);
@@ -375,9 +640,9 @@
                 });
         }
 
-        // ===============================
+        // ===================================================
         // CALCULAR FECHA FIN AUTOMÁTICA
-        // ===============================
+        // ===================================================
         $(document).on('change input', '#edit-fecha-inicio, #edit-dias', function () {
             let fechaInicio = $('#edit-fecha-inicio').val();
             let diasInput   = $('#edit-dias').val();
@@ -405,7 +670,6 @@
             );
         });
 
-        // Validar que días no sea 0
         $(document).on('input', '#edit-dias', function () {
             let valor = $(this).val().replace(/[^0-9]/g, '');
             if (valor !== '' && parseInt(valor) === 0) {
@@ -417,9 +681,9 @@
             }
         });
 
-        // ===============================
+        // ===================================================
         // HOSPITALIZACIÓN
-        // ===============================
+        // ===================================================
         $(document).on('change', '#edit-hospitalizacion', function () {
             if ($(this).is(':checked')) {
                 $('#edit-periodo-hospitalizacion-section').slideDown(200);
@@ -429,9 +693,9 @@
             }
         });
 
-        // ===============================
+        // ===================================================
         // ABRIR MODAL: CARGAR DATOS
-        // ===============================
+        // ===================================================
         function informacion(id) {
             openLoading();
 
@@ -441,18 +705,16 @@
             $('#edit-lista-empleados').hide();
             $('#edit-empleado-actual').show();
 
-            // Limpiar select2 también
             $('#edit-tipo-incapacidad').val('').trigger('change');
             $('#edit-riesgo').val('').trigger('change');
 
-            axios.post(urlAdmin + '/admin/historial/incapacidad/informacion', {id: id})
+            axios.post(urlAdmin + '/admin/historial/incapacidad/informacion', { id: id })
                 .then((response) => {
                     closeLoading();
 
                     if (response.data.success === 1) {
                         const info = response.data.info;
 
-                        // Datos principales
                         $('#id-editar').val(info.id);
                         $('#edit-fecha').val(info.fecha);
                         $('#edit-fecha-inicio').val(info.fecha_inicio);
@@ -461,11 +723,9 @@
                         $('#edit-diagnostico').val(info.diagnostico ?? '');
                         $('#edit-numero').val(info.numero ?? '');
 
-                        // Select2 — asignar ANTES de abrir el modal
                         $('#edit-tipo-incapacidad').val(info.id_tipo_incapacidad).trigger('change');
                         $('#edit-riesgo').val(info.id_riesgo).trigger('change');
 
-                        // Hospitalización
                         const tieneHosp = parseInt(info.hospitalizacion) === 1;
                         $('#edit-hospitalizacion').prop('checked', tieneHosp);
                         if (tieneHosp) {
@@ -474,13 +734,11 @@
                             $('#edit-fecha-fin-hosp').val(info.fecha_fin_hospitalizacion ?? '');
                         }
 
-                        // Empleado
                         $('#edit-empleado-id').val(info.id_empleado);
                         $('#edit-empleado-nombre').val(info.nombre_empleado ?? '');
                         $('#edit-unidad').val(info.unidad ?? '');
                         $('#edit-cargo').val(info.cargo ?? '');
 
-                        // Abrir modal AL FINAL
                         $('#modalEditar').modal('show');
 
                     } else {
@@ -493,9 +751,9 @@
                 });
         }
 
-        // ===============================
+        // ===================================================
         // GUARDAR EDICIÓN
-        // ===============================
+        // ===================================================
         function editar() {
             const id              = $('#id-editar').val();
             const empleadoId      = $('#edit-empleado-id').val();
@@ -511,7 +769,6 @@
             const fechaInicioHosp = $('#edit-fecha-inicio-hosp').val();
             const fechaFinHosp    = $('#edit-fecha-fin-hosp').val();
 
-            // Validaciones
             if (!empleadoId)       { toastr.error('Debe seleccionar un empleado');            return; }
             if (!fecha)            { toastr.error('Debe ingresar la fecha');                   return; }
             if (!tipoIncapacidad)  { toastr.error('Debe seleccionar el tipo de incapacidad');  return; }
@@ -564,9 +821,9 @@
                 });
         }
 
-        // ===============================
-        // CAMBIAR / BUSCAR EMPLEADO
-        // ===============================
+        // ===================================================
+        // MODAL EDITAR — BUSCAR EMPLEADO
+        // ===================================================
         $(document).on('click', '#btn-cambiar-empleado', function () {
             $('#edit-empleado-actual').hide();
             $('#edit-bloque-buscar').show();
@@ -580,37 +837,37 @@
             $('#edit-lista-empleados').hide().html('');
         });
 
+        let editTimeout = null;
+
         $(document).on('keyup', '#edit-buscar-empleado', function () {
-            let texto = $(this).val();
+            const texto = $(this).val();
 
             if (texto.length < 2) {
                 $('#edit-lista-empleados').hide().html('');
                 return;
             }
 
-            if ($(this).data('buscando')) return;
-            const $input = $(this);
-            $input.data('buscando', true);
-
-            axios.get(urlAdmin + '/admin/empleados/buscar', {params: {q: texto}})
-                .then(resp => {
-                    let html = '';
-                    resp.data.forEach(e => {
-                        html += `
-                            <button type="button"
-                                class="list-group-item list-group-item-action edit-empleado-item"
-                                data-id="${e.id}"
-                                data-unidad="${e.unidad}"
-                                data-cargo="${e.cargo}"
-                                data-nombre="${e.nombre}">
-                                <strong>${e.nombre}</strong>
-                                <small class="text-muted d-block">${e.cargo ?? ''} — ${e.unidad ?? ''}</small>
-                            </button>`;
-                    });
-                    $('#edit-lista-empleados').html(html).show();
-                })
-                .catch(() => toastr.error('Error al buscar empleados'))
-                .finally(() => $input.data('buscando', false));
+            clearTimeout(editTimeout);
+            editTimeout = setTimeout(function () {
+                axios.get(urlAdmin + '/admin/empleados/buscar', { params: { q: texto } })
+                    .then(resp => {
+                        let html = '';
+                        resp.data.forEach(e => {
+                            html += `
+                                <button type="button"
+                                    class="list-group-item list-group-item-action edit-empleado-item"
+                                    data-id="${e.id}"
+                                    data-unidad="${e.unidad}"
+                                    data-cargo="${e.cargo}"
+                                    data-nombre="${e.nombre}">
+                                    <strong>${e.nombre}</strong>
+                                    <small class="text-muted d-block">${e.cargo ?? ''} — ${e.unidad ?? ''}</small>
+                                </button>`;
+                        });
+                        $('#edit-lista-empleados').html(html).show();
+                    })
+                    .catch(() => toastr.error('Error al buscar empleados'));
+            }, 300);
         });
 
         $(document).on('click', '.edit-empleado-item', function () {
@@ -630,6 +887,5 @@
         });
 
     </script>
-
 
 @endsection

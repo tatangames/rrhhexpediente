@@ -82,7 +82,7 @@
                                     <div class="custom-control custom-radio">
                                         <input class="custom-control-input" type="radio" id="radio-fraccionado-4" name="condicion-otros" value="fraccionado" checked>
                                         <label for="radio-fraccionado-4" class="custom-control-label">
-                                            <strong>Fraccionado</strong> (Por horas)
+                                            <strong>Fraccionado</strong> (Por horas/minutos)
                                         </label>
                                     </div>
                                     <div class="custom-control custom-radio">
