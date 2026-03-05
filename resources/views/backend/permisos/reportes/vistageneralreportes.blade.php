@@ -6,6 +6,32 @@
 
 @include('backend.urlglobal')
 
+@section('content_top_nav_right')
+    <link href="{{ asset('css/toastr.min.css') }}" type="text/css" rel="stylesheet"/>
+    <link href="{{ asset('css/select2.min.css') }}" type="text/css" rel="stylesheet">
+    <link href="{{ asset('css/select2-bootstrap-5-theme.min.css') }}" type="text/css" rel="stylesheet">
+    <link href="{{ asset('css/estiloToggle.css') }}" type="text/css" rel="stylesheet" />
+
+    <li class="nav-item dropdown">
+        <a href="#" class="nav-link" data-toggle="dropdown" role="button">
+            <i class="fas fa-cogs"></i>
+            <span class="d-none d-md-inline">{{ Auth::guard('admin')->user()->nombre }}</span>
+        </a>
+        <div class="dropdown-menu dropdown-menu-right">
+            <a href="{{ route('admin.perfil') }}" class="dropdown-item">
+                <i class="fas fa-user mr-2"></i> Editar Perfil
+            </a>
+            <form action="{{ route('admin.logout') }}" method="POST">
+                @csrf
+                <button type="submit" class="dropdown-item">
+                    <i class="fas fa-sign-out-alt mr-2"></i> Cerrar Sesión
+                </button>
+            </form>
+        </div>
+    </li>
+@endsection
+
+
 @section('content')
     <link href="{{ asset('css/toastr.min.css') }}" type="text/css" rel="stylesheet"/>
     <link href="{{ asset('css/select2.min.css') }}" type="text/css" rel="stylesheet">
@@ -194,4 +220,6 @@
             document.body.removeChild(form);
         }
     </script>
+
+
 @endsection

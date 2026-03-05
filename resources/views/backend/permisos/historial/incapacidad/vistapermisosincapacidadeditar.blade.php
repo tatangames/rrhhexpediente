@@ -19,20 +19,6 @@
     <link href="{{ asset('css/estiloToggle.css') }}" type="text/css" rel="stylesheet" />
 
     <li class="nav-item dropdown">
-        <a class="nav-link" data-toggle="dropdown" href="#" title="Tema">
-            <i id="theme-icon" class="fas fa-sun"></i>
-        </a>
-        <div class="dropdown-menu dropdown-menu-right p-0" style="min-width: 180px">
-            <a class="dropdown-item d-flex align-items-center" href="#" data-theme="dark">
-                <i class="far fa-moon mr-2"></i> Dark
-            </a>
-            <a class="dropdown-item d-flex align-items-center" href="#" data-theme="light">
-                <i class="far fa-sun mr-2"></i> Light
-            </a>
-        </div>
-    </li>
-
-    <li class="nav-item dropdown">
         <a href="#" class="nav-link" data-toggle="dropdown" role="button">
             <i class="fas fa-cogs"></i>
             <span class="d-none d-md-inline">{{ Auth::guard('admin')->user()->nombre }}</span>
@@ -645,48 +631,5 @@
 
     </script>
 
-    <script>
-        (function () {
-            const SERVER_DEFAULT = {{ $temaPredeterminado }};
-            const iconEl = document.getElementById('theme-icon');
-
-            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-            if (token) axios.defaults.headers.common['X-CSRF-TOKEN'] = token;
-
-            function applyTheme(mode) {
-                const dark = mode === 'dark';
-                document.body.classList.toggle('dark-mode', dark);
-                document.documentElement.setAttribute('data-bs-theme', dark ? 'dark' : 'light');
-                if (iconEl) {
-                    iconEl.classList.remove('fa-sun', 'fa-moon');
-                    iconEl.classList.add(dark ? 'fa-moon' : 'fa-sun');
-                }
-            }
-
-            applyTheme(SERVER_DEFAULT === 1 ? 'dark' : 'light');
-
-            let saving = false;
-            document.addEventListener('click', async (e) => {
-                const a = e.target.closest('.dropdown-item[data-theme]');
-                if (!a || saving) return;
-                e.preventDefault();
-
-                const selectedMode = a.dataset.theme;
-                const previousMode = document.documentElement.getAttribute('data-bs-theme') === 'dark' ? 'dark' : 'light';
-                applyTheme(selectedMode);
-
-                try {
-                    saving = true;
-                    await axios.post(urlAdmin + '/admin/actualizar/tema', {tema: selectedMode === 'dark' ? 1 : 0});
-                    if (window.toastr) toastr.success('Tema actualizado');
-                } catch {
-                    applyTheme(previousMode);
-                    if (window.toastr) toastr.error('No se pudo actualizar el tema');
-                } finally {
-                    saving = false;
-                }
-            });
-        })();
-    </script>
 
 @endsection

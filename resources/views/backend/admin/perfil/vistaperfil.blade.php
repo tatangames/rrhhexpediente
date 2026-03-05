@@ -12,28 +12,29 @@
 
 @include('backend.urlglobal')
 
+
+@section('css')
+
+@endsection
+
 @section('content_top_nav_right')
     <link href="{{ asset('css/toastr.min.css') }}" type="text/css" rel="stylesheet" />
 
-    <li class="nav-item dropdown">
-        <a class="nav-link" data-toggle="dropdown" href="#" title="Tema">
-            <i id="theme-icon" class="fas fa-sun"></i>
-        </a>
-        <div class="dropdown-menu dropdown-menu-right p-0" style="min-width: 180px">
-            <a class="dropdown-item d-flex align-items-center" href="#" data-theme="dark">
-                <i class="far fa-moon mr-2"></i> Dark
-            </a>
-            <a class="dropdown-item d-flex align-items-center" href="#" data-theme="light">
-                <i class="far fa-sun mr-2"></i> Light
-            </a>
-        </div>
-    </li>
+    <style>
+        .nav-item.user-menu,
+        .navbar-nav > .user-menu,
+        li.nav-item.dropdown.user-menu {
+            display: none !important;
+        }
+    </style>
 
     <li class="nav-item dropdown">
         <a href="#" class="nav-link" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
             <i class="fas fa-cogs"></i>
             <span class="d-none d-md-inline">{{ Auth::guard('admin')->user()->nombre }}</span>
         </a>
+
+
 
         <div class="dropdown-menu dropdown-menu-right">
             <a href="{{ route('admin.perfil') }}" class="dropdown-item">

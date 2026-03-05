@@ -17,19 +17,6 @@
     <link href="{{ asset('css/select2.min.css') }}" type="text/css" rel="stylesheet">
     <link href="{{ asset('css/select2-bootstrap-5-theme.min.css') }}" type="text/css" rel="stylesheet">
     <link href="{{ asset('css/estiloToggle.css') }}" type="text/css" rel="stylesheet" />
-    <li class="nav-item dropdown">
-        <a class="nav-link" data-toggle="dropdown" href="#" title="Tema">
-            <i id="theme-icon" class="fas fa-sun"></i>
-        </a>
-        <div class="dropdown-menu dropdown-menu-right p-0" style="min-width: 180px">
-            <a class="dropdown-item d-flex align-items-center" href="#" data-theme="dark">
-                <i class="far fa-moon mr-2"></i> Dark
-            </a>
-            <a class="dropdown-item d-flex align-items-center" href="#" data-theme="light">
-                <i class="far fa-sun mr-2"></i> Light
-            </a>
-        </div>
-    </li>
 
     <li class="nav-item dropdown">
         <a href="#" class="nav-link" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
@@ -50,6 +37,7 @@
             </form>
         </div>
     </li>
+
 @endsection
 
 @section('content')
