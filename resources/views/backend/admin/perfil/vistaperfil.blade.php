@@ -13,20 +13,11 @@
 @include('backend.urlglobal')
 
 
-@section('css')
-
-@endsection
 
 @section('content_top_nav_right')
     <link href="{{ asset('css/toastr.min.css') }}" type="text/css" rel="stylesheet" />
 
-    <style>
-        .nav-item.user-menu,
-        .navbar-nav > .user-menu,
-        li.nav-item.dropdown.user-menu {
-            display: none !important;
-        }
-    </style>
+
 
     <li class="nav-item dropdown">
         <a href="#" class="nav-link" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">

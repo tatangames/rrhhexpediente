@@ -114,15 +114,15 @@ class ReportesPermisoController extends Controller
         foreach ($personales as $i => $p) {
             $condicion   = $p->condicion ? 'Fraccionado' : 'Día Completo';
             $goce        = $p->goce ? 'SÍ' : 'NO';
-            $fechaInicio = $p->condicion ? ($p->fecha_fraccionado ?? '-') : ($p->fecha_inicio ?? '-');
-            $fechaFin    = $p->condicion ? '-' : ($p->fecha_fin ?? '-');
+            $fechaInicio = $p->condicion ? $fmt($p->fecha_fraccionado) : $fmt($p->fecha_inicio);
+            $fechaFin    = $p->condicion ? '-' : $fmt($p->fecha_fin);
             $horaInicio  = $p->condicion ? ($p->hora_inicio ?? '-') : '-';
             $horaFin     = $p->condicion ? ($p->hora_fin    ?? '-') : '-';
             $bg          = $i % 2 === 0 ? '#f9f9f9' : '#fff';
             $html .= "<tr style='background:{$bg};'>
             <td align='center'>" . ($i + 1) . "</td>
             <td>{$p->empleado->nombre}</td><td>{$p->unidad}</td><td>{$p->cargo}</td>
-            <td align='center'>{$p->fecha}</td><td align='center'>{$condicion}</td>
+            <td align='center'>{$fmt($p->fecha)}</td><td align='center'>{$condicion}</td>
             <td align='center'>{$goce}</td><td align='center'>{$fechaInicio}</td>
             <td align='center'>{$fechaFin}</td><td align='center'>{$horaInicio}</td>
             <td align='center'>{$horaFin}</td><td>{$p->razon}</td>
@@ -156,15 +156,15 @@ class ReportesPermisoController extends Controller
 
         foreach ($compensatorios as $i => $p) {
             $condicion   = $p->condicion ? 'Fraccionado' : 'Día Completo';
-            $fechaInicio = $p->condicion ? ($p->fecha_fraccionado ?? '-') : ($p->fecha_inicio ?? '-');
-            $fechaFin    = $p->condicion ? '-' : ($p->fecha_fin ?? '-');
+            $fechaInicio = $p->condicion ? $fmt($p->fecha_fraccionado) : $fmt($p->fecha_inicio);
+            $fechaFin    = $p->condicion ? '-' : $fmt($p->fecha_fin);
             $horaInicio  = $p->condicion ? ($p->hora_inicio ?? '-') : '-';
             $horaFin     = $p->condicion ? ($p->hora_fin    ?? '-') : '-';
             $bg          = $i % 2 === 0 ? '#f9f9f9' : '#fff';
             $html .= "<tr style='background:{$bg};'>
             <td align='center'>" . ($i + 1) . "</td>
             <td>{$p->empleado->nombre}</td><td>{$p->unidad}</td><td>{$p->cargo}</td>
-            <td align='center'>{$p->fecha}</td><td align='center'>{$condicion}</td>
+            <td align='center'>{$fmt($p->fecha)}</td><td align='center'>{$condicion}</td>
             <td align='center'>{$fechaInicio}</td><td align='center'>{$fechaFin}</td>
             <td align='center'>{$horaInicio}</td><td align='center'>{$horaFin}</td>
             <td>{$p->razon}</td>
@@ -200,15 +200,15 @@ class ReportesPermisoController extends Controller
 
         foreach ($enfermedades as $i => $p) {
             $condicion   = $p->condicion ? 'Fraccionado' : 'Día Completo';
-            $fechaInicio = $p->condicion ? ($p->fecha_fraccionado ?? '-') : ($p->fecha_inicio ?? '-');
-            $fechaFin    = $p->condicion ? '-' : ($p->fecha_fin ?? '-');
+            $fechaInicio = $p->condicion ? $fmt($p->fecha_fraccionado) : $fmt($p->fecha_inicio);
+            $fechaFin    = $p->condicion ? '-' : $fmt($p->fecha_fin);
             $horaInicio  = $p->condicion ? ($p->hora_inicio ?? '-') : '-';
             $horaFin     = $p->condicion ? ($p->hora_fin    ?? '-') : '-';
             $bg          = $i % 2 === 0 ? '#f9f9f9' : '#fff';
             $html .= "<tr style='background:{$bg};'>
             <td align='center'>" . ($i + 1) . "</td>
             <td>{$p->empleado->nombre}</td><td>{$p->unidad}</td><td>{$p->cargo}</td>
-            <td align='center'>{$p->fecha}</td><td align='center'>{$condicion}</td>
+            <td align='center'>{$fmt($p->fecha)}</td><td align='center'>{$condicion}</td>
             <td>{$p->unidad_atencion}</td><td>{$p->especialidad}</td><td>{$p->condicion_medica}</td>
             <td align='center'>{$fechaInicio}</td><td align='center'>{$fechaFin}</td>
             <td align='center'>{$horaInicio}</td><td align='center'>{$horaFin}</td>
@@ -244,15 +244,15 @@ class ReportesPermisoController extends Controller
 
         foreach ($consultas as $i => $p) {
             $condicion   = $p->condicion ? 'Fraccionado' : 'Día Completo';
-            $fechaInicio = $p->condicion ? ($p->fecha_fraccionado ?? '-') : ($p->fecha_inicio ?? '-');
-            $fechaFin    = $p->condicion ? '-' : ($p->fecha_fin ?? '-');
+            $fechaInicio = $p->condicion ? $fmt($p->fecha_fraccionado) : $fmt($p->fecha_inicio);
+            $fechaFin    = $p->condicion ? '-' : $fmt($p->fecha_fin);
             $horaInicio  = $p->condicion ? ($p->hora_inicio ?? '-') : '-';
             $horaFin     = $p->condicion ? ($p->hora_fin    ?? '-') : '-';
             $bg          = $i % 2 === 0 ? '#f9f9f9' : '#fff';
             $html .= "<tr style='background:{$bg};'>
             <td align='center'>" . ($i + 1) . "</td>
             <td>{$p->empleado->nombre}</td><td>{$p->unidad}</td><td>{$p->cargo}</td>
-            <td align='center'>{$p->fecha}</td><td align='center'>{$condicion}</td>
+            <td align='center'>{$fmt($p->fecha)}</td><td align='center'>{$condicion}</td>
             <td>{$p->unidad_atencion}</td><td>{$p->especialidad}</td><td>{$p->condicion_medica}</td>
             <td align='center'>{$fechaInicio}</td><td align='center'>{$fechaFin}</td>
             <td align='center'>{$horaInicio}</td><td align='center'>{$horaFin}</td>
@@ -344,15 +344,15 @@ class ReportesPermisoController extends Controller
 
         foreach ($otros as $i => $p) {
             $condicion   = $p->condicion ? 'Fraccionado' : 'Día Completo';
-            $fechaInicio = $p->condicion ? ($p->fecha_fraccionado ?? '-') : ($p->fecha_inicio ?? '-');
-            $fechaFin    = $p->condicion ? '-' : ($p->fecha_fin ?? '-');
+            $fechaInicio = $p->condicion ? $fmt($p->fecha_fraccionado) : $fmt($p->fecha_inicio);
+            $fechaFin    = $p->condicion ? '-' : $fmt($p->fecha_fin);
             $horaInicio  = $p->condicion ? ($p->hora_inicio ?? '-') : '-';
             $horaFin     = $p->condicion ? ($p->hora_fin    ?? '-') : '-';
             $bg          = $i % 2 === 0 ? '#f9f9f9' : '#fff';
             $html .= "<tr style='background:{$bg};'>
             <td align='center'>" . ($i + 1) . "</td>
             <td>{$p->empleado->nombre}</td><td>{$p->unidad}</td><td>{$p->cargo}</td>
-            <td align='center'>{$p->fecha}</td><td align='center'>{$condicion}</td>
+            <td align='center'>{$fmt($p->fecha)}</td><td align='center'>{$condicion}</td>
             <td align='center'>{$fechaInicio}</td><td align='center'>{$fechaFin}</td>
             <td align='center'>{$horaInicio}</td><td align='center'>{$horaFin}</td>
             <td>{$p->razon}</td>
@@ -401,9 +401,33 @@ class ReportesPermisoController extends Controller
             </tr>
         </table>";
 
+        $html .= "
+            <div style='position:fixed; bottom:15mm; left:0; width:100%;
+                        font-family:Arial,sans-serif;'>
+                <table width='100%' style='border-collapse:collapse;'>
+                    <tr>
+                        <td width='55%'></td>
+                        <td width='28%' style='text-align:center; font-size:11px;'>
+                            __________________________________________<br>
+                            <span style='font-weight:bold; font-size: 14px'>Licda. Vanessa Elizabeth Ramos Figueroa</span><br>
+                            <div style='border-top:1.5px solid #000; margin-top:5px;'></div>
+                            <span style='font-size:14px;'>Santa Ana Norte</span>
+                        </td>
+                        <td width='17%'></td>
+                    </tr>
+                </table>
+            </div>";
+
         $mpdf->WriteHTML($html);
+
+
+
+
         return $mpdf->Output('Reporte_General_Permisos.pdf', 'I');
     }
+
+
+
 
     // ─────────────────────────────────────────────────────────────
     //  Helper: mPDF en modo HORIZONTAL (LETTER-L)
@@ -434,45 +458,37 @@ class ReportesPermisoController extends Controller
         $fechaEmisio = now()->format('d/m/Y');
 
         return "
-        <table width='100%' style='border-collapse:collapse; font-family:Arial,sans-serif;'>
-            <tr>
-                <td style='width:22%; border:0.8px solid #000; padding:5px 8px;'>
-                    <table width='100%'>
-                        <tr>
-                            <td style='width:30%;'>
-                                <img src='{$logo}' style='height:38px;'>
-                            </td>
-                            <td style='width:70%; color:#104e8c; font-size:13px; font-weight:bold; line-height:1.3;'>
-                                SANTA ANA NORTE<br>EL SALVADOR
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-                <td style='width:56%; border-top:0.8px solid #000; border-bottom:0.8px solid #000;
-                            padding:6px 8px; text-align:center; font-size:14px; font-weight:bold;'>
-                    {$tituloPDF}<br>
-                    <span style='font-size:10px; font-weight:normal;'>
-                        Período: {$fechaDesde} — {$fechaHasta}
-                    </span>
-                </td>
-                <td style='width:22%; border:0.8px solid #000; padding:0; vertical-align:top;'>
-                    <table width='100%' style='font-size:9px;'>
-                        <tr>
-                            <td style='border-right:0.8px solid #000; border-bottom:0.8px solid #000; padding:3px 5px;'><strong>Código:</strong></td>
-                            <td style='border-bottom:0.8px solid #000; padding:3px 5px; text-align:center;'>TALE-001-FICH</td>
-                        </tr>
-                        <tr>
-                            <td style='border-right:0.8px solid #000; border-bottom:0.8px solid #000; padding:3px 5px;'><strong>Versión:</strong></td>
-                            <td style='border-bottom:0.8px solid #000; padding:3px 5px; text-align:center;'>000</td>
-                        </tr>
-                        <tr>
-                            <td style='border-right:0.8px solid #000; padding:3px 5px;'><strong>Emisión:</strong></td>
-                            <td style='padding:3px 5px; text-align:center;'>{$fechaEmisio}</td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-        </table><br>";
+    <table width='100%' style='border-collapse:collapse; font-family:Arial,sans-serif;'>
+        <tr>
+            <td style='width:22%; border:0.8px solid #000; padding:5px 8px;'>
+                <table width='100%'>
+                    <tr>
+                        <td style='width:30%;'>
+                            <img src='{$logo}' style='height:38px;'>
+                        </td>
+                        <td style='width:70%; color:#104e8c; font-size:13px; font-weight:bold; line-height:1.3;'>
+                            SANTA ANA NORTE<br>EL SALVADOR
+                        </td>
+                    </tr>
+                </table>
+            </td>
+            <td style='width:56%; border-top:0.8px solid #000; border-bottom:0.8px solid #000;
+                        padding:6px 8px; text-align:center; font-size:14px; font-weight:bold;'>
+                {$tituloPDF}<br>
+                <span style='font-size:11px; font-weight:normal;'>
+                    Período: {$fechaDesde} — {$fechaHasta}
+                </span>
+            </td>
+            <td style='width:22%; border:0.8px solid #000; padding:0; vertical-align:middle;'>
+                <table width='100%' style='font-size:9px;'>
+                    <tr>
+                        <td style='border-right:0.8px solid #000; font-size: 13px; padding:3px 5px;'><strong>Emisión:</strong></td>
+                        <td style='padding:3px 5px; font-size: 13px; text-align:center;'>{$fechaEmisio}</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table><br>";
     }
 
     // ─────────────────────────────────────────────────────────────
