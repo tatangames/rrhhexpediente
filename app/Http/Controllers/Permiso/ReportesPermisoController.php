@@ -406,10 +406,11 @@ class ReportesPermisoController extends Controller
                         font-family:Arial,sans-serif;'>
                 <table width='100%' style='border-collapse:collapse;'>
                     <tr>
-                        <td width='55%'></td>
-                        <td width='28%' style='text-align:center; font-size:11px;'>
+                        <td width='45%'></td>
+                        <td width='38%' style='text-align:center; font-size:11px;'>
                             __________________________________________<br>
                             <span style='font-weight:bold; font-size: 14px'>Licda. Vanessa Elizabeth Ramos Figueroa</span><br>
+                            <span style='font-weight:normal; font-size: 14px'>Jefe de Talento Humano</span><br>
                             <div style='border-top:1.5px solid #000; margin-top:5px;'></div>
                             <span style='font-size:14px;'>Santa Ana Norte</span>
                         </td>
