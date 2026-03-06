@@ -321,73 +321,128 @@ class PermisoController extends Controller
     }
 
 
-
-
     public function guardarPermisoOtros(Request $request)
     {
         $regla = array(
-            'empleado_id' => 'required',
-            'condicion' => 'required',
+            'empleado_id'  => 'required',
+            'condicion'    => 'required',
             'fechaEntrego' => 'required',
         );
 
-        //0: DIA COMPLETO
-        // fecha_inicio, fecha_fin
-
-        //1: FRACCIONADO
-        // hora_inicio, hora_fin, duracion, fecha_fraccionado
-
-        // razon, dias_solicitados,
-
         $validar = Validator::make($request->all(), $regla);
-
-        if ($validar->fails()){return ['success' => 0];}
-
+        if ($validar->fails()) { return ['success' => 0]; }
 
         try {
 
             $empleado = PermisosEmpleados::find($request->empleado_id);
 
             if (!$empleado) {
-                return response()->json([
-                    'success' => 0,
-                    'message' => 'Empleado no encontrado'
-                ]);
+                return response()->json(['success' => 0, 'message' => 'Empleado no encontrado']);
             }
 
-            // 🔎 Buscar unidad y cargo
-            $unidad = PermisosUnidades::find($empleado->id_unidad);
-            $cargo = PermisosCargos::find($empleado->id_cargo);
+            // ===============================
+            // 📅 CONVERTIR FECHAS A Y-m-d (formato MySQL)
+            // El input HTML envía Y-m-d, pero por si acaso se parsea con Carbon
+            // ===============================
+            $fechaEntrego     = \Carbon\Carbon::parse($request->fechaEntrego)->format('Y-m-d');
 
-            $nombreUnidad = $unidad->nombre ?? null;
-            $nombreCargo = $cargo->nombre ?? null;
+            $fechaFraccionado = $request->fecha_fraccionado
+                ? \Carbon\Carbon::parse($request->fecha_fraccionado)->format('Y-m-d')
+                : null;
+
+            $fechaInicio      = $request->fecha_inicio
+                ? \Carbon\Carbon::parse($request->fecha_inicio)->format('Y-m-d')
+                : null;
+
+            $fechaFin         = $request->fecha_fin
+                ? \Carbon\Carbon::parse($request->fecha_fin)->format('Y-m-d')
+                : null;
+
+            // ===============================
+            // 🔎 VERIFICAR DUPLICADOS
+            // ===============================
+            if (!$request->forzar_guardado) {
+
+                $query = PermisoOtro::where('id_empleado', $request->empleado_id)
+                    ->where('condicion', $request->condicion);
+
+                if ($request->condicion == 1) {
+
+                    // Fraccionado: misma fecha + solapamiento de horas
+                    $query->where('fecha_fraccionado', $fechaFraccionado)
+                        ->where(function ($q) use ($request) {
+                            $q->whereBetween('hora_inicio', [$request->hora_inicio, $request->hora_fin])
+                                ->orWhereBetween('hora_fin', [$request->hora_inicio, $request->hora_fin])
+                                ->orWhere(function ($q2) use ($request) {
+                                    $q2->where('hora_inicio', '<=', $request->hora_inicio)
+                                        ->where('hora_fin', '>=', $request->hora_fin);
+                                });
+                        });
+
+                } else {
+
+                    // Completo: solapamiento de fechas (Y-m-d sí ordena bien en SQL)
+                    $query->where(function ($q) use ($fechaInicio, $fechaFin) {
+                        $q->whereBetween('fecha_inicio', [$fechaInicio, $fechaFin])
+                            ->orWhereBetween('fecha_fin', [$fechaInicio, $fechaFin])
+                            ->orWhere(function ($q2) use ($fechaInicio, $fechaFin) {
+                                $q2->where('fecha_inicio', '<=', $fechaInicio)
+                                    ->where('fecha_fin', '>=', $fechaFin);
+                            });
+                    });
+                }
+
+                $duplicados = $query->get();
+
+                if ($duplicados->count() > 0) {
+
+                    $lista = $duplicados->map(function ($p) {
+                        return [
+                            'fecha'             => $p->fecha,
+                            'condicion'         => $p->condicion == 1 ? 'Fraccionado' : 'Completo',
+                            'fecha_fraccionado' => $p->fecha_fraccionado,
+                            'fecha_inicio'      => $p->fecha_inicio,
+                            'fecha_fin'         => $p->fecha_fin,
+                            'hora_inicio'       => $p->hora_inicio,
+                            'hora_fin'          => $p->hora_fin,
+                            'razon'             => $p->razon ?? 'Sin descripción',
+                        ];
+                    });
+
+                    return response()->json([
+                        'success'    => 2,
+                        'message'    => 'Se encontraron permisos similares',
+                        'duplicados' => $lista,
+                    ]);
+                }
+            }
+
+            // ===============================
+            // 💾 GUARDAR
+            // ===============================
+            $unidad = PermisosUnidades::find($empleado->id_unidad);
+            $cargo  = PermisosCargos::find($empleado->id_cargo);
 
             PermisoOtro::create([
-                'id_empleado' => $request->empleado_id,
-                'unidad' => $nombreUnidad,
-                'cargo' => $nombreCargo,
-                'fecha' => $request->fechaEntrego,
-                'condicion' => $request->condicion,
-                'fecha_fraccionado' => $request->fecha_fraccionado,
-                'fecha_inicio' => $request->fecha_inicio,
-                'fecha_fin' => $request->fecha_fin,
-                'hora_inicio' => $request->hora_inicio,
-                'hora_fin' => $request->hora_fin,
-                'razon' => $request->razon,
+                'id_empleado'       => $request->empleado_id,
+                'unidad'            => $unidad->nombre ?? null,
+                'cargo'             => $cargo->nombre ?? null,
+                'fecha'             => $fechaEntrego,       // Y-m-d ✅
+                'condicion'         => $request->condicion,
+                'fecha_fraccionado' => $fechaFraccionado,   // Y-m-d ✅
+                'fecha_inicio'      => $fechaInicio,        // Y-m-d ✅
+                'fecha_fin'         => $fechaFin,           // Y-m-d ✅
+                'hora_inicio'       => $request->hora_inicio,
+                'hora_fin'          => $request->hora_fin,
+                'razon'             => $request->razon,
             ]);
 
             return response()->json(['success' => 1]);
 
         } catch (\Exception $e) {
-
-            return response()->json([
-                'success' => 0,
-                'message' => $e->getMessage()
-            ]);
+            return response()->json(['success' => 0, 'message' => $e->getMessage()]);
         }
     }
-
-
 
 
     // =============== GENERAR PERMISO - INCAPACIDAD ==========================================================
@@ -412,49 +467,88 @@ class PermisoController extends Controller
             $empleado = PermisosEmpleados::find($request->empleado_id);
 
             if (!$empleado) {
-                return response()->json([
-                    'success' => 0,
-                    'message' => 'Empleado no encontrado'
-                ]);
+                return response()->json(['success' => 0, 'message' => 'Empleado no encontrado']);
             }
 
-            // 🔎 Buscar unidad y cargo
+            // ===============================
+            // 📅 CONVERTIR FECHAS A Y-m-d (formato MySQL)
+            // ===============================
+            $fecha      = Carbon::parse($request->fecha)->format('Y-m-d');
+            $fechaInicio = Carbon::parse($request->fecha_inicio)->format('Y-m-d');
+            $fechaFin    = Carbon::parse($request->fecha_fin)->format('Y-m-d');
+
+            $fechaInicioHosp = $request->hospitalizacion && $request->fecha_inicio_hospitalizacion
+                ? Carbon::parse($request->fecha_inicio_hospitalizacion)->format('Y-m-d')
+                : null;
+
+            $fechaFinHosp = $request->hospitalizacion && $request->fecha_fin_hospitalizacion
+                ? Carbon::parse($request->fecha_fin_hospitalizacion)->format('Y-m-d')
+                : null;
+
+            // ===============================
+            // 🔎 VERIFICAR DUPLICADOS
+            // Regla: mismo empleado + solapamiento de fechas inicio/fin
+            // ===============================
+            if (!$request->forzar_guardado) {
+
+                $duplicados = PermisoIncapacidad::where('id_empleado', $request->empleado_id)
+                    ->where(function ($q) use ($fechaInicio, $fechaFin) {
+                        $q->whereBetween('fecha_inicio', [$fechaInicio, $fechaFin])
+                            ->orWhereBetween('fecha_fin', [$fechaInicio, $fechaFin])
+                            ->orWhere(function ($q2) use ($fechaInicio, $fechaFin) {
+                                $q2->where('fecha_inicio', '<=', $fechaInicio)
+                                    ->where('fecha_fin', '>=', $fechaFin);
+                            });
+                    })
+                    ->get();
+
+                if ($duplicados->count() > 0) {
+
+                    $lista = $duplicados->map(function ($p) {
+                        return [
+                            'fecha'       => $p->fecha,
+                            'fecha_inicio' => $p->fecha_inicio,
+                            'fecha_fin'    => $p->fecha_fin,
+                            'dias'         => $p->dias,
+                            'diagnostico'  => $p->diagnostico ?? 'Sin diagnóstico',
+                        ];
+                    });
+
+                    return response()->json([
+                        'success'    => 2,
+                        'message'    => 'Se encontraron incapacidades similares',
+                        'duplicados' => $lista,
+                    ]);
+                }
+            }
+
+            // ===============================
+            // 💾 GUARDAR
+            // ===============================
             $unidad = PermisosUnidades::find($empleado->id_unidad);
-            $cargo = PermisosCargos::find($empleado->id_cargo);
+            $cargo  = PermisosCargos::find($empleado->id_cargo);
 
-            $nombreUnidad = $unidad->nombre ?? null;
-            $nombreCargo = $cargo->nombre ?? null;
-
-            // Crear registro de incapacidad
             $incapacidad = new PermisoIncapacidad();
-            $incapacidad->id_empleado = $request->empleado_id;
-            $incapacidad->unidad = $nombreUnidad;
-            $incapacidad->cargo = $nombreCargo;
-            $incapacidad->fecha = $request->fecha;
-            $incapacidad->id_tipo_incapacidad = $request->tipo_incapacidad_id;
-            $incapacidad->id_riesgo = $request->riesgo_id;
-            $incapacidad->fecha_inicio = $request->fecha_inicio;
-            $incapacidad->dias = $request->dias;
-            $incapacidad->fecha_fin = $request->fecha_fin;
-            $incapacidad->diagnostico = $request->diagnostico;
-            $incapacidad->numero = $request->numero;
-            $incapacidad->hospitalizacion = $request->hospitalizacion;
-            $incapacidad->fecha_inicio_hospitalizacion = $request->hospitalizacion ? $request->fecha_inicio_hospitalizacion : null;
-            $incapacidad->fecha_fin_hospitalizacion = $request->hospitalizacion ? $request->fecha_fin_hospitalizacion : null;
+            $incapacidad->id_empleado               = $request->empleado_id;
+            $incapacidad->unidad                    = $unidad->nombre ?? null;
+            $incapacidad->cargo                     = $cargo->nombre ?? null;
+            $incapacidad->fecha                     = $fecha;           // Y-m-d ✅
+            $incapacidad->id_tipo_incapacidad       = $request->tipo_incapacidad_id;
+            $incapacidad->id_riesgo                 = $request->riesgo_id;
+            $incapacidad->fecha_inicio              = $fechaInicio;     // Y-m-d ✅
+            $incapacidad->dias                      = $request->dias;
+            $incapacidad->fecha_fin                 = $fechaFin;        // Y-m-d ✅
+            $incapacidad->diagnostico               = $request->diagnostico;
+            $incapacidad->numero                    = $request->numero;
+            $incapacidad->hospitalizacion           = $request->hospitalizacion;
+            $incapacidad->fecha_inicio_hospitalizacion = $fechaInicioHosp; // Y-m-d ✅
+            $incapacidad->fecha_fin_hospitalizacion    = $fechaFinHosp;    // Y-m-d ✅
             $incapacidad->save();
 
-            return response()->json([
-                'success' => 1,
-                'message' => 'Incapacidad guardada exitosamente',
-                'data' => $incapacidad
-            ]);
+            return response()->json(['success' => 1, 'message' => 'Incapacidad guardada exitosamente']);
 
         } catch (\Exception $e) {
-
-            return response()->json([
-                'success' => 0,
-                'message' => $e->getMessage()
-            ]);
+            return response()->json(['success' => 0, 'message' => $e->getMessage()]);
         }
     }
 
@@ -567,67 +661,125 @@ class PermisoController extends Controller
     public function guardarPermisoEnfermedad(Request $request)
     {
         $regla = array(
-            'empleado_id' => 'required',
-            'condicion' => 'required',
+            'empleado_id'  => 'required',
+            'condicion'    => 'required',
             'fechaEntrego' => 'required',
         );
 
-        //0: DIA COMPLETO
-        // fecha_inicio, fecha_fin
-
-        //1: FRACCIONADO
-        // hora_inicio, hora_fin, duracion, fecha_fraccionado
-
-        // razon, dias_solicitados,
-
         $validar = Validator::make($request->all(), $regla);
-
-        if ($validar->fails()){return ['success' => 0];}
-
+        if ($validar->fails()) { return ['success' => 0]; }
 
         try {
 
             $empleado = PermisosEmpleados::find($request->empleado_id);
 
             if (!$empleado) {
-                return response()->json([
-                    'success' => 0,
-                    'message' => 'Empleado no encontrado'
-                ]);
+                return response()->json(['success' => 0, 'message' => 'Empleado no encontrado']);
             }
 
-            // 🔎 Buscar unidad y cargo
-            $unidad = PermisosUnidades::find($empleado->id_unidad);
-            $cargo = PermisosCargos::find($empleado->id_cargo);
+            // ===============================
+            // 📅 CONVERTIR FECHAS A Y-m-d (formato MySQL)
+            // ===============================
+            $fechaEntrego     = Carbon::parse($request->fechaEntrego)->format('Y-m-d');
 
-            $nombreUnidad = $unidad->nombre ?? null;
-            $nombreCargo = $cargo->nombre ?? null;
+            $fechaFraccionado = $request->fecha_fraccionado
+                ? Carbon::parse($request->fecha_fraccionado)->format('Y-m-d')
+                : null;
+
+            $fechaInicio      = $request->fecha_inicio
+                ? Carbon::parse($request->fecha_inicio)->format('Y-m-d')
+                : null;
+
+            $fechaFin         = $request->fecha_fin
+                ? Carbon::parse($request->fecha_fin)->format('Y-m-d')
+                : null;
+
+            // ===============================
+            // 🔎 VERIFICAR DUPLICADOS
+            // ===============================
+            if (!$request->forzar_guardado) {
+
+                $query = PermisoEnfermedad::where('id_empleado', $request->empleado_id)
+                    ->where('condicion', $request->condicion);
+
+                if ($request->condicion == 1) {
+
+                    // Fraccionado: misma fecha + solapamiento de horas
+                    $query->where('fecha_fraccionado', $fechaFraccionado)
+                        ->where(function ($q) use ($request) {
+                            $q->whereBetween('hora_inicio', [$request->hora_inicio, $request->hora_fin])
+                                ->orWhereBetween('hora_fin', [$request->hora_inicio, $request->hora_fin])
+                                ->orWhere(function ($q2) use ($request) {
+                                    $q2->where('hora_inicio', '<=', $request->hora_inicio)
+                                        ->where('hora_fin', '>=', $request->hora_fin);
+                                });
+                        });
+
+                } else {
+
+                    // Completo: solapamiento de fechas (Y-m-d ordena bien en SQL)
+                    $query->where(function ($q) use ($fechaInicio, $fechaFin) {
+                        $q->whereBetween('fecha_inicio', [$fechaInicio, $fechaFin])
+                            ->orWhereBetween('fecha_fin', [$fechaInicio, $fechaFin])
+                            ->orWhere(function ($q2) use ($fechaInicio, $fechaFin) {
+                                $q2->where('fecha_inicio', '<=', $fechaInicio)
+                                    ->where('fecha_fin', '>=', $fechaFin);
+                            });
+                    });
+                }
+
+                $duplicados = $query->get();
+
+                if ($duplicados->count() > 0) {
+
+                    $lista = $duplicados->map(function ($p) {
+                        return [
+                            'fecha'             => $p->fecha,
+                            'condicion'         => $p->condicion == 1 ? 'Fraccionado' : 'Completo',
+                            'fecha_fraccionado' => $p->fecha_fraccionado,
+                            'fecha_inicio'      => $p->fecha_inicio,
+                            'fecha_fin'         => $p->fecha_fin,
+                            'hora_inicio'       => $p->hora_inicio,
+                            'hora_fin'          => $p->hora_fin,
+                            'razon'             => $p->razon ?? 'Sin descripción',
+                        ];
+                    });
+
+                    return response()->json([
+                        'success'    => 2,
+                        'message'    => 'Se encontraron permisos similares',
+                        'duplicados' => $lista,
+                    ]);
+                }
+            }
+
+            // ===============================
+            // 💾 GUARDAR
+            // ===============================
+            $unidad = PermisosUnidades::find($empleado->id_unidad);
+            $cargo  = PermisosCargos::find($empleado->id_cargo);
 
             PermisoEnfermedad::create([
-                'id_empleado' => $request->empleado_id,
-                'unidad' => $nombreUnidad,
-                'cargo' => $nombreCargo,
-                'fecha' => $request->fechaEntrego,
-                'condicion' => $request->condicion,
-                'fecha_fraccionado' => $request->fecha_fraccionado,
-                'fecha_inicio' => $request->fecha_inicio,
-                'fecha_fin' => $request->fecha_fin,
-                'hora_inicio' => $request->hora_inicio,
-                'hora_fin' => $request->hora_fin,
-                'razon' => $request->razon,
-                'unidad_atencion' => $request->unidadAtencion,
-                'especialidad' => $request->especialidad,
-                'condicion_medica' => $request->condicionMedica,
+                'id_empleado'       => $request->empleado_id,
+                'unidad'            => $unidad->nombre ?? null,
+                'cargo'             => $cargo->nombre ?? null,
+                'fecha'             => $fechaEntrego,       // Y-m-d ✅
+                'condicion'         => $request->condicion,
+                'fecha_fraccionado' => $fechaFraccionado,   // Y-m-d ✅
+                'fecha_inicio'      => $fechaInicio,        // Y-m-d ✅
+                'fecha_fin'         => $fechaFin,           // Y-m-d ✅
+                'hora_inicio'       => $request->hora_inicio,
+                'hora_fin'          => $request->hora_fin,
+                'razon'             => $request->razon,
+                'unidad_atencion'   => $request->unidadAtencion,
+                'especialidad'      => $request->especialidad,
+                'condicion_medica'  => $request->condicionMedica,
             ]);
 
             return response()->json(['success' => 1]);
 
         } catch (\Exception $e) {
-
-            return response()->json([
-                'success' => 0,
-                'message' => $e->getMessage()
-            ]);
+            return response()->json(['success' => 0, 'message' => $e->getMessage()]);
         }
     }
 
@@ -722,67 +874,125 @@ class PermisoController extends Controller
     public function guardarPermisoConsultaMedica(Request $request)
     {
         $regla = array(
-            'empleado_id' => 'required',
-            'condicion' => 'required',
+            'empleado_id'  => 'required',
+            'condicion'    => 'required',
             'fechaEntrego' => 'required',
         );
 
-        //0: DIA COMPLETO
-        // fecha_inicio, fecha_fin
-
-        //1: FRACCIONADO
-        // hora_inicio, hora_fin, duracion
-
-        // razon, dias_solicitados,
-
         $validar = Validator::make($request->all(), $regla);
-
-        if ($validar->fails()){return ['success' => 0];}
-
+        if ($validar->fails()) { return ['success' => 0]; }
 
         try {
 
             $empleado = PermisosEmpleados::find($request->empleado_id);
 
             if (!$empleado) {
-                return response()->json([
-                    'success' => 0,
-                    'message' => 'Empleado no encontrado'
-                ]);
+                return response()->json(['success' => 0, 'message' => 'Empleado no encontrado']);
             }
 
-            // 🔎 Buscar unidad y cargo
-            $unidad = PermisosUnidades::find($empleado->id_unidad);
-            $cargo = PermisosCargos::find($empleado->id_cargo);
+            // ===============================
+            // 📅 CONVERTIR FECHAS A Y-m-d (formato MySQL)
+            // ===============================
+            $fechaEntrego     = Carbon::parse($request->fechaEntrego)->format('Y-m-d');
 
-            $nombreUnidad = $unidad->nombre ?? null;
-            $nombreCargo = $cargo->nombre ?? null;
+            $fechaFraccionado = $request->fecha_fraccionado
+                ? Carbon::parse($request->fecha_fraccionado)->format('Y-m-d')
+                : null;
+
+            $fechaInicio      = $request->fecha_inicio
+                ? Carbon::parse($request->fecha_inicio)->format('Y-m-d')
+                : null;
+
+            $fechaFin         = $request->fecha_fin
+                ? Carbon::parse($request->fecha_fin)->format('Y-m-d')
+                : null;
+
+            // ===============================
+            // 🔎 VERIFICAR DUPLICADOS
+            // ===============================
+            if (!$request->forzar_guardado) {
+
+                $query = PermisoConsultaMedica::where('id_empleado', $request->empleado_id)
+                    ->where('condicion', $request->condicion);
+
+                if ($request->condicion == 1) {
+
+                    // Fraccionado: misma fecha + solapamiento de horas
+                    $query->where('fecha_fraccionado', $fechaFraccionado)
+                        ->where(function ($q) use ($request) {
+                            $q->whereBetween('hora_inicio', [$request->hora_inicio, $request->hora_fin])
+                                ->orWhereBetween('hora_fin', [$request->hora_inicio, $request->hora_fin])
+                                ->orWhere(function ($q2) use ($request) {
+                                    $q2->where('hora_inicio', '<=', $request->hora_inicio)
+                                        ->where('hora_fin', '>=', $request->hora_fin);
+                                });
+                        });
+
+                } else {
+
+                    // Completo: solapamiento de fechas (Y-m-d ordena bien en SQL)
+                    $query->where(function ($q) use ($fechaInicio, $fechaFin) {
+                        $q->whereBetween('fecha_inicio', [$fechaInicio, $fechaFin])
+                            ->orWhereBetween('fecha_fin', [$fechaInicio, $fechaFin])
+                            ->orWhere(function ($q2) use ($fechaInicio, $fechaFin) {
+                                $q2->where('fecha_inicio', '<=', $fechaInicio)
+                                    ->where('fecha_fin', '>=', $fechaFin);
+                            });
+                    });
+                }
+
+                $duplicados = $query->get();
+
+                if ($duplicados->count() > 0) {
+
+                    $lista = $duplicados->map(function ($p) {
+                        return [
+                            'fecha'             => $p->fecha,
+                            'condicion'         => $p->condicion == 1 ? 'Fraccionado' : 'Completo',
+                            'fecha_fraccionado' => $p->fecha_fraccionado,
+                            'fecha_inicio'      => $p->fecha_inicio,
+                            'fecha_fin'         => $p->fecha_fin,
+                            'hora_inicio'       => $p->hora_inicio,
+                            'hora_fin'          => $p->hora_fin,
+                            'razon'             => $p->razon ?? 'Sin descripción',
+                        ];
+                    });
+
+                    return response()->json([
+                        'success'    => 2,
+                        'message'    => 'Se encontraron permisos similares',
+                        'duplicados' => $lista,
+                    ]);
+                }
+            }
+
+            // ===============================
+            // 💾 GUARDAR
+            // ===============================
+            $unidad = PermisosUnidades::find($empleado->id_unidad);
+            $cargo  = PermisosCargos::find($empleado->id_cargo);
 
             PermisoConsultaMedica::create([
-                'id_empleado' => $request->empleado_id,
-                'unidad' => $nombreUnidad,
-                'cargo' => $nombreCargo,
-                'fecha' => $request->fechaEntrego,
-                'condicion' => $request->condicion,
-                'fecha_fraccionado' => $request->fecha_fraccionado,
-                'fecha_inicio' => $request->fecha_inicio,
-                'fecha_fin' => $request->fecha_fin,
-                'hora_inicio' => $request->hora_inicio,
-                'hora_fin' => $request->hora_fin,
-                'razon' => $request->razon,
-                'unidad_atencion' => $request->unidadAtencion,
-                'especialidad' => $request->especialidad,
-                'condicion_medica' => $request->condicionMedica,
+                'id_empleado'       => $request->empleado_id,
+                'unidad'            => $unidad->nombre ?? null,
+                'cargo'             => $cargo->nombre ?? null,
+                'fecha'             => $fechaEntrego,       // Y-m-d ✅
+                'condicion'         => $request->condicion,
+                'fecha_fraccionado' => $fechaFraccionado,   // Y-m-d ✅
+                'fecha_inicio'      => $fechaInicio,        // Y-m-d ✅
+                'fecha_fin'         => $fechaFin,           // Y-m-d ✅
+                'hora_inicio'       => $request->hora_inicio,
+                'hora_fin'          => $request->hora_fin,
+                'razon'             => $request->razon,
+                'unidad_atencion'   => $request->unidadAtencion,
+                'especialidad'      => $request->especialidad,
+                'condicion_medica'  => $request->condicionMedica,
             ]);
 
             return response()->json(['success' => 1]);
 
         } catch (\Exception $e) {
-
-            return response()->json([
-                'success' => 0,
-                'message' => $e->getMessage()
-            ]);
+            return response()->json(['success' => 0, 'message' => $e->getMessage()]);
         }
     }
 
@@ -976,14 +1186,13 @@ class PermisoController extends Controller
     public function guardarPermisoPersonal(Request $request)
     {
         $regla = array(
-            'empleado_id' => 'required',
-            'condicion' => 'required',
+            'empleado_id'  => 'required',
+            'condicion'    => 'required',
             'fechaEntrego' => 'required',
-            'goce_sueldo' => 'required|boolean',
+            'goce_sueldo'  => 'required|boolean',
         );
 
         $validar = Validator::make($request->all(), $regla);
-
         if ($validar->fails()) {
             return ['success' => 0, 'message' => 'Datos incompletos'];
         }
@@ -993,160 +1202,173 @@ class PermisoController extends Controller
             $empleado = PermisosEmpleados::find($request->empleado_id);
 
             if (!$empleado) {
-                return response()->json([
-                    'success' => 0,
-                    'message' => 'Empleado no encontrado'
-                ]);
+                return response()->json(['success' => 0, 'message' => 'Empleado no encontrado']);
             }
 
-            // 🔎 Buscar unidad y cargo
-            $unidad = PermisosUnidades::find($empleado->id_unidad);
-            $cargo = PermisosCargos::find($empleado->id_cargo);
+            // ===============================
+            // 📅 CONVERTIR FECHAS A Y-m-d (formato MySQL)
+            // ===============================
+            $fechaEntrego     = \Carbon\Carbon::parse($request->fechaEntrego)->format('Y-m-d');
 
-            $nombreUnidad = $unidad->nombre ?? null;
-            $nombreCargo = $cargo->nombre ?? null;
+            $fechaFraccionado = $request->fecha_fraccionado
+                ? \Carbon\Carbon::parse($request->fecha_fraccionado)->format('Y-m-d')
+                : null;
 
-            // 📅 Obtener el año de la fecha
-            $anio = Carbon::parse($request->fechaEntrego)->year;
+            $fechaInicio      = $request->fecha_inicio
+                ? \Carbon\Carbon::parse($request->fecha_inicio)->format('Y-m-d')
+                : null;
 
-            // 🔢 Calcular cuántos permisos/minutos ya ha usado este empleado en el año
+            $fechaFin         = $request->fecha_fin
+                ? \Carbon\Carbon::parse($request->fecha_fin)->format('Y-m-d')
+                : null;
+
+            // ===============================
+            // 📅 Año para validación de límites
+            // ===============================
+            $anio = \Carbon\Carbon::parse($fechaEntrego)->year;
+
+            // ===============================
+            // 🔢 VALIDAR LÍMITE DE PERMISOS
+            // ===============================
             $permisosDelAnio = PermisoPersonal::where('id_empleado', $request->empleado_id)
                 ->whereYear('fecha', $anio)
                 ->where('goce', $request->goce_sueldo)
                 ->get();
 
-            // ✅ VALIDAR SEGÚN TIPO DE GOCE
-            if ($request->goce_sueldo == 1) {
-                // CON GOCE DE SUELDO: Máximo 5 días (2400 minutos) al año
+            $totalMinutosUsados  = 0;
+            $minutosSolicitados  = 0;
 
-                $totalMinutosUsados = 0;
-
-                foreach ($permisosDelAnio as $permiso) {
-                    if ($permiso->condicion == 0) {
-                        // Día completo: 8 horas = 480 minutos por día
-                        $inicio = Carbon::parse($permiso->fecha_inicio);
-                        $fin = Carbon::parse($permiso->fecha_fin);
-                        $dias = $inicio->diffInDays($fin) + 1;
-                        $totalMinutosUsados += $dias * 480;
-                    } else {
-                        // Fraccionado: calcular minutos
-                        $horaInicio = Carbon::parse($permiso->hora_inicio);
-                        $horaFin = Carbon::parse($permiso->hora_fin);
-                        $totalMinutosUsados += $horaFin->diffInMinutes($horaInicio);
-                    }
-                }
-
-                // Calcular cuántos minutos se están solicitando ahora
-                $minutosSolicitados = 0;
-
-                if ($request->condicion == 0) {
-                    // Día completo
-                    $inicio = Carbon::parse($request->fecha_inicio);
-                    $fin = Carbon::parse($request->fecha_fin);
-                    $dias = $inicio->diffInDays($fin) + 1;
-                    $minutosSolicitados = $dias * 480;
+            foreach ($permisosDelAnio as $permiso) {
+                if ($permiso->condicion == 0) {
+                    $inicio = \Carbon\Carbon::parse($permiso->fecha_inicio);
+                    $fin    = \Carbon\Carbon::parse($permiso->fecha_fin);
+                    $totalMinutosUsados += ($inicio->diffInDays($fin) + 1) * 480;
                 } else {
-                    // Fraccionado: usar los minutos calculados en el frontend
-                    $minutosSolicitados = $request->duracion_minutos;
+                    $horaInicio = \Carbon\Carbon::parse($permiso->hora_inicio);
+                    $horaFin    = \Carbon\Carbon::parse($permiso->hora_fin);
+                    $totalMinutosUsados += $horaFin->diffInMinutes($horaInicio);
                 }
+            }
 
-                $limiteMinutos = 5 * 480; // 5 días = 2400 minutos
-
-                // Validar límite
-                if (($totalMinutosUsados + $minutosSolicitados) > $limiteMinutos) {
-                    $disponibles = $limiteMinutos - $totalMinutosUsados;
-                    return response()->json([
-                        'success' => 0,
-                        'tipo' => 'limite_excedido',
-                        'data' => [
-                            'anio' => $anio,
-                            'tipo_goce' => 'Con goce de sueldo',
-                            'limite_minutos' => $limiteMinutos,
-                            'usados_minutos' => $totalMinutosUsados,
-                            'solicitando_minutos' => $minutosSolicitados,
-                            'disponibles_minutos' => $disponibles
-                        ],
-                        'message' => "Límite de permisos con goce de sueldo excedido."
-                    ]);
-                }
-
+            if ($request->condicion == 0) {
+                $inicio = \Carbon\Carbon::parse($fechaInicio);
+                $fin    = \Carbon\Carbon::parse($fechaFin);
+                $minutosSolicitados = ($inicio->diffInDays($fin) + 1) * 480;
             } else {
-                // SIN GOCE DE SUELDO: Máximo 60 días (28800 minutos) al año
+                $minutosSolicitados = $request->duracion_minutos;
+            }
 
-                $totalMinutosUsados = 0;
-
-                foreach ($permisosDelAnio as $permiso) {
-                    if ($permiso->condicion == 0) {
-                        // Día completo: 8 horas = 480 minutos por día
-                        $inicio = Carbon::parse($permiso->fecha_inicio);
-                        $fin = Carbon::parse($permiso->fecha_fin);
-                        $dias = $inicio->diffInDays($fin) + 1;
-                        $totalMinutosUsados += $dias * 480;
-                    } else {
-                        // Fraccionado: calcular minutos
-                        $horaInicio = Carbon::parse($permiso->hora_inicio);
-                        $horaFin = Carbon::parse($permiso->hora_fin);
-                        $totalMinutosUsados += $horaFin->diffInMinutes($horaInicio);
-                    }
-                }
-
-                // Calcular minutos solicitados
-                $minutosSolicitados = 0;
-
-                if ($request->condicion == 0) {
-                    $inicio = Carbon::parse($request->fecha_inicio);
-                    $fin = Carbon::parse($request->fecha_fin);
-                    $dias = $inicio->diffInDays($fin) + 1;
-                    $minutosSolicitados = $dias * 480;
-                } else {
-                    $minutosSolicitados = $request->duracion_minutos;
-                }
-
+            if ($request->goce_sueldo == 1) {
+                $limiteMinutos = 5 * 480; // 5 días = 2400 minutos
+                $tipoGoce      = 'Con goce de sueldo';
+            } else {
                 $limiteMinutos = 60 * 480; // 60 días = 28800 minutos
+                $tipoGoce      = 'Sin goce de sueldo';
+            }
 
-                // Validar límite
-                if (($totalMinutosUsados + $minutosSolicitados) > $limiteMinutos) {
-                    $disponibles = $limiteMinutos - $totalMinutosUsados;
+            if (($totalMinutosUsados + $minutosSolicitados) > $limiteMinutos) {
+                $disponibles = $limiteMinutos - $totalMinutosUsados;
+                return response()->json([
+                    'success' => 0,
+                    'tipo'    => 'limite_excedido',
+                    'data'    => [
+                        'anio'                => $anio,
+                        'tipo_goce'           => $tipoGoce,
+                        'limite_minutos'      => $limiteMinutos,
+                        'usados_minutos'      => $totalMinutosUsados,
+                        'solicitando_minutos' => $minutosSolicitados,
+                        'disponibles_minutos' => $disponibles,
+                    ],
+                    'message' => "Límite de permisos {$tipoGoce} excedido.",
+                ]);
+            }
+
+            // ===============================
+            // 🔎 VERIFICAR DUPLICADOS
+            // Regla: mismo empleado + misma condicion + solapamiento (sin importar goce)
+            // ===============================
+            if (!$request->forzar_guardado) {
+
+                $query = PermisoPersonal::where('id_empleado', $request->empleado_id)
+                    ->where('condicion', $request->condicion);
+
+                if ($request->condicion == 1) {
+
+                    // Fraccionado: misma fecha + solapamiento de horas
+                    $query->where('fecha_fraccionado', $fechaFraccionado)
+                        ->where(function ($q) use ($request) {
+                            $q->whereBetween('hora_inicio', [$request->hora_inicio, $request->hora_fin])
+                                ->orWhereBetween('hora_fin', [$request->hora_inicio, $request->hora_fin])
+                                ->orWhere(function ($q2) use ($request) {
+                                    $q2->where('hora_inicio', '<=', $request->hora_inicio)
+                                        ->where('hora_fin', '>=', $request->hora_fin);
+                                });
+                        });
+
+                } else {
+
+                    // Completo: solapamiento de fechas
+                    $query->where(function ($q) use ($fechaInicio, $fechaFin) {
+                        $q->whereBetween('fecha_inicio', [$fechaInicio, $fechaFin])
+                            ->orWhereBetween('fecha_fin', [$fechaInicio, $fechaFin])
+                            ->orWhere(function ($q2) use ($fechaInicio, $fechaFin) {
+                                $q2->where('fecha_inicio', '<=', $fechaInicio)
+                                    ->where('fecha_fin', '>=', $fechaFin);
+                            });
+                    });
+                }
+
+                $duplicados = $query->get();
+
+                if ($duplicados->count() > 0) {
+
+                    $lista = $duplicados->map(function ($p) {
+                        return [
+                            'fecha'             => $p->fecha,
+                            'condicion'         => $p->condicion == 1 ? 'Fraccionado' : 'Completo',
+                            'goce'              => $p->goce == 1 ? 'Con goce' : 'Sin goce',
+                            'fecha_fraccionado' => $p->fecha_fraccionado,
+                            'fecha_inicio'      => $p->fecha_inicio,
+                            'fecha_fin'         => $p->fecha_fin,
+                            'hora_inicio'       => $p->hora_inicio,
+                            'hora_fin'          => $p->hora_fin,
+                            'razon'             => $p->razon ?? 'Sin descripción',
+                        ];
+                    });
+
                     return response()->json([
-                        'success' => 0,
-                        'tipo' => 'limite_excedido',
-                        'data' => [
-                            'anio' => $anio,
-                            'tipo_goce' => 'Sin goce de sueldo',
-                            'limite_minutos' => $limiteMinutos,
-                            'usados_minutos' => $totalMinutosUsados,
-                            'solicitando_minutos' => $minutosSolicitados,
-                            'disponibles_minutos' => $disponibles
-                        ],
-                        'message' => "Límite de permisos sin goce de sueldo excedido."
+                        'success'    => 2,
+                        'message'    => 'Se encontraron permisos similares',
+                        'duplicados' => $lista,
                     ]);
                 }
             }
 
-            // ✅ TODO OK: Guardar el permiso
+            // ===============================
+            // 💾 GUARDAR
+            // ===============================
+            $unidad = PermisosUnidades::find($empleado->id_unidad);
+            $cargo  = PermisosCargos::find($empleado->id_cargo);
+
             PermisoPersonal::create([
-                'id_empleado' => $request->empleado_id,
-                'unidad' => $nombreUnidad,
-                'cargo' => $nombreCargo,
-                'fecha' => $request->fechaEntrego,
-                'condicion' => $request->condicion,
-                'fecha_fraccionado' => $request->fecha_fraccionado,
-                'goce' => $request->goce_sueldo,
-                'fecha_inicio' => $request->fecha_inicio,
-                'fecha_fin' => $request->fecha_fin,
-                'hora_inicio' => $request->hora_inicio,
-                'hora_fin' => $request->hora_fin,
-                'razon' => $request->razon,
+                'id_empleado'       => $request->empleado_id,
+                'unidad'            => $unidad->nombre ?? null,
+                'cargo'             => $cargo->nombre ?? null,
+                'fecha'             => $fechaEntrego,       // Y-m-d ✅
+                'condicion'         => $request->condicion,
+                'fecha_fraccionado' => $fechaFraccionado,   // Y-m-d ✅
+                'goce'              => $request->goce_sueldo,
+                'fecha_inicio'      => $fechaInicio,        // Y-m-d ✅
+                'fecha_fin'         => $fechaFin,           // Y-m-d ✅
+                'hora_inicio'       => $request->hora_inicio,
+                'hora_fin'          => $request->hora_fin,
+                'razon'             => $request->razon,
             ]);
 
             return response()->json(['success' => 1]);
 
         } catch (\Exception $e) {
-
-            return response()->json([
-                'success' => 0,
-                'message' => $e->getMessage()
-            ]);
+            return response()->json(['success' => 0, 'message' => $e->getMessage()]);
         }
     }
 
@@ -1235,64 +1457,122 @@ class PermisoController extends Controller
     public function guardarPermisoCompensatorio(Request $request)
     {
         $regla = array(
-            'empleado_id' => 'required',
-            'condicion' => 'required',
+            'empleado_id'  => 'required',
+            'condicion'    => 'required',
             'fechaEntrego' => 'required',
         );
 
-        //0: DIA COMPLETO
-        // fecha_inicio, fecha_fin
-
-        //1: FRACCIONADO
-        // fecha_fraccionado, hora_inicio, hora_fin, duracion
-
-        // razon, dias_solicitados,
-
         $validar = Validator::make($request->all(), $regla);
-
-        if ($validar->fails()){return ['success' => 0];}
-
+        if ($validar->fails()) { return ['success' => 0]; }
 
         try {
 
             $empleado = PermisosEmpleados::find($request->empleado_id);
 
             if (!$empleado) {
-                return response()->json([
-                    'success' => 0,
-                    'message' => 'Empleado no encontrado'
-                ]);
+                return response()->json(['success' => 0, 'message' => 'Empleado no encontrado']);
             }
 
-            // 🔎 Buscar unidad y cargo
-            $unidad = PermisosUnidades::find($empleado->id_unidad);
-            $cargo = PermisosCargos::find($empleado->id_cargo);
+            // ===============================
+            // 📅 CONVERTIR FECHAS A Y-m-d (formato MySQL)
+            // ===============================
+            $fechaEntrego     = Carbon::parse($request->fechaEntrego)->format('Y-m-d');
 
-            $nombreUnidad = $unidad->nombre ?? null;
-            $nombreCargo = $cargo->nombre ?? null;
+            $fechaFraccionado = $request->fecha_fraccionado
+                ? Carbon::parse($request->fecha_fraccionado)->format('Y-m-d')
+                : null;
+
+            $fechaInicio      = $request->fecha_inicio
+                ? Carbon::parse($request->fecha_inicio)->format('Y-m-d')
+                : null;
+
+            $fechaFin         = $request->fecha_fin
+                ? Carbon::parse($request->fecha_fin)->format('Y-m-d')
+                : null;
+
+            // ===============================
+            // 🔎 VERIFICAR DUPLICADOS
+            // ===============================
+            if (!$request->forzar_guardado) {
+
+                $query = PermisoCompensatorio::where('id_empleado', $request->empleado_id)
+                    ->where('condicion', $request->condicion);
+
+                if ($request->condicion == 1) {
+
+                    // Fraccionado: misma fecha + solapamiento de horas
+                    $query->where('fecha_fraccionado', $fechaFraccionado)
+                        ->where(function ($q) use ($request) {
+                            $q->whereBetween('hora_inicio', [$request->hora_inicio, $request->hora_fin])
+                                ->orWhereBetween('hora_fin', [$request->hora_inicio, $request->hora_fin])
+                                ->orWhere(function ($q2) use ($request) {
+                                    $q2->where('hora_inicio', '<=', $request->hora_inicio)
+                                        ->where('hora_fin', '>=', $request->hora_fin);
+                                });
+                        });
+
+                } else {
+
+                    // Completo: solapamiento de fechas (Y-m-d ordena bien en SQL)
+                    $query->where(function ($q) use ($fechaInicio, $fechaFin) {
+                        $q->whereBetween('fecha_inicio', [$fechaInicio, $fechaFin])
+                            ->orWhereBetween('fecha_fin', [$fechaInicio, $fechaFin])
+                            ->orWhere(function ($q2) use ($fechaInicio, $fechaFin) {
+                                $q2->where('fecha_inicio', '<=', $fechaInicio)
+                                    ->where('fecha_fin', '>=', $fechaFin);
+                            });
+                    });
+                }
+
+                $duplicados = $query->get();
+
+                if ($duplicados->count() > 0) {
+
+                    $lista = $duplicados->map(function ($p) {
+                        return [
+                            'fecha'             => $p->fecha,
+                            'condicion'         => $p->condicion == 1 ? 'Fraccionado' : 'Completo',
+                            'fecha_fraccionado' => $p->fecha_fraccionado,
+                            'fecha_inicio'      => $p->fecha_inicio,
+                            'fecha_fin'         => $p->fecha_fin,
+                            'hora_inicio'       => $p->hora_inicio,
+                            'hora_fin'          => $p->hora_fin,
+                            'razon'             => $p->razon ?? 'Sin descripción',
+                        ];
+                    });
+
+                    return response()->json([
+                        'success'    => 2,
+                        'message'    => 'Se encontraron permisos similares',
+                        'duplicados' => $lista,
+                    ]);
+                }
+            }
+
+            // ===============================
+            // 💾 GUARDAR
+            // ===============================
+            $unidad = PermisosUnidades::find($empleado->id_unidad);
+            $cargo  = PermisosCargos::find($empleado->id_cargo);
 
             PermisoCompensatorio::create([
-                'id_empleado' => $request->empleado_id,
-                'unidad' => $nombreUnidad,
-                'cargo' => $nombreCargo,
-                'fecha' => $request->fechaEntrego,
-                'condicion' => $request->condicion,
-                'fecha_fraccionado' => $request->fecha_fraccionado,
-                'fecha_inicio' => $request->fecha_inicio,
-                'fecha_fin' => $request->fecha_fin,
-                'hora_inicio' => $request->hora_inicio,
-                'hora_fin' => $request->hora_fin,
-                'razon' => $request->razon,
+                'id_empleado'       => $request->empleado_id,
+                'unidad'            => $unidad->nombre ?? null,
+                'cargo'             => $cargo->nombre ?? null,
+                'fecha'             => $fechaEntrego,       // Y-m-d ✅
+                'condicion'         => $request->condicion,
+                'fecha_fraccionado' => $fechaFraccionado,   // Y-m-d ✅
+                'fecha_inicio'      => $fechaInicio,        // Y-m-d ✅
+                'fecha_fin'         => $fechaFin,           // Y-m-d ✅
+                'hora_inicio'       => $request->hora_inicio,
+                'hora_fin'          => $request->hora_fin,
+                'razon'             => $request->razon,
             ]);
 
             return response()->json(['success' => 1]);
 
         } catch (\Exception $e) {
-
-            return response()->json([
-                'success' => 0,
-                'message' => $e->getMessage()
-            ]);
+            return response()->json(['success' => 0, 'message' => $e->getMessage()]);
         }
     }
 
