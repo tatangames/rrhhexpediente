@@ -50,12 +50,33 @@ class HistorialPermisoController extends Controller
             $query->where('id_empleado', $request->empleado_id);
         }
 
+        // Filtro por fecha de solicitud (fecha_fraccionado o fecha_inicio según condición)
         if ($request->filled('fecha_desde')) {
-            $query->whereDate('fecha', '>=', $request->fecha_desde);
+            $query->where(function($q) use ($request) {
+                $q->where(function($q2) use ($request) {
+                    // Fraccionado
+                    $q2->where('condicion', 1)
+                        ->whereDate('fecha_fraccionado', '>=', $request->fecha_desde);
+                })->orWhere(function($q2) use ($request) {
+                    // Completo
+                    $q2->where('condicion', 0)
+                        ->whereDate('fecha_inicio', '>=', $request->fecha_desde);
+                });
+            });
         }
 
         if ($request->filled('fecha_hasta')) {
-            $query->whereDate('fecha', '<=', $request->fecha_hasta);
+            $query->where(function($q) use ($request) {
+                $q->where(function($q2) use ($request) {
+                    // Fraccionado
+                    $q2->where('condicion', 1)
+                        ->whereDate('fecha_fraccionado', '<=', $request->fecha_hasta);
+                })->orWhere(function($q2) use ($request) {
+                    // Completo
+                    $q2->where('condicion', 0)
+                        ->whereDate('fecha_fin', '<=', $request->fecha_hasta);
+                });
+            });
         }
 
         if ($request->filled('condicion') && $request->condicion !== '') {
@@ -64,10 +85,8 @@ class HistorialPermisoController extends Controller
 
         $arrayPermisos = $query->get()->map(function ($item) {
 
-            // Fecha de solicitud
             $item->fecha = date('d-m-Y', strtotime($item->fecha));
 
-            // Fraccionado
             $item->fecha_fraccionado_fmt = $item->fecha_fraccionado
                 ? date('d/m/Y', strtotime($item->fecha_fraccionado))
                 : null;
@@ -80,7 +99,6 @@ class HistorialPermisoController extends Controller
                 ? date('g:i A', strtotime($item->hora_fin))
                 : null;
 
-            // Completo
             $item->fecha_inicio_fmt = $item->fecha_inicio
                 ? date('d/m/Y', strtotime($item->fecha_inicio))
                 : null;
@@ -89,7 +107,6 @@ class HistorialPermisoController extends Controller
                 ? date('d/m/Y', strtotime($item->fecha_fin))
                 : null;
 
-            // Empleado
             $infoEmpleado         = PermisosEmpleados::find($item->id_empleado);
             $item->nombreEmpleado = $infoEmpleado->nombre ?? 'Sin nombre';
 
@@ -218,11 +235,27 @@ class HistorialPermisoController extends Controller
         }
 
         if ($request->filled('fecha_desde')) {
-            $query->whereDate('fecha', '>=', $request->fecha_desde);
+            $query->where(function($q) use ($request) {
+                $q->where(function($q2) use ($request) {
+                    $q2->where('condicion', 1)
+                        ->whereDate('fecha_fraccionado', '>=', $request->fecha_desde);
+                })->orWhere(function($q2) use ($request) {
+                    $q2->where('condicion', 0)
+                        ->whereDate('fecha_inicio', '>=', $request->fecha_desde);
+                });
+            });
         }
 
         if ($request->filled('fecha_hasta')) {
-            $query->whereDate('fecha', '<=', $request->fecha_hasta);
+            $query->where(function($q) use ($request) {
+                $q->where(function($q2) use ($request) {
+                    $q2->where('condicion', 1)
+                        ->whereDate('fecha_fraccionado', '<=', $request->fecha_hasta);
+                })->orWhere(function($q2) use ($request) {
+                    $q2->where('condicion', 0)
+                        ->whereDate('fecha_fin', '<=', $request->fecha_hasta);
+                });
+            });
         }
 
         if ($request->filled('condicion') && $request->condicion !== '') {
@@ -231,10 +264,8 @@ class HistorialPermisoController extends Controller
 
         $arrayPermisos = $query->get()->map(function ($item) {
 
-            // Fecha de solicitud
             $item->fecha = date('d-m-Y', strtotime($item->fecha));
 
-            // Fraccionado
             $item->fecha_fraccionado_fmt = $item->fecha_fraccionado
                 ? date('d/m/Y', strtotime($item->fecha_fraccionado))
                 : null;
@@ -247,7 +278,6 @@ class HistorialPermisoController extends Controller
                 ? date('g:i A', strtotime($item->hora_fin))
                 : null;
 
-            // Completo
             $item->fecha_inicio_fmt = $item->fecha_inicio
                 ? date('d/m/Y', strtotime($item->fecha_inicio))
                 : null;
@@ -256,7 +286,6 @@ class HistorialPermisoController extends Controller
                 ? date('d/m/Y', strtotime($item->fecha_fin))
                 : null;
 
-            // Empleado
             $infoEmpleado         = PermisosEmpleados::find($item->id_empleado);
             $item->nombreEmpleado = $infoEmpleado->nombre ?? 'Sin nombre';
 
@@ -392,11 +421,27 @@ class HistorialPermisoController extends Controller
         }
 
         if ($request->filled('fecha_desde')) {
-            $query->whereDate('fecha', '>=', $request->fecha_desde);
+            $query->where(function($q) use ($request) {
+                $q->where(function($q2) use ($request) {
+                    $q2->where('condicion', 1)
+                        ->whereDate('fecha_fraccionado', '>=', $request->fecha_desde);
+                })->orWhere(function($q2) use ($request) {
+                    $q2->where('condicion', 0)
+                        ->whereDate('fecha_inicio', '>=', $request->fecha_desde);
+                });
+            });
         }
 
         if ($request->filled('fecha_hasta')) {
-            $query->whereDate('fecha', '<=', $request->fecha_hasta);
+            $query->where(function($q) use ($request) {
+                $q->where(function($q2) use ($request) {
+                    $q2->where('condicion', 1)
+                        ->whereDate('fecha_fraccionado', '<=', $request->fecha_hasta);
+                })->orWhere(function($q2) use ($request) {
+                    $q2->where('condicion', 0)
+                        ->whereDate('fecha_fin', '<=', $request->fecha_hasta);
+                });
+            });
         }
 
         if ($request->filled('condicion') && $request->condicion !== '') {
@@ -562,11 +607,27 @@ class HistorialPermisoController extends Controller
         }
 
         if ($request->filled('fecha_desde')) {
-            $query->whereDate('fecha', '>=', $request->fecha_desde);
+            $query->where(function($q) use ($request) {
+                $q->where(function($q2) use ($request) {
+                    $q2->where('condicion', 1)
+                        ->whereDate('fecha_fraccionado', '>=', $request->fecha_desde);
+                })->orWhere(function($q2) use ($request) {
+                    $q2->where('condicion', 0)
+                        ->whereDate('fecha_inicio', '>=', $request->fecha_desde);
+                });
+            });
         }
 
         if ($request->filled('fecha_hasta')) {
-            $query->whereDate('fecha', '<=', $request->fecha_hasta);
+            $query->where(function($q) use ($request) {
+                $q->where(function($q2) use ($request) {
+                    $q2->where('condicion', 1)
+                        ->whereDate('fecha_fraccionado', '<=', $request->fecha_hasta);
+                })->orWhere(function($q2) use ($request) {
+                    $q2->where('condicion', 0)
+                        ->whereDate('fecha_fin', '<=', $request->fecha_hasta);
+                });
+            });
         }
 
         if ($request->filled('condicion') && $request->condicion !== '') {
@@ -731,11 +792,11 @@ class HistorialPermisoController extends Controller
         }
 
         if ($request->filled('fecha_desde')) {
-            $query->whereDate('fecha', '>=', $request->fecha_desde);
+            $query->whereDate('fecha_inicio', '>=', $request->fecha_desde);
         }
 
         if ($request->filled('fecha_hasta')) {
-            $query->whereDate('fecha', '<=', $request->fecha_hasta);
+            $query->whereDate('fecha_fin', '<=', $request->fecha_hasta);
         }
 
         if ($request->filled('tipo')) {
@@ -885,11 +946,27 @@ class HistorialPermisoController extends Controller
         }
 
         if ($request->filled('fecha_desde')) {
-            $query->whereDate('fecha', '>=', $request->fecha_desde);
+            $query->where(function($q) use ($request) {
+                $q->where(function($q2) use ($request) {
+                    $q2->where('condicion', 1)
+                        ->whereDate('fecha_fraccionado', '>=', $request->fecha_desde);
+                })->orWhere(function($q2) use ($request) {
+                    $q2->where('condicion', 0)
+                        ->whereDate('fecha_inicio', '>=', $request->fecha_desde);
+                });
+            });
         }
 
         if ($request->filled('fecha_hasta')) {
-            $query->whereDate('fecha', '<=', $request->fecha_hasta);
+            $query->where(function($q) use ($request) {
+                $q->where(function($q2) use ($request) {
+                    $q2->where('condicion', 1)
+                        ->whereDate('fecha_fraccionado', '<=', $request->fecha_hasta);
+                })->orWhere(function($q2) use ($request) {
+                    $q2->where('condicion', 0)
+                        ->whereDate('fecha_fin', '<=', $request->fecha_hasta);
+                });
+            });
         }
 
         if ($request->filled('condicion') && $request->condicion !== '') {
