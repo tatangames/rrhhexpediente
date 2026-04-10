@@ -46,29 +46,51 @@ class HistorialPermisoController extends Controller
     {
         $query = PermisoOtro::orderBy('fecha', 'asc');
 
-        // Filtro por empleado
         if ($request->filled('empleado_id')) {
             $query->where('id_empleado', $request->empleado_id);
         }
 
-        // Filtro por rango de fechas
         if ($request->filled('fecha_desde')) {
             $query->whereDate('fecha', '>=', $request->fecha_desde);
         }
+
         if ($request->filled('fecha_hasta')) {
             $query->whereDate('fecha', '<=', $request->fecha_hasta);
         }
 
-        // Filtro por condición (1 = fraccionado, 0 = completo)
         if ($request->filled('condicion') && $request->condicion !== '') {
             $query->where('condicion', $request->condicion);
         }
 
         $arrayPermisos = $query->get()->map(function ($item) {
 
+            // Fecha de solicitud
             $item->fecha = date('d-m-Y', strtotime($item->fecha));
 
-            $infoEmpleado        = PermisosEmpleados::find($item->id_empleado);
+            // Fraccionado
+            $item->fecha_fraccionado_fmt = $item->fecha_fraccionado
+                ? date('d/m/Y', strtotime($item->fecha_fraccionado))
+                : null;
+
+            $item->hora_inicio_fmt = $item->hora_inicio
+                ? date('g:i A', strtotime($item->hora_inicio))
+                : null;
+
+            $item->hora_fin_fmt = $item->hora_fin
+                ? date('g:i A', strtotime($item->hora_fin))
+                : null;
+
+            // Completo
+            $item->fecha_inicio_fmt = $item->fecha_inicio
+                ? date('d/m/Y', strtotime($item->fecha_inicio))
+                : null;
+
+            $item->fecha_fin_fmt = $item->fecha_fin
+                ? date('d/m/Y', strtotime($item->fecha_fin))
+                : null;
+
+            // Empleado
+            $infoEmpleado         = PermisosEmpleados::find($item->id_empleado);
             $item->nombreEmpleado = $infoEmpleado->nombre ?? 'Sin nombre';
 
             return $item;
@@ -191,28 +213,50 @@ class HistorialPermisoController extends Controller
     {
         $query = PermisoEnfermedad::orderBy('fecha', 'asc');
 
-        // Filtro por empleado
         if ($request->filled('empleado_id')) {
             $query->where('id_empleado', $request->empleado_id);
         }
 
-        // Filtro por rango de fechas
         if ($request->filled('fecha_desde')) {
             $query->whereDate('fecha', '>=', $request->fecha_desde);
         }
+
         if ($request->filled('fecha_hasta')) {
             $query->whereDate('fecha', '<=', $request->fecha_hasta);
         }
 
-        // Filtro por condición (1 = fraccionado, 0 = días completos)
         if ($request->filled('condicion') && $request->condicion !== '') {
             $query->where('condicion', $request->condicion);
         }
 
         $arrayPermisos = $query->get()->map(function ($item) {
 
+            // Fecha de solicitud
             $item->fecha = date('d-m-Y', strtotime($item->fecha));
 
+            // Fraccionado
+            $item->fecha_fraccionado_fmt = $item->fecha_fraccionado
+                ? date('d/m/Y', strtotime($item->fecha_fraccionado))
+                : null;
+
+            $item->hora_inicio_fmt = $item->hora_inicio
+                ? date('g:i A', strtotime($item->hora_inicio))
+                : null;
+
+            $item->hora_fin_fmt = $item->hora_fin
+                ? date('g:i A', strtotime($item->hora_fin))
+                : null;
+
+            // Completo
+            $item->fecha_inicio_fmt = $item->fecha_inicio
+                ? date('d/m/Y', strtotime($item->fecha_inicio))
+                : null;
+
+            $item->fecha_fin_fmt = $item->fecha_fin
+                ? date('d/m/Y', strtotime($item->fecha_fin))
+                : null;
+
+            // Empleado
             $infoEmpleado         = PermisosEmpleados::find($item->id_empleado);
             $item->nombreEmpleado = $infoEmpleado->nombre ?? 'Sin nombre';
 
@@ -343,20 +387,18 @@ class HistorialPermisoController extends Controller
     {
         $query = PermisoConsultaMedica::orderBy('fecha', 'asc');
 
-        // Filtro por empleado
         if ($request->filled('empleado_id')) {
             $query->where('id_empleado', $request->empleado_id);
         }
 
-        // Filtro por rango de fechas
         if ($request->filled('fecha_desde')) {
             $query->whereDate('fecha', '>=', $request->fecha_desde);
         }
+
         if ($request->filled('fecha_hasta')) {
             $query->whereDate('fecha', '<=', $request->fecha_hasta);
         }
 
-        // Filtro por condición (1 = fraccionado, 0 = días completos)
         if ($request->filled('condicion') && $request->condicion !== '') {
             $query->where('condicion', $request->condicion);
         }
@@ -364,6 +406,26 @@ class HistorialPermisoController extends Controller
         $arrayPermisos = $query->get()->map(function ($item) {
 
             $item->fecha = date('d-m-Y', strtotime($item->fecha));
+
+            $item->fecha_fraccionado_fmt = $item->fecha_fraccionado
+                ? date('d/m/Y', strtotime($item->fecha_fraccionado))
+                : null;
+
+            $item->hora_inicio_fmt = $item->hora_inicio
+                ? date('g:i A', strtotime($item->hora_inicio))
+                : null;
+
+            $item->hora_fin_fmt = $item->hora_fin
+                ? date('g:i A', strtotime($item->hora_fin))
+                : null;
+
+            $item->fecha_inicio_fmt = $item->fecha_inicio
+                ? date('d/m/Y', strtotime($item->fecha_inicio))
+                : null;
+
+            $item->fecha_fin_fmt = $item->fecha_fin
+                ? date('d/m/Y', strtotime($item->fecha_fin))
+                : null;
 
             $infoEmpleado         = PermisosEmpleados::find($item->id_empleado);
             $item->nombreEmpleado = $infoEmpleado->nombre ?? 'Sin nombre';
@@ -495,20 +557,18 @@ class HistorialPermisoController extends Controller
     {
         $query = PermisoCompensatorio::orderBy('fecha', 'asc');
 
-        // Filtro por empleado
         if ($request->filled('empleado_id')) {
             $query->where('id_empleado', $request->empleado_id);
         }
 
-        // Filtro por rango de fechas
         if ($request->filled('fecha_desde')) {
             $query->whereDate('fecha', '>=', $request->fecha_desde);
         }
+
         if ($request->filled('fecha_hasta')) {
             $query->whereDate('fecha', '<=', $request->fecha_hasta);
         }
 
-        // Filtro por condición (1 = fraccionado, 0 = días completos)
         if ($request->filled('condicion') && $request->condicion !== '') {
             $query->where('condicion', $request->condicion);
         }
@@ -516,6 +576,26 @@ class HistorialPermisoController extends Controller
         $arrayPermisos = $query->get()->map(function ($item) {
 
             $item->fecha = date('d-m-Y', strtotime($item->fecha));
+
+            $item->fecha_fraccionado_fmt = $item->fecha_fraccionado
+                ? date('d/m/Y', strtotime($item->fecha_fraccionado))
+                : null;
+
+            $item->hora_inicio_fmt = $item->hora_inicio
+                ? date('g:i A', strtotime($item->hora_inicio))
+                : null;
+
+            $item->hora_fin_fmt = $item->hora_fin
+                ? date('g:i A', strtotime($item->hora_fin))
+                : null;
+
+            $item->fecha_inicio_fmt = $item->fecha_inicio
+                ? date('d/m/Y', strtotime($item->fecha_inicio))
+                : null;
+
+            $item->fecha_fin_fmt = $item->fecha_fin
+                ? date('d/m/Y', strtotime($item->fecha_fin))
+                : null;
 
             $infoEmpleado         = PermisosEmpleados::find($item->id_empleado);
             $item->nombreEmpleado = $infoEmpleado->nombre ?? 'Sin nombre';
@@ -646,25 +726,22 @@ class HistorialPermisoController extends Controller
     {
         $query = PermisoIncapacidad::orderBy('fecha', 'asc');
 
-        // Filtro por empleado
         if ($request->filled('empleado_id')) {
             $query->where('id_empleado', $request->empleado_id);
         }
 
-        // Filtro por rango de fechas
         if ($request->filled('fecha_desde')) {
             $query->whereDate('fecha', '>=', $request->fecha_desde);
         }
+
         if ($request->filled('fecha_hasta')) {
             $query->whereDate('fecha', '<=', $request->fecha_hasta);
         }
 
-        // Filtro por tipo de incapacidad
         if ($request->filled('tipo')) {
             $query->where('id_tipo_incapacidad', $request->tipo);
         }
 
-        // Filtro por hospitalización (0 o 1)
         if ($request->filled('hospitalizacion') && $request->hospitalizacion !== '') {
             $query->where('hospitalizacion', $request->hospitalizacion);
         }
@@ -672,6 +749,14 @@ class HistorialPermisoController extends Controller
         $arrayPermisos = $query->get()->map(function ($item) {
 
             $item->fecha = date('d-m-Y', strtotime($item->fecha));
+
+            $item->fecha_inicio_fmt = $item->fecha_inicio
+                ? date('d/m/Y', strtotime($item->fecha_inicio))
+                : null;
+
+            $item->fecha_fin_fmt = $item->fecha_fin
+                ? date('d/m/Y', strtotime($item->fecha_fin))
+                : null;
 
             $infoEmpleado         = PermisosEmpleados::find($item->id_empleado);
             $item->nombreEmpleado = $infoEmpleado->nombre ?? 'Sin nombre';
@@ -795,25 +880,22 @@ class HistorialPermisoController extends Controller
     {
         $query = PermisoPersonal::orderBy('fecha', 'asc');
 
-        // Filtro por empleado
         if ($request->filled('empleado_id')) {
             $query->where('id_empleado', $request->empleado_id);
         }
 
-        // Filtro por rango de fechas
         if ($request->filled('fecha_desde')) {
             $query->whereDate('fecha', '>=', $request->fecha_desde);
         }
+
         if ($request->filled('fecha_hasta')) {
             $query->whereDate('fecha', '<=', $request->fecha_hasta);
         }
 
-        // Filtro por condición (1 = fraccionado, 0 = días completos)
         if ($request->filled('condicion') && $request->condicion !== '') {
             $query->where('condicion', $request->condicion);
         }
 
-        // Filtro por goce de sueldo (1 = con goce, 0 = sin goce)
         if ($request->filled('goce') && $request->goce !== '') {
             $query->where('goce', $request->goce);
         }
@@ -821,6 +903,26 @@ class HistorialPermisoController extends Controller
         $arrayPermisos = $query->get()->map(function ($item) {
 
             $item->fecha = date('d-m-Y', strtotime($item->fecha));
+
+            $item->fecha_fraccionado_fmt = $item->fecha_fraccionado
+                ? date('d/m/Y', strtotime($item->fecha_fraccionado))
+                : null;
+
+            $item->hora_inicio_fmt = $item->hora_inicio
+                ? date('g:i A', strtotime($item->hora_inicio))
+                : null;
+
+            $item->hora_fin_fmt = $item->hora_fin
+                ? date('g:i A', strtotime($item->hora_fin))
+                : null;
+
+            $item->fecha_inicio_fmt = $item->fecha_inicio
+                ? date('d/m/Y', strtotime($item->fecha_inicio))
+                : null;
+
+            $item->fecha_fin_fmt = $item->fecha_fin
+                ? date('d/m/Y', strtotime($item->fecha_fin))
+                : null;
 
             $infoEmpleado         = PermisosEmpleados::find($item->id_empleado);
             $item->nombreEmpleado = $infoEmpleado->nombre ?? 'Sin nombre';
@@ -830,6 +932,7 @@ class HistorialPermisoController extends Controller
 
         return view('backend.permisos.historial.personal.tablapermisospersonaleditar', compact('arrayPermisos'));
     }
+
 
     public function informacionHistorialPermisoPersonal(Request $request)
     {

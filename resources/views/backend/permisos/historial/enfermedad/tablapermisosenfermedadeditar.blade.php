@@ -7,48 +7,85 @@
                         <table id="tabla" class="table table-bordered table-striped">
                             <thead>
                             <tr>
-                                <th style="width: 3%">Fecha Solicitud</th>
-                                <th style="width: 3%">Tipo</th>
-                                <th style="width: 8%">Nombre</th>
-                                <th style="width: 7%">Unidad</th>
-                                <th style="width: 7%">Cargo</th>
-                                <th style="width: 7%">Razón</th>
-                                <th style="width: 4%">Opciones</th>
+                                <th>Fecha Solicitud</th>
+                                <th>Fecha Permiso</th>
+                                <th>Tipo</th>
+                                <th>Nombre</th>
+                                <th>Unidad</th>
+                                <th>Cargo</th>
+                                <th>Razón</th>
+                                <th>Opciones</th>
                             </tr>
                             </thead>
                             <tbody>
 
                             @foreach($arrayPermisos as $dato)
                                 <tr>
+
+                                    {{-- Fecha Solicitud --}}
                                     @php
-                                        $partes = explode('-', $dato->fecha);
-                                        $ordenFecha = count($partes) === 3 ? $partes[2].'-'.$partes[1].'-'.$partes[0] : $dato->fecha;
+                                        $partes     = explode('-', $dato->fecha);
+                                        $ordenFecha = count($partes) === 3
+                                            ? $partes[2].'-'.$partes[1].'-'.$partes[0]
+                                            : $dato->fecha;
                                     @endphp
                                     <td data-order="{{ $ordenFecha }}">
                                         {{ $dato->fecha }}
                                     </td>
+
+                                    {{-- Fecha del Permiso --}}
                                     <td>
-                                        @if($dato->condicion == 0)
-                                            Dias
+                                        @if($dato->condicion == 1)
+                                            {{ $dato->fecha_fraccionado_fmt ?? '—' }}<br>
+                                            <small class="text-muted">
+                                                <i class="fas fa-clock mr-1"></i>
+                                                {{ $dato->hora_inicio_fmt ?? '—' }} – {{ $dato->hora_fin_fmt ?? '—' }}
+                                            </small>
                                         @else
-                                            Fraccionado
+                                            @if(!$dato->fecha_fin_fmt || $dato->fecha_inicio_fmt === $dato->fecha_fin_fmt)
+                                                {{ $dato->fecha_inicio_fmt ?? '—' }}
+                                            @else
+                                                {{ $dato->fecha_inicio_fmt }} – {{ $dato->fecha_fin_fmt }}
+                                            @endif
                                         @endif
                                     </td>
+
+                                    {{-- Tipo --}}
+                                    <td>
+                                        @if($dato->condicion == 1)
+                                            <span class="badge badge-warning">
+                                                    <i class="fas fa-clock mr-1"></i> Fraccionado
+                                                </span>
+                                        @else
+                                            <span class="badge badge-primary">
+                                                    <i class="fas fa-calendar mr-1"></i> Días
+                                                </span>
+                                        @endif
+                                    </td>
+
+                                    {{-- Datos del empleado --}}
                                     <td>{{ $dato->nombreEmpleado }}</td>
-                                    <td>{{ $dato->unidad }}</td>
-                                    <td>{{ $dato->cargo }}</td>
-                                    <td>{{ $dato->razon }}</td>
+                                    <td>{{ $dato->unidad ?? '—' }}</td>
+                                    <td>{{ $dato->cargo ?? '—' }}</td>
+
+                                    {{-- Razón --}}
+                                    <td>{{ $dato->razon ?? '—' }}</td>
+
+                                    {{-- Opciones --}}
                                     <td>
                                         <button type="button"
-                                                class="btn btn-info btn-xs" onclick="informacion({{ $dato->id }})">
-                                            <i class="fas fa-edit" title="Editar"></i> Editar
+                                                class="btn btn-info btn-xs"
+                                                onclick="informacion({{ $dato->id }})">
+                                            <i class="fas fa-edit"></i> Editar
                                         </button>
-
                                         <button type="button"
-                                                class="btn btn-danger btn-xs" onclick="informacionBorrar({{ $dato->id }})">
-                                            <i class="fas fa-trash" title="Borrar"></i> Borrar
+                                                style="margin: 5px"
+                                                class="btn btn-danger btn-xs"
+                                                onclick="informacionBorrar({{ $dato->id }})">
+                                            <i class="fas fa-trash"></i> Borrar
                                         </button>
                                     </td>
+
                                 </tr>
                             @endforeach
 
@@ -66,5 +103,3 @@
         </div>
     </div>
 </section>
-
-
