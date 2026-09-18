@@ -88,8 +88,11 @@ class ReportesPdfUnidadesPermisosController extends Controller
     {
         $fmt = fn($fecha) => $fecha ? Carbon::parse($fecha)->format('d-m-Y') : '-';
 
+        $mostrarUnidad = !$idUnidad;
+
         $mpdf = $this->mpdfHorizontal('Reporte - Todos los Permisos');
         $html = $this->htmlCabecera('REPORTE GENERAL DE PERMISOS', $desde, $hasta);
+        $html .= $this->htmlInfoUnidad($idUnidad);
 
         // ── 1. PERSONALES ────────────────────────────────────────
         $personales = $this->filtrarPorFechaPermiso(
@@ -105,8 +108,8 @@ class ReportesPdfUnidadesPermisosController extends Controller
               <table width='100%' border='1' cellpadding='3' style='border-collapse:collapse;font-size:8.5px;'>
                 <tr style='background:#8a8f97;color:#fff;font-weight:bold;text-align:center;'>
                     <td width='3%'>#</td>
-                    <td width='19%'>EMPLEADO</td>
-                    <td width='12%'>UNIDAD</td>
+                    <td width='" . ($mostrarUnidad ? '19%' : '31%') . "'>EMPLEADO</td>"
+            . $this->colUnidadHeader($mostrarUnidad, '12%') . "
                     <td width='12%'>CARGO</td>
                     <td width='10%'>CONDICIÓN</td>
                     <td width='8%'>GOCE</td>
@@ -127,7 +130,7 @@ class ReportesPdfUnidadesPermisosController extends Controller
             $bg          = $i % 2 === 0 ? '#f9f9f9' : '#fff';
             $html .= "<tr style='background:{$bg};'>
             <td align='center'>" . ($i + 1) . "</td>
-            <td>{$p->empleado->nombre}</td><td>{$p->unidad}</td><td>{$p->cargo}</td>
+            <td>{$p->empleado->nombre}</td>" . $this->colUnidadRow($mostrarUnidad, $p->unidad) . "<td>{$p->cargo}</td>
             <td align='center'>{$condicion}</td>
             <td align='center'>{$goce}</td><td align='center'>{$fechaInicio}</td>
             <td align='center'>{$fechaFin}</td><td align='center'>{$horaInicio}</td>
@@ -150,8 +153,8 @@ class ReportesPdfUnidadesPermisosController extends Controller
               <table width='100%' border='1' cellpadding='3' style='border-collapse:collapse;font-size:8.5px;'>
                 <tr style='background:#8a8f97;color:#fff;font-weight:bold;text-align:center;'>
                     <td width='3%'>#</td>
-                    <td width='22%'>EMPLEADO</td>
-                    <td width='13%'>UNIDAD</td>
+                    <td width='" . ($mostrarUnidad ? '22%' : '35%') . "'>EMPLEADO</td>"
+            . $this->colUnidadHeader($mostrarUnidad, '13%') . "
                     <td width='13%'>CARGO</td>
                     <td width='11%'>CONDICIÓN</td>
                     <td width='10%'>INICIO</td>
@@ -170,7 +173,7 @@ class ReportesPdfUnidadesPermisosController extends Controller
             $bg          = $i % 2 === 0 ? '#f9f9f9' : '#fff';
             $html .= "<tr style='background:{$bg};'>
             <td align='center'>" . ($i + 1) . "</td>
-            <td>{$p->empleado->nombre}</td><td>{$p->unidad}</td><td>{$p->cargo}</td>
+            <td>{$p->empleado->nombre}</td>" . $this->colUnidadRow($mostrarUnidad, $p->unidad) . "<td>{$p->cargo}</td>
             <td align='center'>{$condicion}</td>
             <td align='center'>{$fechaInicio}</td><td align='center'>{$fechaFin}</td>
             <td align='center'>{$horaInicio}</td><td align='center'>{$horaFin}</td>
@@ -193,17 +196,17 @@ class ReportesPdfUnidadesPermisosController extends Controller
               <table width='100%' border='1' cellpadding='3' style='border-collapse:collapse;font-size:8.5px;'>
                 <tr style='background:#8a8f97;color:#fff;font-weight:bold;text-align:center;'>
                     <td width='3%'>#</td>
-                    <td width='15%'>EMPLEADO</td>
-                    <td width='10%'>UNIDAD</td>
+                    <td width='" . ($mostrarUnidad ? '15%' : '25%') . "'>EMPLEADO</td>"
+            . $this->colUnidadHeader($mostrarUnidad, '10%') . "
                     <td width='10%'>CARGO</td>
                     <td width='9%'>CONDICIÓN</td>
                     <td width='11%'>UNIDAD ATENCIÓN</td>
                     <td width='11%'>ESPECIALIDAD</td>
-                    <td width='11%'>COND. MÉDICA</td>
-                    <td width='8%'>INICIO</td>
-                    <td width='8%'>FIN</td>
-                    <td width='6%'>H.INI</td>
-                    <td width='6%'>H.FIN</td>
+                    <td width='10%'>COND. MÉDICA</td>
+                    <td width='7%'>INICIO</td>
+                    <td width='7%'>FIN</td>
+                    <td width='3%'>H.INI</td>
+                    <td width='3%'>H.FIN</td>
                 </tr>";
 
         foreach ($enfermedades as $i => $p) {
@@ -215,7 +218,7 @@ class ReportesPdfUnidadesPermisosController extends Controller
             $bg          = $i % 2 === 0 ? '#f9f9f9' : '#fff';
             $html .= "<tr style='background:{$bg};'>
             <td align='center'>" . ($i + 1) . "</td>
-            <td>{$p->empleado->nombre}</td><td>{$p->unidad}</td><td>{$p->cargo}</td>
+            <td>{$p->empleado->nombre}</td>" . $this->colUnidadRow($mostrarUnidad, $p->unidad) . "<td>{$p->cargo}</td>
             <td align='center'>{$condicion}</td>
             <td>{$p->unidad_atencion}</td><td>{$p->especialidad}</td><td>{$p->condicion_medica}</td>
             <td align='center'>{$fechaInicio}</td><td align='center'>{$fechaFin}</td>
@@ -238,17 +241,17 @@ class ReportesPdfUnidadesPermisosController extends Controller
               <table width='100%' border='1' cellpadding='3' style='border-collapse:collapse;font-size:8.5px;'>
                 <tr style='background:#8a8f97;color:#fff;font-weight:bold;text-align:center;'>
                     <td width='3%'>#</td>
-                    <td width='15%'>EMPLEADO</td>
-                    <td width='10%'>UNIDAD</td>
+                    <td width='" . ($mostrarUnidad ? '15%' : '25%') . "'>EMPLEADO</td>"
+            . $this->colUnidadHeader($mostrarUnidad, '10%') . "
                     <td width='10%'>CARGO</td>
                     <td width='9%'>CONDICIÓN</td>
                     <td width='11%'>UNIDAD ATENCIÓN</td>
                     <td width='11%'>ESPECIALIDAD</td>
-                    <td width='11%'>COND. MÉDICA</td>
-                    <td width='8%'>INICIO</td>
-                    <td width='8%'>FIN</td>
-                    <td width='6%'>H.INI</td>
-                    <td width='6%'>H.FIN</td>
+                    <td width='10%'>COND. MÉDICA</td>
+                    <td width='7%'>INICIO</td>
+                    <td width='7%'>FIN</td>
+                    <td width='3%'>H.INI</td>
+                    <td width='3%'>H.FIN</td>
                 </tr>";
 
         foreach ($consultas as $i => $p) {
@@ -260,7 +263,7 @@ class ReportesPdfUnidadesPermisosController extends Controller
             $bg          = $i % 2 === 0 ? '#f9f9f9' : '#fff';
             $html .= "<tr style='background:{$bg};'>
             <td align='center'>" . ($i + 1) . "</td>
-            <td>{$p->empleado->nombre}</td><td>{$p->unidad}</td><td>{$p->cargo}</td>
+            <td>{$p->empleado->nombre}</td>" . $this->colUnidadRow($mostrarUnidad, $p->unidad) . "<td>{$p->cargo}</td>
             <td align='center'>{$condicion}</td>
             <td>{$p->unidad_atencion}</td><td>{$p->especialidad}</td><td>{$p->condicion_medica}</td>
             <td align='center'>{$fechaInicio}</td><td align='center'>{$fechaFin}</td>
@@ -285,17 +288,17 @@ class ReportesPdfUnidadesPermisosController extends Controller
               <table width='100%' border='1' cellpadding='3' style='border-collapse:collapse;font-size:8.5px;'>
                 <tr style='background:#8a8f97;color:#fff;font-weight:bold;text-align:center;'>
                     <td width='3%'>#</td>
-                    <td width='17%'>EMPLEADO</td>
-                    <td width='10%'>UNIDAD</td>
+                    <td width='" . ($mostrarUnidad ? '17%' : '27%') . "'>EMPLEADO</td>"
+            . $this->colUnidadHeader($mostrarUnidad, '10%') . "
                     <td width='10%'>CARGO</td>
                     <td width='11%'>TIPO INCAPACIDAD</td>
                     <td width='9%'>RIESGO</td>
                     <td width='12%'>DIAGNÓSTICO</td>
                     <td width='6%'>N° DOC.</td>
-                    <td width='8%'>INICIO</td>
-                    <td width='8%'>FIN</td>
+                    <td width='7%'>INICIO</td>
+                    <td width='7%'>FIN</td>
                     <td width='4%'>DÍAS</td>
-                    <td width='10%'>HOSPITALIZ.</td>
+                    <td width='9%'>HOSPITALIZ.</td>
                 </tr>";
 
         foreach ($incapacidades as $i => $p) {
@@ -305,7 +308,7 @@ class ReportesPdfUnidadesPermisosController extends Controller
             $bg = $i % 2 === 0 ? '#f9f9f9' : '#fff';
             $html .= "<tr style='background:{$bg};'>
             <td align='center'>" . ($i + 1) . "</td>
-            <td>{$p->empleado?->nombre}</td><td>{$p->unidad}</td><td>{$p->cargo}</td>
+            <td>{$p->empleado?->nombre}</td>" . $this->colUnidadRow($mostrarUnidad, $p->unidad) . "<td>{$p->cargo}</td>
             <td>{$p->tipoIncapacidad?->nombre}</td><td>{$p->riesgo?->nombre}</td>
             <td>{$p->diagnostico}</td><td align='center'>{$p->numero}</td>
             <td align='center'>{$fmt($p->fecha_inicio)}</td>
@@ -343,8 +346,8 @@ class ReportesPdfUnidadesPermisosController extends Controller
               <table width='100%' border='1' cellpadding='3' style='border-collapse:collapse;font-size:8.5px;'>
                 <tr style='background:#8a8f97;color:#fff;font-weight:bold;text-align:center;'>
                     <td width='3%'>#</td>
-                    <td width='22%'>EMPLEADO</td>
-                    <td width='13%'>UNIDAD</td>
+                    <td width='" . ($mostrarUnidad ? '22%' : '35%') . "'>EMPLEADO</td>"
+            . $this->colUnidadHeader($mostrarUnidad, '13%') . "
                     <td width='13%'>CARGO</td>
                     <td width='11%'>CONDICIÓN</td>
                     <td width='10%'>INICIO</td>
@@ -363,7 +366,7 @@ class ReportesPdfUnidadesPermisosController extends Controller
             $bg          = $i % 2 === 0 ? '#f9f9f9' : '#fff';
             $html .= "<tr style='background:{$bg};'>
             <td align='center'>" . ($i + 1) . "</td>
-            <td>{$p->empleado->nombre}</td><td>{$p->unidad}</td><td>{$p->cargo}</td>
+            <td>{$p->empleado->nombre}</td>" . $this->colUnidadRow($mostrarUnidad, $p->unidad) . "<td>{$p->cargo}</td>
             <td align='center'>{$condicion}</td>
             <td align='center'>{$fechaInicio}</td><td align='center'>{$fechaFin}</td>
             <td align='center'>{$horaInicio}</td><td align='center'>{$horaFin}</td>
@@ -562,10 +565,48 @@ class ReportesPdfUnidadesPermisosController extends Controller
     }
 
     // ─────────────────────────────────────────────────────────────
+    //  Helper: texto "Unidad: X" mostrado cuando se filtra por
+    //  una unidad específica (reemplaza la columna UNIDAD).
+    // ─────────────────────────────────────────────────────────────
+    private function htmlInfoUnidad($idUnidad): string
+    {
+        if (!$idUnidad) {
+            return '';
+        }
+
+        $unidad       = PermisosUnidades::find($idUnidad);
+        $nombreUnidad = $unidad->nombre ?? 'N/D';
+
+        return "<p style='font-size:11px; font-weight:bold; margin:0 0 8px;'>
+                    Unidad: {$nombreUnidad}
+                </p>";
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    //  Helper: celda de encabezado UNIDAD (solo si no hay filtro
+    //  de unidad activo).
+    // ─────────────────────────────────────────────────────────────
+    private function colUnidadHeader(bool $mostrar, string $width): string
+    {
+        return $mostrar ? "<td width='{$width}'>UNIDAD</td>" : '';
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    //  Helper: celda de fila UNIDAD (solo si no hay filtro
+    //  de unidad activo).
+    // ─────────────────────────────────────────────────────────────
+    private function colUnidadRow(bool $mostrar, $valor): string
+    {
+        return $mostrar ? "<td>{$valor}</td>" : '';
+    }
+
+    // ─────────────────────────────────────────────────────────────
     //  1. PERMISO PERSONAL
     // ─────────────────────────────────────────────────────────────
     private function pdfPersonal($idEmpleado, $desde, $hasta, $idUnidad = null)
     {
+        $mostrarUnidad = !$idUnidad;
+
         $registros = $this->filtrarPorFechaPermiso(
             PermisoPersonal::with('empleado')
                 ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
@@ -575,13 +616,14 @@ class ReportesPdfUnidadesPermisosController extends Controller
 
         $mpdf = $this->mpdfHorizontal('Reporte - Permisos Personales');
         $html = $this->htmlCabecera('REPORTE DE PERMISOS PERSONALES', $desde, $hasta);
+        $html .= $this->htmlInfoUnidad($idUnidad);
 
         $html .= "
         <table width='100%' border='1' cellpadding='4' style='border-collapse:collapse;font-size:9px;'>
             <tr style='background:#8a8f97; color:#fff; font-weight:bold; text-align:center;'>
                 <td width='3%'>#</td>
-                <td width='19%'>EMPLEADO</td>
-                <td width='12%'>UNIDAD</td>
+                <td width='" . ($mostrarUnidad ? '19%' : '31%') . "'>EMPLEADO</td>"
+            . $this->colUnidadHeader($mostrarUnidad, '12%') . "
                 <td width='12%'>CARGO</td>
                 <td width='9%'>CONDICIÓN</td>
                 <td width='8%'>GOCE SALARIAL</td>
@@ -608,8 +650,7 @@ class ReportesPdfUnidadesPermisosController extends Controller
             $html .= "
             <tr style='background:{$bg};'>
                 <td align='center'>" . ($i + 1) . "</td>
-                <td>{$p->empleado->nombre}</td>
-                <td>{$p->unidad}</td>
+                <td>{$p->empleado->nombre}</td>" . $this->colUnidadRow($mostrarUnidad, $p->unidad) . "
                 <td>{$p->cargo}</td>
                 <td align='center'>{$condicion}</td>
                 <td align='center'>{$goce}</td>
@@ -632,6 +673,8 @@ class ReportesPdfUnidadesPermisosController extends Controller
     // ─────────────────────────────────────────────────────────────
     private function pdfCompensatorio($idEmpleado, $desde, $hasta, $idUnidad = null)
     {
+        $mostrarUnidad = !$idUnidad;
+
         $registros = $this->filtrarPorFechaPermiso(
             PermisoCompensatorio::with('empleado')
                 ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
@@ -641,13 +684,14 @@ class ReportesPdfUnidadesPermisosController extends Controller
 
         $mpdf = $this->mpdfHorizontal('Reporte - Permisos Compensatorios');
         $html = $this->htmlCabecera('REPORTE DE PERMISOS COMPENSATORIOS', $desde, $hasta);
+        $html .= $this->htmlInfoUnidad($idUnidad);
 
         $html .= "
         <table width='100%' border='1' cellpadding='4' style='border-collapse:collapse;font-size:9px;'>
             <tr style='background:#8a8f97; color:#fff; font-weight:bold; text-align:center;'>
                 <td width='3%'>#</td>
-                <td width='21%'>EMPLEADO</td>
-                <td width='14%'>UNIDAD</td>
+                <td width='" . ($mostrarUnidad ? '21%' : '35%') . "'>EMPLEADO</td>"
+            . $this->colUnidadHeader($mostrarUnidad, '14%') . "
                 <td width='14%'>CARGO</td>
                 <td width='11%'>CONDICIÓN</td>
                 <td width='10%'>FECHA INICIO</td>
@@ -672,8 +716,7 @@ class ReportesPdfUnidadesPermisosController extends Controller
             $html .= "
             <tr style='background:{$bg};'>
                 <td align='center'>" . ($i + 1) . "</td>
-                <td>{$p->empleado->nombre}</td>
-                <td>{$p->unidad}</td>
+                <td>{$p->empleado->nombre}</td>" . $this->colUnidadRow($mostrarUnidad, $p->unidad) . "
                 <td>{$p->cargo}</td>
                 <td align='center'>{$condicion}</td>
                 <td align='center'>{$fechaInicio}</td>
@@ -695,6 +738,8 @@ class ReportesPdfUnidadesPermisosController extends Controller
     // ─────────────────────────────────────────────────────────────
     private function pdfEnfermedad($idEmpleado, $desde, $hasta, $idUnidad = null)
     {
+        $mostrarUnidad = !$idUnidad;
+
         $registros = $this->filtrarPorFechaPermiso(
             PermisoEnfermedad::with('empleado')
                 ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
@@ -706,13 +751,14 @@ class ReportesPdfUnidadesPermisosController extends Controller
 
         $mpdf = $this->mpdfHorizontal('Reporte - Permisos por Enfermedad');
         $html = $this->htmlCabecera('REPORTE DE PERMISOS POR ENFERMEDAD', $desde, $hasta);
+        $html .= $this->htmlInfoUnidad($idUnidad);
 
         $html .= "
         <table width='100%' border='1' cellpadding='4' style='border-collapse:collapse;font-size:9px;'>
             <tr style='background:#8a8f97; color:#fff; font-weight:bold; text-align:center;'>
                 <td width='3%'>#</td>
-                <td width='16%'>EMPLEADO</td>
-                <td width='11%'>UNIDAD</td>
+                <td width='" . ($mostrarUnidad ? '16%' : '27%') . "'>EMPLEADO</td>"
+            . $this->colUnidadHeader($mostrarUnidad, '11%') . "
                 <td width='11%'>CARGO</td>
                 <td width='9%'>CONDICIÓN</td>
                 <td width='11%'>UNIDAD ATENCIÓN</td>
@@ -735,8 +781,7 @@ class ReportesPdfUnidadesPermisosController extends Controller
             $html .= "
             <tr style='background:{$bg};'>
                 <td align='center'>" . ($i + 1) . "</td>
-                <td>{$p->empleado->nombre}</td>
-                <td>{$p->unidad}</td>
+                <td>{$p->empleado->nombre}</td>" . $this->colUnidadRow($mostrarUnidad, $p->unidad) . "
                 <td>{$p->cargo}</td>
                 <td align='center'>{$condicion}</td>
                 <td>{$p->unidad_atencion}</td>
@@ -760,6 +805,8 @@ class ReportesPdfUnidadesPermisosController extends Controller
     // ─────────────────────────────────────────────────────────────
     private function pdfConsultaMedica($idEmpleado, $desde, $hasta, $idUnidad = null)
     {
+        $mostrarUnidad = !$idUnidad;
+
         $registros = $this->filtrarPorFechaPermiso(
             PermisoConsultaMedica::with('empleado')
                 ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
@@ -771,13 +818,14 @@ class ReportesPdfUnidadesPermisosController extends Controller
 
         $mpdf = $this->mpdfHorizontal('Reporte - Consulta Médica');
         $html = $this->htmlCabecera('REPORTE DE PERMISOS - CONSULTA MÉDICA', $desde, $hasta);
+        $html .= $this->htmlInfoUnidad($idUnidad);
 
         $html .= "
         <table width='100%' border='1' cellpadding='4' style='border-collapse:collapse;font-size:9px;'>
             <tr style='background:#8a8f97; color:#fff; font-weight:bold; text-align:center;'>
                 <td width='3%'>#</td>
-                <td width='16%'>EMPLEADO</td>
-                <td width='11%'>UNIDAD</td>
+                <td width='" . ($mostrarUnidad ? '16%' : '27%') . "'>EMPLEADO</td>"
+            . $this->colUnidadHeader($mostrarUnidad, '11%') . "
                 <td width='11%'>CARGO</td>
                 <td width='9%'>CONDICIÓN</td>
                 <td width='11%'>UNIDAD ATENCIÓN</td>
@@ -800,8 +848,7 @@ class ReportesPdfUnidadesPermisosController extends Controller
             $html .= "
             <tr style='background:{$bg};'>
                 <td align='center'>" . ($i + 1) . "</td>
-                <td>{$p->empleado->nombre}</td>
-                <td>{$p->unidad}</td>
+                <td>{$p->empleado->nombre}</td>" . $this->colUnidadRow($mostrarUnidad, $p->unidad) . "
                 <td>{$p->cargo}</td>
                 <td align='center'>{$condicion}</td>
                 <td>{$p->unidad_atencion}</td>
@@ -827,6 +874,8 @@ class ReportesPdfUnidadesPermisosController extends Controller
     // ─────────────────────────────────────────────────────────────
     private function pdfIncapacidad($idEmpleado, $desde, $hasta, $idUnidad = null)
     {
+        $mostrarUnidad = !$idUnidad;
+
         $registros = PermisoIncapacidad::with(['empleado', 'tipoIncapacidad', 'riesgo'])
             ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
             ->when($idUnidad, fn($q) => $q->whereHas('empleado', fn($qq) => $qq->where('id_unidad', $idUnidad)))
@@ -839,13 +888,14 @@ class ReportesPdfUnidadesPermisosController extends Controller
 
         $mpdf = $this->mpdfHorizontal('Reporte - Incapacidades');
         $html = $this->htmlCabecera('REPORTE DE PERMISOS POR INCAPACIDAD', $desde, $hasta);
+        $html .= $this->htmlInfoUnidad($idUnidad);
 
         $html .= "
         <table width='100%' border='1' cellpadding='4' style='border-collapse:collapse;font-size:9px;'>
             <tr style='background:#8a8f97; color:#fff; font-weight:bold; text-align:center;'>
                 <td width='3%'>#</td>
-                <td width='18%'>EMPLEADO</td>
-                <td width='11%'>UNIDAD</td>
+                <td width='" . ($mostrarUnidad ? '18%' : '29%') . "'>EMPLEADO</td>"
+            . $this->colUnidadHeader($mostrarUnidad, '11%') . "
                 <td width='11%'>CARGO</td>
                 <td width='11%'>TIPO INCAPACIDAD</td>
                 <td width='9%'>RIESGO</td>
@@ -866,8 +916,7 @@ class ReportesPdfUnidadesPermisosController extends Controller
             $html .= "
             <tr style='background:{$bg};'>
                 <td align='center'>" . ($i + 1) . "</td>
-                <td>{$p->empleado?->nombre}</td>
-                <td>{$p->unidad}</td>
+                <td>{$p->empleado?->nombre}</td>" . $this->colUnidadRow($mostrarUnidad, $p->unidad) . "
                 <td>{$p->cargo}</td>
                 <td>{$p->tipoIncapacidad?->nombre}</td>
                 <td>{$p->riesgo?->nombre}</td>
@@ -906,6 +955,8 @@ class ReportesPdfUnidadesPermisosController extends Controller
     // ─────────────────────────────────────────────────────────────
     private function pdfOtros($idEmpleado, $desde, $hasta, $idUnidad = null)
     {
+        $mostrarUnidad = !$idUnidad;
+
         $registros = $this->filtrarPorFechaPermiso(
             PermisoOtro::with('empleado')
                 ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
@@ -915,13 +966,14 @@ class ReportesPdfUnidadesPermisosController extends Controller
 
         $mpdf = $this->mpdfHorizontal('Reporte - Otros Permisos');
         $html = $this->htmlCabecera('REPORTE DE OTROS PERMISOS', $desde, $hasta);
+        $html .= $this->htmlInfoUnidad($idUnidad);
 
         $html .= "
         <table width='100%' border='1' cellpadding='4' style='border-collapse:collapse;font-size:9px;'>
             <tr style='background:#8a8f97; color:#fff; font-weight:bold; text-align:center;'>
                 <td width='3%'>#</td>
-                <td width='21%'>EMPLEADO</td>
-                <td width='14%'>UNIDAD</td>
+                <td width='" . ($mostrarUnidad ? '21%' : '35%') . "'>EMPLEADO</td>"
+            . $this->colUnidadHeader($mostrarUnidad, '14%') . "
                 <td width='14%'>CARGO</td>
                 <td width='11%'>CONDICIÓN</td>
                 <td width='10%'>FECHA INICIO</td>
@@ -946,8 +998,7 @@ class ReportesPdfUnidadesPermisosController extends Controller
             $html .= "
             <tr style='background:{$bg};'>
                 <td align='center'>" . ($i + 1) . "</td>
-                <td>{$p->empleado->nombre}</td>
-                <td>{$p->unidad}</td>
+                <td>{$p->empleado->nombre}</td>" . $this->colUnidadRow($mostrarUnidad, $p->unidad) . "
                 <td>{$p->cargo}</td>
                 <td align='center'>{$condicion}</td>
                 <td align='center'>{$fechaInicio}</td>
