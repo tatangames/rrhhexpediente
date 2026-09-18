@@ -485,18 +485,10 @@ return [
 
 
         [
-            'text'    => 'Reportes',
-            'icon'    => 'fas fa-pen-alt',
-            'can'     => 'sidebar.permisos',
-            'submenu' => [
-                [
-                    'text'  => 'General',
-                    'icon'  => 'fas fa-file-alt',
-                    'route' => 'reporte.general.index',
-                    'can'   => 'sidebar.permisos',
-                ],
-
-            ],
+            'text'  => 'Reportes',
+            'icon'  => 'fas fa-file-alt',
+            'route' => 'reporte.general.index',
+            'can'   => 'sidebar.permisos',
         ],
 
 
