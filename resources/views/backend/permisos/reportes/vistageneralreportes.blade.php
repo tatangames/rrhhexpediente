@@ -47,7 +47,7 @@
                     <div class="card card-secondary shadow">
                         <div class="card-header">
                             <h3 class="card-title">
-                                <i class="fas fa-file-pdf mr-2"></i>Generar Reporte de Permisos
+                                <i class="fas fa-file-pdf mr-2"></i>Generar Reporte de Permisos Por Empleado
                             </h3>
                         </div>
 
