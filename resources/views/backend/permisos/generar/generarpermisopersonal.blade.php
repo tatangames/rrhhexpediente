@@ -896,6 +896,8 @@
             axios.post(urlAdmin + '/admin/guardar/permiso/personal', datosPermiso)
                 .then(resp => {
 
+
+
                     if (resp.data.success === 1) {
 
                         toastr.success('Permiso guardado exitosamente');
@@ -907,45 +909,45 @@
 
                         resp.data.duplicados.forEach(function (d) {
 
-                            let tiempoHtml = '';
-                            let goceBadge  = d.goce === 'Con goce'
+                            let goceBadge = d.goce === 'Con goce'
                                 ? '<span class="badge badge-success">Con goce</span>'
                                 : '<span class="badge badge-danger">Sin goce</span>';
 
+                            let tiempoHtml = '';
                             if (d.condicion === 'Fraccionado') {
                                 tiempoHtml = `
-                                    <span class="badge badge-warning">
-                                        <i class="fas fa-clock"></i> Fraccionado
-                                    </span>
-                                    <small class="d-block text-muted mt-1">
-                                        Fecha: ${formatearFecha(d.fecha_fraccionado)}
-                                        &nbsp;|&nbsp;
-                                        De: ${d.hora_inicio ?? '-'} &nbsp;-&nbsp; A: ${d.hora_fin ?? '-'}
-                                    </small>
-                                `;
+                            <span class="badge badge-warning">
+                                <i class="fas fa-clock"></i> Fraccionado
+                            </span>
+                            <small class="d-block text-muted mt-1">
+                                Fecha: ${formatearFecha(d.fecha_fraccionado)}
+                                &nbsp;|&nbsp;
+                                De: ${d.hora_inicio ?? '-'} &nbsp;-&nbsp; A: ${d.hora_fin ?? '-'}
+                            </small>
+                        `;
                             } else {
                                 tiempoHtml = `
-                                    <span class="badge badge-primary">
-                                        <i class="fas fa-calendar-day"></i> Completo
-                                    </span>
-                                    <small class="d-block text-muted mt-1">
-                                        Desde: ${formatearFecha(d.fecha_inicio)}
-                                        &nbsp;|&nbsp;
-                                        Hasta: ${formatearFecha(d.fecha_fin)}
-                                    </small>
-                                `;
+                            <span class="badge badge-primary">
+                                <i class="fas fa-calendar-day"></i> Completo
+                            </span>
+                            <small class="d-block text-muted mt-1">
+                                Desde: ${formatearFecha(d.fecha_inicio)}
+                                &nbsp;|&nbsp;
+                                Hasta: ${formatearFecha(d.fecha_fin)}
+                            </small>
+                        `;
                             }
 
                             html += `
-                                <li class="list-group-item">
-                                    <div>
-                                        <strong>Fecha entregó:</strong> ${formatearFecha(d.fecha)}
-                                        &nbsp; ${goceBadge}<br>
-                                        <strong>Razón:</strong> ${d.razon}
-                                        <div class="mt-2">${tiempoHtml}</div>
-                                    </div>
-                                </li>
-                            `;
+                        <li class="list-group-item">
+                            <div>
+                                <strong>Fecha entregó:</strong> ${formatearFecha(d.fecha)}
+                                &nbsp; ${goceBadge}<br>
+                                <strong>Razón:</strong> ${d.razon}
+                                <div class="mt-2">${tiempoHtml}</div>
+                            </div>
+                        </li>
+                    `;
                         });
 
                         $('#lista-duplicados').html(html);
@@ -953,21 +955,47 @@
                         $('#modalDuplicados').modal('show');
 
                     } else if (resp.data.tipo === 'limite_excedido' && resp.data.data) {
+
                         mostrarModalLimite(resp.data.data);
+
                     } else {
+
                         toastr.error(resp.data.message || 'Error al guardar el permiso');
+
                     }
                 })
                 .catch(err => {
+
+                    // 🔍 DEBUG: por si el error viene por status HTTP != 2xx
+                    console.error('Error en la petición:', err.response ? err.response.data : err);
+
                     if (err.response && err.response.data && err.response.data.tipo === 'limite_excedido') {
                         mostrarModalLimite(err.response.data.data);
                     } else {
-                        toastr.error('Error al guardar el permiso');
+                        toastr.error(
+                            (err.response && err.response.data && err.response.data.message)
+                                ? err.response.data.message
+                                : 'Error al guardar el permiso'
+                        );
                     }
                 })
                 .finally(() => {
                     closeLoading();
                 });
+        }
+
+
+        // ===============================
+        // FUNCIÓN PARA MOSTRAR MODAL DE LÍMITE
+        // ===============================
+        function mostrarModalLimite(data) {
+            $('#modal-anio').text(data.anio);
+            $('#modal-tipo-goce').text(data.tipo_goce);
+            $('#modal-limite').html(`<strong>${formatearTiempo(data.limite_minutos)}</strong>`);
+            $('#modal-usados').html(`<strong>${formatearTiempo(data.usados_minutos)}</strong>`);
+            $('#modal-solicitando').html(`<strong>${formatearTiempo(data.solicitando_minutos)}</strong>`);
+            $('#modal-disponibles').html(`<strong>${formatearTiempo(data.disponibles_minutos)}</strong>`);
+            $('#modalLimitePermiso').modal('show');
         }
 
         // ===============================

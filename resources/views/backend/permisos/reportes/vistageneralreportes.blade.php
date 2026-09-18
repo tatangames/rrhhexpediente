@@ -76,6 +76,10 @@
                                 </select>
                             </div>
 
+                            <hr>
+
+                            <p>Busca por Fecha de uso del Permiso</p>
+
                             <div class="row">
                                 <!-- Fecha Desde -->
                                 <div class="col-md-6">
@@ -126,9 +130,104 @@
                     </div>
                 </div>
 
+
+                <div class="col-md-7 mt-4">
+                    <div class="card card-info shadow">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-building mr-2"></i>Generar Reporte de Permisos por Unidad
+                            </h3>
+                        </div>
+
+                        <div class="card-body">
+
+                            <!-- Unidad -->
+                            <div class="form-group">
+                                <label>Unidad:</label>
+                                <select class="form-control" id="select-unidad">
+                                    <option value="0">-- TODAS --</option>
+                                    @foreach($arrayUnidades as $item)
+                                        <option value="{{ $item->id }}">{{ $item->nombre }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <!-- Tipo de Permiso -->
+                            <div class="form-group">
+                                <label>Tipo de Permiso: <span style="color:red">*</span></label>
+                                <select class="form-control" id="select-tipopermiso-unidad">
+                                    <option value="0">-- TODOS --</option>
+                                    <option value="1">Personal</option>
+                                    <option value="2">Compensatorio</option>
+                                    <option value="3">Enfermedad</option>
+                                    <option value="4">Consulta Médica</option>
+                                    <option value="5">Incapacidad</option>
+                                    <option value="6">Otros</option>
+                                </select>
+                            </div>
+
+
+                            <hr>
+
+                            <p>Busca por Fecha de uso del Permiso</p>
+
+                            <div class="row">
+                                <!-- Fecha Desde -->
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Desde: <span style="color:red">*</span></label>
+                                        <input type="date" class="form-control" id="fecha-desde-unidad">
+                                        <small class="text-danger d-none" id="error-desde-unidad">
+                                            La fecha de inicio es requerida.
+                                        </small>
+                                    </div>
+                                </div>
+
+                                <!-- Fecha Hasta -->
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Hasta: <span style="color:red">*</span></label>
+                                        <input type="date" class="form-control" id="fecha-hasta-unidad">
+                                        <small class="text-danger d-none" id="error-hasta-unidad">
+                                            La fecha de fin es requerida.
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Error de rango de fechas -->
+                            <small class="text-danger d-none" id="error-rango-unidad">
+                                La fecha "Desde" no puede ser mayor que la fecha "Hasta".
+                            </small>
+
+                        </div>
+
+
+                        <div class="card-footer d-flex gap-2">
+                            <button type="button" onclick="generarReportePorUnidad('pdf')"
+                                    class="btn btn-outline-danger d-flex align-items-center">
+                                <img src="{{ asset('images/logopdf.png') }}" width="28" height="28"
+                                     style="margin-right:8px;">
+                                Generar PDF
+                            </button>
+
+                            <button type="button" onclick="generarReportePorUnidad('excel')"
+                                    class="btn btn-outline-success d-flex align-items-center">
+                                <img src="{{ asset('images/logoexcel.png') }}" width="28" height="28"
+                                     style="margin-right:8px;">
+                                Generar Excel
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+
             </div>
         </div>
     </section>
+
+
+
 
 @stop
 
@@ -219,6 +318,93 @@
             form.submit();
             document.body.removeChild(form);
         }
+
+
+
+        $('#select-unidad').select2({
+            theme: "bootstrap-5",
+            language: { noResults: () => "Búsqueda no encontrada" }
+        });
+
+        $('#select-tipopermiso-unidad').select2({
+            theme: "bootstrap-5",
+            minimumResultsForSearch: Infinity
+        });
+
+        $('#fecha-desde-unidad').on('change', function () {
+            $('#error-desde-unidad, #error-rango-unidad').addClass('d-none');
+            $(this).removeClass('is-invalid');
+        });
+
+        $('#fecha-hasta-unidad').on('change', function () {
+            $('#error-hasta-unidad, #error-rango-unidad').addClass('d-none');
+            $(this).removeClass('is-invalid');
+        });
+
+        function generarReportePorUnidad(tipo) {
+            const idUnidad   = $('#select-unidad').val();
+            const tipoPerm   = $('#select-tipopermiso-unidad').val();
+            const fechaDesde = $('#fecha-desde-unidad').val();
+            const fechaHasta = $('#fecha-hasta-unidad').val();
+
+            let valido = true;
+
+            $('#error-desde-unidad, #error-hasta-unidad, #error-rango-unidad').addClass('d-none');
+            $('#fecha-desde-unidad, #fecha-hasta-unidad').removeClass('is-invalid');
+
+            if (!fechaDesde) {
+                $('#error-desde-unidad').removeClass('d-none');
+                $('#fecha-desde-unidad').addClass('is-invalid');
+                valido = false;
+            }
+
+            if (!fechaHasta) {
+                $('#error-hasta-unidad').removeClass('d-none');
+                $('#fecha-hasta-unidad').addClass('is-invalid');
+                valido = false;
+            }
+
+            if (fechaDesde && fechaHasta && fechaDesde > fechaHasta) {
+                $('#error-rango-unidad').removeClass('d-none');
+                $('#fecha-desde-unidad, #fecha-hasta-unidad').addClass('is-invalid');
+                valido = false;
+            }
+
+            if (!valido) return;
+
+            const rutas = {
+                pdf:   '{{ route("permiso.pdf.generar.unidad") }}',
+                excel: '{{ route("permiso.excel.generar.unidad") }}'
+            };
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = rutas[tipo];
+            form.target = '_blank';
+
+            const fields = {
+                _token:       '{{ csrf_token() }}',
+                tipo_permiso: tipoPerm,
+                id_unidad:    idUnidad,
+                fecha_desde:  fechaDesde,
+                fecha_hasta:  fechaHasta,
+            };
+
+            Object.entries(fields).forEach(([name, value]) => {
+                const input = document.createElement('input');
+                input.type  = 'hidden';
+                input.name  = name;
+                input.value = value;
+                form.appendChild(input);
+            });
+
+            document.body.appendChild(form);
+            form.submit();
+            document.body.removeChild(form);
+        }
+
+
+
     </script>
 
 

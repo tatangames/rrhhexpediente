@@ -19,6 +19,10 @@ use App\Http\Controllers\Evaluacion\JefeEvaluacionController;
 
 use App\Http\Controllers\Permiso\ReportesExcelPermisoController;
 
+use App\Http\Controllers\Permiso\ReportesPdfUnidadesPermisosController;
+use App\Http\Controllers\Permiso\ReportesExcelUnidadesPermisosController;
+
+
 
 Route::get('/', [LoginController::class,'vistaLoginForm'])->name('login.admin');
 Route::post('/login', [LoginController::class, 'login']);
@@ -262,9 +266,12 @@ Route::post('/admin/reportes/permiso/pdf', [ReportesPermisoController::class, 'g
 Route::post('/admin/reportes/permiso/excel', [ReportesExcelPermisoController::class, 'generarReportePermisoEXCEL'])->name('permiso.excel.generar');
 
 
+Route::post('/permisos/reportes/pdf/unidad', [ReportesPdfUnidadesPermisosController::class, 'generarReportePermisoPDFPorUnidad'])
+    ->name('permiso.pdf.generar.unidad');
 
 
-
+Route::post('/permisos/reportes/excel/unidad', [ReportesExcelUnidadesPermisosController::class, 'generarReportePermisoPDFPorUnidad'])
+    ->name('permiso.excel.generar.unidad');
 
 
 

@@ -15,39 +15,41 @@ use App\Models\PermisoConsultaMedica;
 use App\Models\PermisoIncapacidad;
 use App\Models\PermisoOtro;
 
-class ReportesPermisoController extends Controller
+class ReportesPdfUnidadesPermisosController extends Controller
 {
-    public function __construct()
+    // ─────────────────────────────────────────────────────────────
+    //  Helper: aplica el filtro por rango de fechas usando la
+    //  fecha real del permiso (fecha_fraccionado / fecha_inicio-fin)
+    //  en vez de la fecha de entrega del documento.
+    // ─────────────────────────────────────────────────────────────
+    private function filtrarPorFechaPermiso($query, $desde, $hasta)
     {
-        $this->middleware('auth');
-    }
-
-    private function getTemaPredeterminado()
-    {
-        return Auth::guard('admin')->user()->tema;
-    }
-
-    public function indexReportesGeneral()
-    {
-        $temaPredeterminado = $this->getTemaPredeterminado();
-        $arrayEmpleados     = PermisosEmpleados::orderBy('nombre', 'ASC')->get();
-        $arrayUnidades = PermisosUnidades::orderBy('nombre', 'ASC')->get();
-
-        return view('backend.permisos.reportes.vistageneralreportes',
-            compact('temaPredeterminado', 'arrayEmpleados',
-                'arrayUnidades'));
+        return $query->where(function ($q) use ($desde, $hasta) {
+            // Fraccionado: la fecha del permiso cae dentro del rango
+            $q->where(function ($q2) use ($desde, $hasta) {
+                $q2->where('condicion', 1)
+                    ->whereDate('fecha_fraccionado', '>=', $desde)
+                    ->whereDate('fecha_fraccionado', '<=', $hasta);
+            })
+                // Completo: el rango del permiso se solapa con el rango solicitado
+                ->orWhere(function ($q2) use ($desde, $hasta) {
+                    $q2->where('condicion', 0)
+                        ->whereDate('fecha_inicio', '<=', $hasta)
+                        ->whereDate('fecha_fin', '>=', $desde);
+                });
+        })->orderByRaw('COALESCE(fecha_fraccionado, fecha_inicio)');
     }
 
     // ─────────────────────────────────────────────────────────────
     //  RUTA PRINCIPAL: valida, detecta tipo y delega
     // ─────────────────────────────────────────────────────────────
-    public function generarReportePermisoPDF(Request $request)
+    public function generarReportePermisoPDFPorUnidad(Request $request)
     {
         $request->validate([
             'tipo_permiso' => 'required|integer|between:0,6',
             'fecha_desde'  => 'required|date',
             'fecha_hasta'  => 'required|date|after_or_equal:fecha_desde',
-            'id_empleado'  => 'nullable|integer',
+            'id_unidad'    => 'nullable|integer',
         ], [
             'fecha_desde.required'       => 'La fecha de inicio es requerida.',
             'fecha_hasta.required'       => 'La fecha de fin es requerida.',
@@ -57,32 +59,31 @@ class ReportesPermisoController extends Controller
 
         $tipo = (int) $request->tipo_permiso;
 
-        $idEmpleado = ($request->id_empleado && $request->id_empleado != '0')
-            ? $request->id_empleado
+        $idUnidad = ($request->id_unidad && $request->id_unidad != '0')
+            ? $request->id_unidad
             : null;
 
         $desde = $request->fecha_desde;
         $hasta = $request->fecha_hasta;
 
-        // TODOS = genera un PDF con todos los tipos concatenados
         if ($tipo === 0) {
-            return $this->pdfTodos($idEmpleado, $desde, $hasta);
+            return $this->pdfTodos(null, $desde, $hasta, $idUnidad);
         }
 
         return match ($tipo) {
-            1 => $this->pdfPersonal($idEmpleado, $desde, $hasta),
-            2 => $this->pdfCompensatorio($idEmpleado, $desde, $hasta),
-            3 => $this->pdfEnfermedad($idEmpleado, $desde, $hasta),
-            4 => $this->pdfConsultaMedica($idEmpleado, $desde, $hasta),
-            5 => $this->pdfIncapacidad($idEmpleado, $desde, $hasta),
-            6 => $this->pdfOtros($idEmpleado, $desde, $hasta),
+            1 => $this->pdfPersonal(null, $desde, $hasta, $idUnidad),
+            2 => $this->pdfCompensatorio(null, $desde, $hasta, $idUnidad),
+            3 => $this->pdfEnfermedad(null, $desde, $hasta, $idUnidad),
+            4 => $this->pdfConsultaMedica(null, $desde, $hasta, $idUnidad),
+            5 => $this->pdfIncapacidad(null, $desde, $hasta, $idUnidad),
+            6 => $this->pdfOtros(null, $desde, $hasta, $idUnidad),
         };
     }
 
     // ─────────────────────────────────────────────────────────────
     //  0. TODOS LOS TIPOS DE PERMISO (un PDF con secciones)
     // ─────────────────────────────────────────────────────────────
-    private function pdfTodos($idEmpleado, $desde, $hasta)
+    private function pdfTodos($idEmpleado, $desde, $hasta, $idUnidad = null)
     {
         $fmt = fn($fecha) => $fecha ? Carbon::parse($fecha)->format('d-m-Y') : '-';
 
@@ -90,22 +91,12 @@ class ReportesPermisoController extends Controller
         $html = $this->htmlCabecera('REPORTE GENERAL DE PERMISOS', $desde, $hasta);
 
         // ── 1. PERSONALES ────────────────────────────────────────
-        $personales = PermisoPersonal::with('empleado')
-            ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
-            ->where(function ($q) use ($desde, $hasta) {
-                $q->where(function ($q2) use ($desde, $hasta) {
-                    $q2->where('condicion', 1)
-                        ->whereDate('fecha_fraccionado', '>=', $desde)
-                        ->whereDate('fecha_fraccionado', '<=', $hasta);
-                })
-                    ->orWhere(function ($q2) use ($desde, $hasta) {
-                        $q2->where('condicion', 0)
-                            ->whereDate('fecha_inicio', '<=', $hasta)
-                            ->whereDate('fecha_fin', '>=', $desde);
-                    });
-            })
-            ->orderByRaw('COALESCE(fecha_fraccionado, fecha_inicio)')
-            ->get();
+        $personales = $this->filtrarPorFechaPermiso(
+            PermisoPersonal::with('empleado')
+                ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
+                ->when($idUnidad, fn($q) => $q->whereHas('empleado', fn($qq) => $qq->where('id_unidad', $idUnidad))),
+            $desde, $hasta
+        )->get();
 
         $html .= "<h4 style='font-size:11px;background:#d0d3d8;padding:4px 6px;margin:10px 0 4px;'>
                 1. PERMISOS PERSONALES
@@ -113,16 +104,16 @@ class ReportesPermisoController extends Controller
               <table width='100%' border='1' cellpadding='3' style='border-collapse:collapse;font-size:8.5px;'>
                 <tr style='background:#8a8f97;color:#fff;font-weight:bold;text-align:center;'>
                     <td width='3%'>#</td>
-                    <td width='22%'>EMPLEADO</td>
+                    <td width='19%'>EMPLEADO</td>
                     <td width='12%'>UNIDAD</td>
                     <td width='12%'>CARGO</td>
                     <td width='10%'>CONDICIÓN</td>
                     <td width='8%'>GOCE</td>
-                    <td width='8%'>INICIO</td>
-                    <td width='8%'>FIN</td>
-                    <td width='6%'>H.INICIO</td>
-                    <td width='6%'>H.FIN</td>
-                    <td width='9%'>RAZÓN</td>
+                    <td width='9%'>INICIO</td>
+                    <td width='9%'>FIN</td>
+                    <td width='7%'>H.INICIO</td>
+                    <td width='7%'>H.FIN</td>
+                    <td width='11%'>RAZÓN</td>
                 </tr>";
 
         foreach ($personales as $i => $p) {
@@ -145,22 +136,12 @@ class ReportesPermisoController extends Controller
         $html .= "</table>" . $this->htmlTotalRegistros(count($personales));
 
         // ── 2. COMPENSATORIOS ────────────────────────────────────
-        $compensatorios = PermisoCompensatorio::with('empleado')
-            ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
-            ->where(function ($q) use ($desde, $hasta) {
-                $q->where(function ($q2) use ($desde, $hasta) {
-                    $q2->where('condicion', 1)
-                        ->whereDate('fecha_fraccionado', '>=', $desde)
-                        ->whereDate('fecha_fraccionado', '<=', $hasta);
-                })
-                    ->orWhere(function ($q2) use ($desde, $hasta) {
-                        $q2->where('condicion', 0)
-                            ->whereDate('fecha_inicio', '<=', $hasta)
-                            ->whereDate('fecha_fin', '>=', $desde);
-                    });
-            })
-            ->orderByRaw('COALESCE(fecha_fraccionado, fecha_inicio)')
-            ->get();
+        $compensatorios = $this->filtrarPorFechaPermiso(
+            PermisoCompensatorio::with('empleado')
+                ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
+                ->when($idUnidad, fn($q) => $q->whereHas('empleado', fn($qq) => $qq->where('id_unidad', $idUnidad))),
+            $desde, $hasta
+        )->get();
 
         $html .= "<h4 style='font-size:11px;background:#d0d3d8;padding:4px 6px;margin:10px 0 4px;'>
                 2. PERMISOS COMPENSATORIOS
@@ -168,15 +149,15 @@ class ReportesPermisoController extends Controller
               <table width='100%' border='1' cellpadding='3' style='border-collapse:collapse;font-size:8.5px;'>
                 <tr style='background:#8a8f97;color:#fff;font-weight:bold;text-align:center;'>
                     <td width='3%'>#</td>
-                    <td width='24%'>EMPLEADO</td>
+                    <td width='22%'>EMPLEADO</td>
                     <td width='13%'>UNIDAD</td>
                     <td width='13%'>CARGO</td>
                     <td width='11%'>CONDICIÓN</td>
-                    <td width='9%'>INICIO</td>
-                    <td width='9%'>FIN</td>
-                    <td width='6%'>H.INICIO</td>
-                    <td width='6%'>H.FIN</td>
-                    <td width='9%'>RAZÓN</td>
+                    <td width='10%'>INICIO</td>
+                    <td width='10%'>FIN</td>
+                    <td width='7%'>H.INICIO</td>
+                    <td width='7%'>H.FIN</td>
+                    <td width='7%'>RAZÓN</td>
                 </tr>";
 
         foreach ($compensatorios as $i => $p) {
@@ -198,22 +179,12 @@ class ReportesPermisoController extends Controller
         $html .= "</table>" . $this->htmlTotalRegistros(count($compensatorios));
 
         // ── 3. ENFERMEDAD ────────────────────────────────────────
-        $enfermedades = PermisoEnfermedad::with('empleado')
-            ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
-            ->where(function ($q) use ($desde, $hasta) {
-                $q->where(function ($q2) use ($desde, $hasta) {
-                    $q2->where('condicion', 1)
-                        ->whereDate('fecha_fraccionado', '>=', $desde)
-                        ->whereDate('fecha_fraccionado', '<=', $hasta);
-                })
-                    ->orWhere(function ($q2) use ($desde, $hasta) {
-                        $q2->where('condicion', 0)
-                            ->whereDate('fecha_inicio', '<=', $hasta)
-                            ->whereDate('fecha_fin', '>=', $desde);
-                    });
-            })
-            ->orderByRaw('COALESCE(fecha_fraccionado, fecha_inicio)')
-            ->get();
+        $enfermedades = $this->filtrarPorFechaPermiso(
+            PermisoEnfermedad::with('empleado')
+                ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
+                ->when($idUnidad, fn($q) => $q->whereHas('empleado', fn($qq) => $qq->where('id_unidad', $idUnidad))),
+            $desde, $hasta
+        )->get();
 
         $html .= "<h4 style='font-size:11px;background:#d0d3d8;padding:4px 6px;margin:10px 0 4px;'>
                 3. PERMISOS POR ENFERMEDAD
@@ -221,17 +192,17 @@ class ReportesPermisoController extends Controller
               <table width='100%' border='1' cellpadding='3' style='border-collapse:collapse;font-size:8.5px;'>
                 <tr style='background:#8a8f97;color:#fff;font-weight:bold;text-align:center;'>
                     <td width='3%'>#</td>
-                    <td width='16%'>EMPLEADO</td>
-                    <td width='11%'>UNIDAD</td>
-                    <td width='11%'>CARGO</td>
+                    <td width='15%'>EMPLEADO</td>
+                    <td width='10%'>UNIDAD</td>
+                    <td width='10%'>CARGO</td>
                     <td width='9%'>CONDICIÓN</td>
                     <td width='11%'>UNIDAD ATENCIÓN</td>
                     <td width='11%'>ESPECIALIDAD</td>
-                    <td width='10%'>COND. MÉDICA</td>
-                    <td width='7%'>INICIO</td>
-                    <td width='7%'>FIN</td>
-                    <td width='3%'>H.INI</td>
-                    <td width='3%'>H.FIN</td>
+                    <td width='11%'>COND. MÉDICA</td>
+                    <td width='8%'>INICIO</td>
+                    <td width='8%'>FIN</td>
+                    <td width='6%'>H.INI</td>
+                    <td width='6%'>H.FIN</td>
                 </tr>";
 
         foreach ($enfermedades as $i => $p) {
@@ -253,22 +224,12 @@ class ReportesPermisoController extends Controller
         $html .= "</table>" . $this->htmlTotalRegistros(count($enfermedades));
 
         // ── 4. CONSULTA MÉDICA ───────────────────────────────────
-        $consultas = PermisoConsultaMedica::with('empleado')
-            ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
-            ->where(function ($q) use ($desde, $hasta) {
-                $q->where(function ($q2) use ($desde, $hasta) {
-                    $q2->where('condicion', 1)
-                        ->whereDate('fecha_fraccionado', '>=', $desde)
-                        ->whereDate('fecha_fraccionado', '<=', $hasta);
-                })
-                    ->orWhere(function ($q2) use ($desde, $hasta) {
-                        $q2->where('condicion', 0)
-                            ->whereDate('fecha_inicio', '<=', $hasta)
-                            ->whereDate('fecha_fin', '>=', $desde);
-                    });
-            })
-            ->orderByRaw('COALESCE(fecha_fraccionado, fecha_inicio)')
-            ->get();
+        $consultas = $this->filtrarPorFechaPermiso(
+            PermisoConsultaMedica::with('empleado')
+                ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
+                ->when($idUnidad, fn($q) => $q->whereHas('empleado', fn($qq) => $qq->where('id_unidad', $idUnidad))),
+            $desde, $hasta
+        )->get();
 
         $html .= "<h4 style='font-size:11px;background:#d0d3d8;padding:4px 6px;margin:10px 0 4px;'>
                 4. PERMISOS - CONSULTA MÉDICA
@@ -276,17 +237,17 @@ class ReportesPermisoController extends Controller
               <table width='100%' border='1' cellpadding='3' style='border-collapse:collapse;font-size:8.5px;'>
                 <tr style='background:#8a8f97;color:#fff;font-weight:bold;text-align:center;'>
                     <td width='3%'>#</td>
-                    <td width='16%'>EMPLEADO</td>
-                    <td width='11%'>UNIDAD</td>
-                    <td width='11%'>CARGO</td>
+                    <td width='15%'>EMPLEADO</td>
+                    <td width='10%'>UNIDAD</td>
+                    <td width='10%'>CARGO</td>
                     <td width='9%'>CONDICIÓN</td>
                     <td width='11%'>UNIDAD ATENCIÓN</td>
                     <td width='11%'>ESPECIALIDAD</td>
-                    <td width='10%'>COND. MÉDICA</td>
-                    <td width='7%'>INICIO</td>
-                    <td width='7%'>FIN</td>
-                    <td width='3%'>H.INI</td>
-                    <td width='3%'>H.FIN</td>
+                    <td width='11%'>COND. MÉDICA</td>
+                    <td width='8%'>INICIO</td>
+                    <td width='8%'>FIN</td>
+                    <td width='6%'>H.INI</td>
+                    <td width='6%'>H.FIN</td>
                 </tr>";
 
         foreach ($consultas as $i => $p) {
@@ -308,8 +269,10 @@ class ReportesPermisoController extends Controller
         $html .= "</table>" . $this->htmlTotalRegistros(count($consultas));
 
         // ── 5. INCAPACIDADES ─────────────────────────────────────
+        // (no tiene condicion/fecha_fraccionado: solapamiento directo)
         $incapacidades = PermisoIncapacidad::with(['empleado', 'tipoIncapacidad', 'riesgo'])
             ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
+            ->when($idUnidad, fn($q) => $q->whereHas('empleado', fn($qq) => $qq->where('id_unidad', $idUnidad)))
             ->whereDate('fecha_inicio', '<=', $hasta)
             ->whereDate('fecha_fin', '>=', $desde)
             ->orderBy('fecha_inicio')
@@ -321,17 +284,17 @@ class ReportesPermisoController extends Controller
               <table width='100%' border='1' cellpadding='3' style='border-collapse:collapse;font-size:8.5px;'>
                 <tr style='background:#8a8f97;color:#fff;font-weight:bold;text-align:center;'>
                     <td width='3%'>#</td>
-                    <td width='18%'>EMPLEADO</td>
+                    <td width='17%'>EMPLEADO</td>
                     <td width='10%'>UNIDAD</td>
                     <td width='10%'>CARGO</td>
                     <td width='11%'>TIPO INCAPACIDAD</td>
                     <td width='9%'>RIESGO</td>
                     <td width='12%'>DIAGNÓSTICO</td>
                     <td width='6%'>N° DOC.</td>
-                    <td width='7%'>INICIO</td>
-                    <td width='7%'>FIN</td>
+                    <td width='8%'>INICIO</td>
+                    <td width='8%'>FIN</td>
                     <td width='4%'>DÍAS</td>
-                    <td width='9%'>HOSPITALIZ.</td>
+                    <td width='10%'>HOSPITALIZ.</td>
                 </tr>";
 
         foreach ($incapacidades as $i => $p) {
@@ -366,22 +329,12 @@ class ReportesPermisoController extends Controller
         </table>";
 
         // ── 6. OTROS ─────────────────────────────────────────────
-        $otros = PermisoOtro::with('empleado')
-            ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
-            ->where(function ($q) use ($desde, $hasta) {
-                $q->where(function ($q2) use ($desde, $hasta) {
-                    $q2->where('condicion', 1)
-                        ->whereDate('fecha_fraccionado', '>=', $desde)
-                        ->whereDate('fecha_fraccionado', '<=', $hasta);
-                })
-                    ->orWhere(function ($q2) use ($desde, $hasta) {
-                        $q2->where('condicion', 0)
-                            ->whereDate('fecha_inicio', '<=', $hasta)
-                            ->whereDate('fecha_fin', '>=', $desde);
-                    });
-            })
-            ->orderByRaw('COALESCE(fecha_fraccionado, fecha_inicio)')
-            ->get();
+        $otros = $this->filtrarPorFechaPermiso(
+            PermisoOtro::with('empleado')
+                ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
+                ->when($idUnidad, fn($q) => $q->whereHas('empleado', fn($qq) => $qq->where('id_unidad', $idUnidad))),
+            $desde, $hasta
+        )->get();
 
         $html .= "<h4 style='font-size:11px;background:#d0d3d8;padding:4px 6px;margin:10px 0 4px;'>
                 6. OTROS PERMISOS
@@ -389,15 +342,15 @@ class ReportesPermisoController extends Controller
               <table width='100%' border='1' cellpadding='3' style='border-collapse:collapse;font-size:8.5px;'>
                 <tr style='background:#8a8f97;color:#fff;font-weight:bold;text-align:center;'>
                     <td width='3%'>#</td>
-                    <td width='24%'>EMPLEADO</td>
+                    <td width='22%'>EMPLEADO</td>
                     <td width='13%'>UNIDAD</td>
                     <td width='13%'>CARGO</td>
                     <td width='11%'>CONDICIÓN</td>
-                    <td width='9%'>INICIO</td>
-                    <td width='9%'>FIN</td>
-                    <td width='6%'>H.INICIO</td>
-                    <td width='6%'>H.FIN</td>
-                    <td width='9%'>RAZÓN</td>
+                    <td width='10%'>INICIO</td>
+                    <td width='10%'>FIN</td>
+                    <td width='7%'>H.INICIO</td>
+                    <td width='7%'>H.FIN</td>
+                    <td width='7%'>RAZÓN</td>
                 </tr>";
 
         foreach ($otros as $i => $p) {
@@ -477,11 +430,10 @@ class ReportesPermisoController extends Controller
         </table>
     </div>";
 
-
         $mpdf->WriteHTML($html);
+
         return $mpdf->Output('Reporte_General_Permisos.pdf', 'I');
     }
-
 
     // ─────────────────────────────────────────────────────────────
     //  Helper: mPDF en modo HORIZONTAL (LETTER-L)
@@ -558,76 +510,61 @@ class ReportesPermisoController extends Controller
     // ─────────────────────────────────────────────────────────────
     //  1. PERMISO PERSONAL
     // ─────────────────────────────────────────────────────────────
-    private function pdfPersonal($idEmpleado, $desde, $hasta)
+    private function pdfPersonal($idEmpleado, $desde, $hasta, $idUnidad = null)
     {
-        $registros = PermisoPersonal::with('empleado')
-            ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
-            ->where(function ($q) use ($desde, $hasta) {
-                // Fraccionado: la fecha del permiso cae dentro del rango
-                $q->where(function ($q2) use ($desde, $hasta) {
-                    $q2->where('condicion', 1)
-                        ->whereDate('fecha_fraccionado', '>=', $desde)
-                        ->whereDate('fecha_fraccionado', '<=', $hasta);
-                })
-                    // Completo: el rango del permiso se solapa con el rango solicitado
-                    ->orWhere(function ($q2) use ($desde, $hasta) {
-                        $q2->where('condicion', 0)
-                            ->whereDate('fecha_inicio', '<=', $hasta)
-                            ->whereDate('fecha_fin', '>=', $desde);
-                    });
-            })
-            ->orderByRaw('COALESCE(fecha_fraccionado, fecha_inicio)')
-            ->get();
+        $registros = $this->filtrarPorFechaPermiso(
+            PermisoPersonal::with('empleado')
+                ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
+                ->when($idUnidad, fn($q) => $q->whereHas('empleado', fn($qq) => $qq->where('id_unidad', $idUnidad))),
+            $desde, $hasta
+        )->get();
 
         $mpdf = $this->mpdfHorizontal('Reporte - Permisos Personales');
         $html = $this->htmlCabecera('REPORTE DE PERMISOS PERSONALES', $desde, $hasta);
 
         $html .= "
-    <table width='100%' border='1' cellpadding='4' style='border-collapse:collapse;font-size:9px;'>
-        <tr style='background:#8a8f97; color:#fff; font-weight:bold; text-align:center;'>
-            <td width='3%'>#</td>
-            <td width='18%'>EMPLEADO</td>
-            <td width='12%'>UNIDAD</td>
-            <td width='12%'>CARGO</td>
-            <td width='9%'>CONDICIÓN</td>
-            <td width='8%'>GOCE SALARIAL</td>
-            <td width='8%'>FECHA INICIO</td>
-            <td width='8%'>FECHA FIN</td>
-            <td width='6%'>HORA INICIO</td>
-            <td width='6%'>HORA FIN</td>
-            <td width='10%'>RAZÓN</td>
-        </tr>";
+        <table width='100%' border='1' cellpadding='4' style='border-collapse:collapse;font-size:9px;'>
+            <tr style='background:#8a8f97; color:#fff; font-weight:bold; text-align:center;'>
+                <td width='3%'>#</td>
+                <td width='19%'>EMPLEADO</td>
+                <td width='12%'>UNIDAD</td>
+                <td width='12%'>CARGO</td>
+                <td width='9%'>CONDICIÓN</td>
+                <td width='8%'>GOCE SALARIAL</td>
+                <td width='9%'>FECHA INICIO</td>
+                <td width='9%'>FECHA FIN</td>
+                <td width='6%'>HORA INICIO</td>
+                <td width='6%'>HORA FIN</td>
+                <td width='10%'>RAZÓN</td>
+            </tr>";
 
         foreach ($registros as $i => $p) {
-            $condicion    = $p->condicion ? 'Fraccionado' : 'Día Completo';
-            $goce         = $p->goce ? 'SÍ' : 'NO';
-
-            $fechaInicio  = $p->condicion
-                ? ($p->fecha_fraccionado ? \Carbon\Carbon::parse($p->fecha_fraccionado)->format('d-m-Y') : '-')
-                : ($p->fecha_inicio ? \Carbon\Carbon::parse($p->fecha_inicio)->format('d-m-Y') : '-');
-
-            $fechaFin     = $p->condicion
+            $condicion   = $p->condicion ? 'Fraccionado' : 'Día Completo';
+            $goce        = $p->goce ? 'SÍ' : 'NO';
+            $fechaInicio = $p->condicion
+                ? ($p->fecha_fraccionado ? Carbon::parse($p->fecha_fraccionado)->format('d-m-Y') : '-')
+                : ($p->fecha_inicio ? Carbon::parse($p->fecha_inicio)->format('d-m-Y') : '-');
+            $fechaFin    = $p->condicion
                 ? '-'
-                : ($p->fecha_fin ? \Carbon\Carbon::parse($p->fecha_fin)->format('d-m-Y') : '-');
-
-            $horaInicio   = $p->condicion ? ($p->hora_inicio ?? '-') : '-';
-            $horaFin      = $p->condicion ? ($p->hora_fin    ?? '-') : '-';
-            $bg           = $i % 2 === 0 ? '#f9f9f9' : '#fff';
+                : ($p->fecha_fin ? Carbon::parse($p->fecha_fin)->format('d-m-Y') : '-');
+            $horaInicio  = $p->condicion ? ($p->hora_inicio ?? '-') : '-';
+            $horaFin     = $p->condicion ? ($p->hora_fin    ?? '-') : '-';
+            $bg          = $i % 2 === 0 ? '#f9f9f9' : '#fff';
 
             $html .= "
-        <tr style='background:{$bg};'>
-            <td align='center'>" . ($i + 1) . "</td>
-            <td>{$p->empleado->nombre}</td>
-            <td>{$p->unidad}</td>
-            <td>{$p->cargo}</td>
-            <td align='center'>{$condicion}</td>
-            <td align='center'>{$goce}</td>
-            <td align='center'>{$fechaInicio}</td>
-            <td align='center'>{$fechaFin}</td>
-            <td align='center'>{$horaInicio}</td>
-            <td align='center'>{$horaFin}</td>
-            <td>{$p->razon}</td>
-        </tr>";
+            <tr style='background:{$bg};'>
+                <td align='center'>" . ($i + 1) . "</td>
+                <td>{$p->empleado->nombre}</td>
+                <td>{$p->unidad}</td>
+                <td>{$p->cargo}</td>
+                <td align='center'>{$condicion}</td>
+                <td align='center'>{$goce}</td>
+                <td align='center'>{$fechaInicio}</td>
+                <td align='center'>{$fechaFin}</td>
+                <td align='center'>{$horaInicio}</td>
+                <td align='center'>{$horaFin}</td>
+                <td>{$p->razon}</td>
+            </tr>";
         }
 
         $html .= "</table>" . $this->htmlTotalRegistros(count($registros));
@@ -635,77 +572,61 @@ class ReportesPermisoController extends Controller
         return $mpdf->Output('Reporte_Permisos_Personales.pdf', 'I');
     }
 
-
     // ─────────────────────────────────────────────────────────────
     //  2. PERMISO COMPENSATORIO
     // ─────────────────────────────────────────────────────────────
-    private function pdfCompensatorio($idEmpleado, $desde, $hasta)
+    private function pdfCompensatorio($idEmpleado, $desde, $hasta, $idUnidad = null)
     {
-        $registros = PermisoCompensatorio::with('empleado')
-            ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
-            ->where(function ($q) use ($desde, $hasta) {
-                // Fraccionado: la fecha del permiso cae dentro del rango
-                $q->where(function ($q2) use ($desde, $hasta) {
-                    $q2->where('condicion', 1)
-                        ->whereDate('fecha_fraccionado', '>=', $desde)
-                        ->whereDate('fecha_fraccionado', '<=', $hasta);
-                })
-                    // Completo: el rango del permiso se solapa con el rango solicitado
-                    ->orWhere(function ($q2) use ($desde, $hasta) {
-                        $q2->where('condicion', 0)
-                            ->whereDate('fecha_inicio', '<=', $hasta)
-                            ->whereDate('fecha_fin', '>=', $desde);
-                    });
-            })
-            ->orderByRaw('COALESCE(fecha_fraccionado, fecha_inicio)')
-            ->get();
+        $registros = $this->filtrarPorFechaPermiso(
+            PermisoCompensatorio::with('empleado')
+                ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
+                ->when($idUnidad, fn($q) => $q->whereHas('empleado', fn($qq) => $qq->where('id_unidad', $idUnidad))),
+            $desde, $hasta
+        )->get();
 
         $mpdf = $this->mpdfHorizontal('Reporte - Permisos Compensatorios');
         $html = $this->htmlCabecera('REPORTE DE PERMISOS COMPENSATORIOS', $desde, $hasta);
 
         $html .= "
-    <table width='100%' border='1' cellpadding='4' style='border-collapse:collapse;font-size:9px;'>
-        <tr style='background:#8a8f97; color:#fff; font-weight:bold; text-align:center;'>
-            <td width='3%'>#</td>
-            <td width='20%'>EMPLEADO</td>
-            <td width='13%'>UNIDAD</td>
-            <td width='13%'>CARGO</td>
-            <td width='11%'>CONDICIÓN</td>
-            <td width='10%'>FECHA INICIO</td>
-            <td width='10%'>FECHA FIN</td>
-            <td width='6%'>HORA INICIO</td>
-            <td width='6%'>HORA FIN</td>
-            <td width='11%'>RAZÓN</td>
-        </tr>";
+        <table width='100%' border='1' cellpadding='4' style='border-collapse:collapse;font-size:9px;'>
+            <tr style='background:#8a8f97; color:#fff; font-weight:bold; text-align:center;'>
+                <td width='3%'>#</td>
+                <td width='21%'>EMPLEADO</td>
+                <td width='14%'>UNIDAD</td>
+                <td width='14%'>CARGO</td>
+                <td width='11%'>CONDICIÓN</td>
+                <td width='10%'>FECHA INICIO</td>
+                <td width='10%'>FECHA FIN</td>
+                <td width='6%'>HORA INICIO</td>
+                <td width='6%'>HORA FIN</td>
+                <td width='8%'>RAZÓN</td>
+            </tr>";
 
         foreach ($registros as $i => $p) {
             $condicion   = $p->condicion ? 'Fraccionado' : 'Día Completo';
-
             $fechaInicio = $p->condicion
-                ? ($p->fecha_fraccionado ? \Carbon\Carbon::parse($p->fecha_fraccionado)->format('d-m-Y') : '-')
-                : ($p->fecha_inicio ? \Carbon\Carbon::parse($p->fecha_inicio)->format('d-m-Y') : '-');
-
+                ? ($p->fecha_fraccionado ? Carbon::parse($p->fecha_fraccionado)->format('d-m-Y') : '-')
+                : ($p->fecha_inicio ? Carbon::parse($p->fecha_inicio)->format('d-m-Y') : '-');
             $fechaFin    = $p->condicion
                 ? '-'
-                : ($p->fecha_fin ? \Carbon\Carbon::parse($p->fecha_fin)->format('d-m-Y') : '-');
-
+                : ($p->fecha_fin ? Carbon::parse($p->fecha_fin)->format('d-m-Y') : '-');
             $horaInicio  = $p->condicion ? ($p->hora_inicio ?? '-') : '-';
             $horaFin     = $p->condicion ? ($p->hora_fin    ?? '-') : '-';
             $bg          = $i % 2 === 0 ? '#f9f9f9' : '#fff';
 
             $html .= "
-        <tr style='background:{$bg};'>
-            <td align='center'>" . ($i + 1) . "</td>
-            <td>{$p->empleado->nombre}</td>
-            <td>{$p->unidad}</td>
-            <td>{$p->cargo}</td>
-            <td align='center'>{$condicion}</td>
-            <td align='center'>{$fechaInicio}</td>
-            <td align='center'>{$fechaFin}</td>
-            <td align='center'>{$horaInicio}</td>
-            <td align='center'>{$horaFin}</td>
-            <td>{$p->razon}</td>
-        </tr>";
+            <tr style='background:{$bg};'>
+                <td align='center'>" . ($i + 1) . "</td>
+                <td>{$p->empleado->nombre}</td>
+                <td>{$p->unidad}</td>
+                <td>{$p->cargo}</td>
+                <td align='center'>{$condicion}</td>
+                <td align='center'>{$fechaInicio}</td>
+                <td align='center'>{$fechaFin}</td>
+                <td align='center'>{$horaInicio}</td>
+                <td align='center'>{$horaFin}</td>
+                <td>{$p->razon}</td>
+            </tr>";
         }
 
         $html .= "</table>" . $this->htmlTotalRegistros(count($registros));
@@ -716,75 +637,60 @@ class ReportesPermisoController extends Controller
     // ─────────────────────────────────────────────────────────────
     //  3. PERMISO ENFERMEDAD
     // ─────────────────────────────────────────────────────────────
-    private function pdfEnfermedad($idEmpleado, $desde, $hasta)
+    private function pdfEnfermedad($idEmpleado, $desde, $hasta, $idUnidad = null)
     {
-        $registros = PermisoEnfermedad::with('empleado')
-            ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
-            ->where(function ($q) use ($desde, $hasta) {
-                $q->where(function ($q2) use ($desde, $hasta) {
-                    $q2->where('condicion', 1)
-                        ->whereDate('fecha_fraccionado', '>=', $desde)
-                        ->whereDate('fecha_fraccionado', '<=', $hasta);
-                })
-                    ->orWhere(function ($q2) use ($desde, $hasta) {
-                        $q2->where('condicion', 0)
-                            ->whereDate('fecha_inicio', '<=', $hasta)
-                            ->whereDate('fecha_fin', '>=', $desde);
-                    });
-            })
-            ->orderByRaw('COALESCE(fecha_fraccionado, fecha_inicio)')
-            ->get();
+        $registros = $this->filtrarPorFechaPermiso(
+            PermisoEnfermedad::with('empleado')
+                ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
+                ->when($idUnidad, fn($q) => $q->whereHas('empleado', fn($qq) => $qq->where('id_unidad', $idUnidad))),
+            $desde, $hasta
+        )->get();
 
-        $fmt = fn($fecha) => $fecha ? \Carbon\Carbon::parse($fecha)->format('d-m-Y') : '-';
+        $fmt = fn($fecha) => $fecha ? Carbon::parse($fecha)->format('d-m-Y') : '-';
 
         $mpdf = $this->mpdfHorizontal('Reporte - Permisos por Enfermedad');
         $html = $this->htmlCabecera('REPORTE DE PERMISOS POR ENFERMEDAD', $desde, $hasta);
 
         $html .= "
-    <table width='100%' border='1' cellpadding='4' style='border-collapse:collapse;font-size:9px;'>
-        <tr style='background:#8a8f97; color:#fff; font-weight:bold; text-align:center;'>
-            <td width='3%'>#</td>
-            <td width='16%'>EMPLEADO</td>
-            <td width='11%'>UNIDAD</td>
-            <td width='11%'>CARGO</td>
-            <td width='9%'>CONDICIÓN</td>
-            <td width='11%'>UNIDAD ATENCIÓN</td>
-            <td width='11%'>ESPECIALIDAD</td>
-            <td width='11%'>COND. MÉDICA</td>
-            <td width='8%'>INICIO</td>
-            <td width='8%'>FIN</td>
-            <td width='7%'>H. INICIO</td>
-            <td width='7%'>H. FIN</td>
-        </tr>";
+        <table width='100%' border='1' cellpadding='4' style='border-collapse:collapse;font-size:9px;'>
+            <tr style='background:#8a8f97; color:#fff; font-weight:bold; text-align:center;'>
+                <td width='3%'>#</td>
+                <td width='16%'>EMPLEADO</td>
+                <td width='11%'>UNIDAD</td>
+                <td width='11%'>CARGO</td>
+                <td width='9%'>CONDICIÓN</td>
+                <td width='11%'>UNIDAD ATENCIÓN</td>
+                <td width='11%'>ESPECIALIDAD</td>
+                <td width='11%'>COND. MÉDICA</td>
+                <td width='8%'>INICIO</td>
+                <td width='8%'>FIN</td>
+                <td width='7%'>H. INICIO</td>
+                <td width='7%'>H. FIN</td>
+            </tr>";
 
         foreach ($registros as $i => $p) {
             $condicion   = $p->condicion ? 'Fraccionado' : 'Día Completo';
-
-            $fechaInicio = $p->condicion
-                ? $fmt($p->fecha_fraccionado)
-                : $fmt($p->fecha_inicio);
-
+            $fechaInicio = $p->condicion ? $fmt($p->fecha_fraccionado) : $fmt($p->fecha_inicio);
             $fechaFin    = $p->condicion ? '-' : $fmt($p->fecha_fin);
-
             $horaInicio  = $p->condicion ? ($p->hora_inicio ?? '-') : '-';
             $horaFin     = $p->condicion ? ($p->hora_fin    ?? '-') : '-';
             $bg          = $i % 2 === 0 ? '#f9f9f9' : '#fff';
 
             $html .= "
-        <tr style='background:{$bg};'>
-            <td align='center'>" . ($i + 1) . "</td>
-            <td>{$p->empleado->nombre}</td>
-            <td>{$p->unidad}</td>
-            <td>{$p->cargo}</td>
-            <td align='center'>{$condicion}</td>
-            <td>{$p->unidad_atencion}</td>
-            <td>{$p->especialidad}</td>
-            <td>{$p->condicion_medica}</td>
-            <td align='center'>{$fechaInicio}</td>
-            <td align='center'>{$fechaFin}</td>
-            <td align='center'>{$horaInicio}</td>
-            <td align='center'>{$horaFin}</td>
-        </tr>";
+            <tr style='background:{$bg};'>
+                <td align='center'>" . ($i + 1) . "</td>
+                <td>{$p->empleado->nombre}</td>
+                <td>{$p->unidad}</td>
+                <td>{$p->cargo}</td>
+                <td align='center'>{$condicion}</td>
+                <td>{$p->unidad_atencion}</td>
+                <td>{$p->especialidad}</td>
+                <td>{$p->condicion_medica}</td>
+                <td align='center'>{$fechaInicio}</td>
+                <td align='center'>{$fechaFin}</td>
+                <td align='center'>{$horaInicio}</td>
+                <td align='center'>{$horaFin}</td>
+            </tr>";
         }
 
         $html .= "</table>" . $this->htmlTotalRegistros(count($registros));
@@ -795,75 +701,60 @@ class ReportesPermisoController extends Controller
     // ─────────────────────────────────────────────────────────────
     //  4. PERMISO CONSULTA MÉDICA
     // ─────────────────────────────────────────────────────────────
-    private function pdfConsultaMedica($idEmpleado, $desde, $hasta)
+    private function pdfConsultaMedica($idEmpleado, $desde, $hasta, $idUnidad = null)
     {
-        $registros = PermisoConsultaMedica::with('empleado')
-            ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
-            ->where(function ($q) use ($desde, $hasta) {
-                $q->where(function ($q2) use ($desde, $hasta) {
-                    $q2->where('condicion', 1)
-                        ->whereDate('fecha_fraccionado', '>=', $desde)
-                        ->whereDate('fecha_fraccionado', '<=', $hasta);
-                })
-                    ->orWhere(function ($q2) use ($desde, $hasta) {
-                        $q2->where('condicion', 0)
-                            ->whereDate('fecha_inicio', '<=', $hasta)
-                            ->whereDate('fecha_fin', '>=', $desde);
-                    });
-            })
-            ->orderByRaw('COALESCE(fecha_fraccionado, fecha_inicio)')
-            ->get();
+        $registros = $this->filtrarPorFechaPermiso(
+            PermisoConsultaMedica::with('empleado')
+                ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
+                ->when($idUnidad, fn($q) => $q->whereHas('empleado', fn($qq) => $qq->where('id_unidad', $idUnidad))),
+            $desde, $hasta
+        )->get();
 
-        $fmt = fn($fecha) => $fecha ? \Carbon\Carbon::parse($fecha)->format('d-m-Y') : '-';
+        $fmt = fn($fecha) => $fecha ? Carbon::parse($fecha)->format('d-m-Y') : '-';
 
         $mpdf = $this->mpdfHorizontal('Reporte - Consulta Médica');
         $html = $this->htmlCabecera('REPORTE DE PERMISOS - CONSULTA MÉDICA', $desde, $hasta);
 
         $html .= "
-    <table width='100%' border='1' cellpadding='4' style='border-collapse:collapse;font-size:9px;'>
-        <tr style='background:#8a8f97; color:#fff; font-weight:bold; text-align:center;'>
-            <td width='3%'>#</td>
-            <td width='16%'>EMPLEADO</td>
-            <td width='11%'>UNIDAD</td>
-            <td width='11%'>CARGO</td>
-            <td width='9%'>CONDICIÓN</td>
-            <td width='11%'>UNIDAD ATENCIÓN</td>
-            <td width='11%'>ESPECIALIDAD</td>
-            <td width='11%'>COND. MÉDICA</td>
-            <td width='8%'>INICIO</td>
-            <td width='8%'>FIN</td>
-            <td width='7%'>H. INICIO</td>
-            <td width='7%'>H. FIN</td>
-        </tr>";
+        <table width='100%' border='1' cellpadding='4' style='border-collapse:collapse;font-size:9px;'>
+            <tr style='background:#8a8f97; color:#fff; font-weight:bold; text-align:center;'>
+                <td width='3%'>#</td>
+                <td width='16%'>EMPLEADO</td>
+                <td width='11%'>UNIDAD</td>
+                <td width='11%'>CARGO</td>
+                <td width='9%'>CONDICIÓN</td>
+                <td width='11%'>UNIDAD ATENCIÓN</td>
+                <td width='11%'>ESPECIALIDAD</td>
+                <td width='11%'>COND. MÉDICA</td>
+                <td width='8%'>INICIO</td>
+                <td width='8%'>FIN</td>
+                <td width='7%'>H. INICIO</td>
+                <td width='7%'>H. FIN</td>
+            </tr>";
 
         foreach ($registros as $i => $p) {
             $condicion   = $p->condicion ? 'Fraccionado' : 'Día Completo';
-
-            $fechaInicio = $p->condicion
-                ? $fmt($p->fecha_fraccionado)
-                : $fmt($p->fecha_inicio);
-
+            $fechaInicio = $p->condicion ? $fmt($p->fecha_fraccionado) : $fmt($p->fecha_inicio);
             $fechaFin    = $p->condicion ? '-' : $fmt($p->fecha_fin);
-
             $horaInicio  = $p->condicion ? ($p->hora_inicio ?? '-') : '-';
             $horaFin     = $p->condicion ? ($p->hora_fin    ?? '-') : '-';
             $bg          = $i % 2 === 0 ? '#f9f9f9' : '#fff';
 
             $html .= "
-        <tr style='background:{$bg};'>
-            <td align='center'>" . ($i + 1) . "</td>
-            <td>{$p->empleado->nombre}</td>
-            <td>{$p->unidad}</td>
-            <td>{$p->cargo}</td>
-            <td align='center'>{$condicion}</td>
-            <td>{$p->unidad_atencion}</td>
-            <td>{$p->especialidad}</td>
-            <td>{$p->condicion_medica}</td>
-            <td align='center'>{$fechaInicio}</td>
-            <td align='center'>{$fechaFin}</td>
-            <td align='center'>{$horaInicio}</td>
-            <td align='center'>{$horaFin}</td>
-        </tr>";
+            <tr style='background:{$bg};'>
+                <td align='center'>" . ($i + 1) . "</td>
+                <td>{$p->empleado->nombre}</td>
+                <td>{$p->unidad}</td>
+                <td>{$p->cargo}</td>
+                <td align='center'>{$condicion}</td>
+                <td>{$p->unidad_atencion}</td>
+                <td>{$p->especialidad}</td>
+                <td>{$p->condicion_medica}</td>
+                <td align='center'>{$fechaInicio}</td>
+                <td align='center'>{$fechaFin}</td>
+                <td align='center'>{$horaInicio}</td>
+                <td align='center'>{$horaFin}</td>
+            </tr>";
         }
 
         $html .= "</table>" . $this->htmlTotalRegistros(count($registros));
@@ -873,11 +764,14 @@ class ReportesPermisoController extends Controller
 
     // ─────────────────────────────────────────────────────────────
     //  5. PERMISO INCAPACIDAD
+    //  (no tiene condicion/fecha_fraccionado: se filtra por
+    //  solapamiento directo de fecha_inicio / fecha_fin)
     // ─────────────────────────────────────────────────────────────
-    private function pdfIncapacidad($idEmpleado, $desde, $hasta)
+    private function pdfIncapacidad($idEmpleado, $desde, $hasta, $idUnidad = null)
     {
         $registros = PermisoIncapacidad::with(['empleado', 'tipoIncapacidad', 'riesgo'])
             ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
+            ->when($idUnidad, fn($q) => $q->whereHas('empleado', fn($qq) => $qq->where('id_unidad', $idUnidad)))
             ->whereDate('fecha_inicio', '<=', $hasta)
             ->whereDate('fecha_fin', '>=', $desde)
             ->orderBy('fecha_inicio')
@@ -889,21 +783,21 @@ class ReportesPermisoController extends Controller
         $html = $this->htmlCabecera('REPORTE DE PERMISOS POR INCAPACIDAD', $desde, $hasta);
 
         $html .= "
-    <table width='100%' border='1' cellpadding='4' style='border-collapse:collapse;font-size:9px;'>
-        <tr style='background:#8a8f97; color:#fff; font-weight:bold; text-align:center;'>
-            <td width='3%'>#</td>
-            <td width='18%'>EMPLEADO</td>
-            <td width='11%'>UNIDAD</td>
-            <td width='11%'>CARGO</td>
-            <td width='11%'>TIPO INCAPACIDAD</td>
-            <td width='9%'>RIESGO</td>
-            <td width='13%'>DIAGNÓSTICO</td>
-            <td width='6%'>N° DOC.</td>
-            <td width='8%'>INICIO</td>
-            <td width='8%'>FIN</td>
-            <td width='4%'>DÍAS</td>
-            <td width='11%'>HOSPITALIZACIÓN</td>
-        </tr>";
+        <table width='100%' border='1' cellpadding='4' style='border-collapse:collapse;font-size:9px;'>
+            <tr style='background:#8a8f97; color:#fff; font-weight:bold; text-align:center;'>
+                <td width='3%'>#</td>
+                <td width='18%'>EMPLEADO</td>
+                <td width='11%'>UNIDAD</td>
+                <td width='11%'>CARGO</td>
+                <td width='11%'>TIPO INCAPACIDAD</td>
+                <td width='9%'>RIESGO</td>
+                <td width='13%'>DIAGNÓSTICO</td>
+                <td width='6%'>N° DOC.</td>
+                <td width='8%'>INICIO</td>
+                <td width='8%'>FIN</td>
+                <td width='4%'>DÍAS</td>
+                <td width='11%'>HOSPITALIZACIÓN</td>
+            </tr>";
 
         foreach ($registros as $i => $p) {
             $hospitaliza = $p->hospitalizacion
@@ -912,37 +806,37 @@ class ReportesPermisoController extends Controller
             $bg = $i % 2 === 0 ? '#f9f9f9' : '#fff';
 
             $html .= "
-        <tr style='background:{$bg};'>
-            <td align='center'>" . ($i + 1) . "</td>
-            <td>{$p->empleado?->nombre}</td>
-            <td>{$p->unidad}</td>
-            <td>{$p->cargo}</td>
-            <td>{$p->tipoIncapacidad?->nombre}</td>
-            <td>{$p->riesgo?->nombre}</td>
-            <td>{$p->diagnostico}</td>
-            <td align='center'>{$p->numero}</td>
-            <td align='center'>{$fmt($p->fecha_inicio)}</td>
-            <td align='center'>{$fmt($p->fecha_fin)}</td>
-            <td align='center'>{$p->dias}</td>
-            <td align='center'>{$hospitaliza}</td>
-        </tr>";
+            <tr style='background:{$bg};'>
+                <td align='center'>" . ($i + 1) . "</td>
+                <td>{$p->empleado?->nombre}</td>
+                <td>{$p->unidad}</td>
+                <td>{$p->cargo}</td>
+                <td>{$p->tipoIncapacidad?->nombre}</td>
+                <td>{$p->riesgo?->nombre}</td>
+                <td>{$p->diagnostico}</td>
+                <td align='center'>{$p->numero}</td>
+                <td align='center'>{$fmt($p->fecha_inicio)}</td>
+                <td align='center'>{$fmt($p->fecha_fin)}</td>
+                <td align='center'>{$p->dias}</td>
+                <td align='center'>{$hospitaliza}</td>
+            </tr>";
         }
 
         $totalDias = $registros->sum('dias');
 
         $html .= "</table>
-        <br>
-        <table width='28%' border='1' cellpadding='4'
-               style='border-collapse:collapse;font-size:9px;margin-left:auto;'>
-            <tr style='background:#e8e8e8; font-weight:bold;'>
-                <td>Total registros</td>
-                <td align='center'>" . count($registros) . "</td>
-            </tr>
-            <tr style='background:#e8e8e8; font-weight:bold;'>
-                <td>Total días incapacidad</td>
-                <td align='center'>{$totalDias}</td>
-            </tr>
-        </table>";
+            <br>
+            <table width='28%' border='1' cellpadding='4'
+                   style='border-collapse:collapse;font-size:9px;margin-left:auto;'>
+                <tr style='background:#e8e8e8; font-weight:bold;'>
+                    <td>Total registros</td>
+                    <td align='center'>" . count($registros) . "</td>
+                </tr>
+                <tr style='background:#e8e8e8; font-weight:bold;'>
+                    <td>Total días incapacidad</td>
+                    <td align='center'>{$totalDias}</td>
+                </tr>
+            </table>";
 
         $mpdf->WriteHTML($html);
         return $mpdf->Output('Reporte_Incapacidades.pdf', 'I');
@@ -951,76 +845,62 @@ class ReportesPermisoController extends Controller
     // ─────────────────────────────────────────────────────────────
     //  6. PERMISO OTROS
     // ─────────────────────────────────────────────────────────────
-    private function pdfOtros($idEmpleado, $desde, $hasta)
+    private function pdfOtros($idEmpleado, $desde, $hasta, $idUnidad = null)
     {
-        $registros = PermisoOtro::with('empleado')
-            ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
-            ->where(function ($q) use ($desde, $hasta) {
-                $q->where(function ($q2) use ($desde, $hasta) {
-                    $q2->where('condicion', 1)
-                        ->whereDate('fecha_fraccionado', '>=', $desde)
-                        ->whereDate('fecha_fraccionado', '<=', $hasta);
-                })
-                    ->orWhere(function ($q2) use ($desde, $hasta) {
-                        $q2->where('condicion', 0)
-                            ->whereDate('fecha_inicio', '<=', $hasta)
-                            ->whereDate('fecha_fin', '>=', $desde);
-                    });
-            })
-            ->orderByRaw('COALESCE(fecha_fraccionado, fecha_inicio)')
-            ->get();
-
-        $fmt = fn($fecha) => $fecha ? \Carbon\Carbon::parse($fecha)->format('d-m-Y') : '-';
+        $registros = $this->filtrarPorFechaPermiso(
+            PermisoOtro::with('empleado')
+                ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
+                ->when($idUnidad, fn($q) => $q->whereHas('empleado', fn($qq) => $qq->where('id_unidad', $idUnidad))),
+            $desde, $hasta
+        )->get();
 
         $mpdf = $this->mpdfHorizontal('Reporte - Otros Permisos');
         $html = $this->htmlCabecera('REPORTE DE OTROS PERMISOS', $desde, $hasta);
 
         $html .= "
-    <table width='100%' border='1' cellpadding='4' style='border-collapse:collapse;font-size:9px;'>
-        <tr style='background:#8a8f97; color:#fff; font-weight:bold; text-align:center;'>
-            <td width='3%'>#</td>
-            <td width='21%'>EMPLEADO</td>
-            <td width='14%'>UNIDAD</td>
-            <td width='14%'>CARGO</td>
-            <td width='11%'>CONDICIÓN</td>
-            <td width='10%'>FECHA INICIO</td>
-            <td width='10%'>FECHA FIN</td>
-            <td width='6%'>HORA INICIO</td>
-            <td width='6%'>HORA FIN</td>
-            <td width='11%'>RAZÓN</td>
-        </tr>";
+        <table width='100%' border='1' cellpadding='4' style='border-collapse:collapse;font-size:9px;'>
+            <tr style='background:#8a8f97; color:#fff; font-weight:bold; text-align:center;'>
+                <td width='3%'>#</td>
+                <td width='21%'>EMPLEADO</td>
+                <td width='14%'>UNIDAD</td>
+                <td width='14%'>CARGO</td>
+                <td width='11%'>CONDICIÓN</td>
+                <td width='10%'>FECHA INICIO</td>
+                <td width='10%'>FECHA FIN</td>
+                <td width='6%'>HORA INICIO</td>
+                <td width='6%'>HORA FIN</td>
+                <td width='8%'>RAZÓN</td>
+            </tr>";
 
         foreach ($registros as $i => $p) {
             $condicion   = $p->condicion ? 'Fraccionado' : 'Día Completo';
-
             $fechaInicio = $p->condicion
-                ? $fmt($p->fecha_fraccionado)
-                : $fmt($p->fecha_inicio);
-
-            $fechaFin    = $p->condicion ? '-' : $fmt($p->fecha_fin);
-
+                ? ($p->fecha_fraccionado ? Carbon::parse($p->fecha_fraccionado)->format('d-m-Y') : '-')
+                : ($p->fecha_inicio ? Carbon::parse($p->fecha_inicio)->format('d-m-Y') : '-');
+            $fechaFin    = $p->condicion
+                ? '-'
+                : ($p->fecha_fin ? Carbon::parse($p->fecha_fin)->format('d-m-Y') : '-');
             $horaInicio  = $p->condicion ? ($p->hora_inicio ?? '-') : '-';
             $horaFin     = $p->condicion ? ($p->hora_fin    ?? '-') : '-';
             $bg          = $i % 2 === 0 ? '#f9f9f9' : '#fff';
 
             $html .= "
-        <tr style='background:{$bg};'>
-            <td align='center'>" . ($i + 1) . "</td>
-            <td>{$p->empleado->nombre}</td>
-            <td>{$p->unidad}</td>
-            <td>{$p->cargo}</td>
-            <td align='center'>{$condicion}</td>
-            <td align='center'>{$fechaInicio}</td>
-            <td align='center'>{$fechaFin}</td>
-            <td align='center'>{$horaInicio}</td>
-            <td align='center'>{$horaFin}</td>
-            <td>{$p->razon}</td>
-        </tr>";
+            <tr style='background:{$bg};'>
+                <td align='center'>" . ($i + 1) . "</td>
+                <td>{$p->empleado->nombre}</td>
+                <td>{$p->unidad}</td>
+                <td>{$p->cargo}</td>
+                <td align='center'>{$condicion}</td>
+                <td align='center'>{$fechaInicio}</td>
+                <td align='center'>{$fechaFin}</td>
+                <td align='center'>{$horaInicio}</td>
+                <td align='center'>{$horaFin}</td>
+                <td>{$p->razon}</td>
+            </tr>";
         }
 
         $html .= "</table>" . $this->htmlTotalRegistros(count($registros));
         $mpdf->WriteHTML($html);
         return $mpdf->Output('Reporte_Otros_Permisos.pdf', 'I');
     }
-
 }

@@ -19,6 +19,7 @@ use App\Models\PermisosUnidades;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Spatie\Permission\Exceptions\RoleDoesNotExist;
 use Spatie\Permission\Models\Permission;
@@ -1182,9 +1183,10 @@ class PermisoController extends Controller
 
 
 
-    // MÉTODO: guardarPermisoPersonal
     public function guardarPermisoPersonal(Request $request)
     {
+        Log::info('=== INICIO guardarPermisoPersonal ===', $request->all());
+
         $regla = array(
             'empleado_id'  => 'required',
             'condicion'    => 'required',
@@ -1194,14 +1196,18 @@ class PermisoController extends Controller
 
         $validar = Validator::make($request->all(), $regla);
         if ($validar->fails()) {
-            return ['success' => 0, 'message' => 'Datos incompletos'];
+            Log::warning('Validación falló', $validar->errors()->toArray());
+            // OJO: esto NO es un JSON válido para el frontend, corregido abajo
+            return response()->json(['success' => 0, 'message' => 'Datos incompletos', 'errores' => $validar->errors()]);
         }
 
         try {
 
             $empleado = PermisosEmpleados::find($request->empleado_id);
+            Log::info('Empleado encontrado', ['empleado' => $empleado]);
 
             if (!$empleado) {
+                Log::warning('Empleado no encontrado', ['empleado_id' => $request->empleado_id]);
                 return response()->json(['success' => 0, 'message' => 'Empleado no encontrado']);
             }
 
@@ -1222,6 +1228,13 @@ class PermisoController extends Controller
                 ? \Carbon\Carbon::parse($request->fecha_fin)->format('Y-m-d')
                 : null;
 
+            Log::info('Fechas convertidas', [
+                'fechaEntrego'     => $fechaEntrego,
+                'fechaFraccionado' => $fechaFraccionado,
+                'fechaInicio'      => $fechaInicio,
+                'fechaFin'         => $fechaFin,
+            ]);
+
             // ===============================
             // 📅 Año para validación de límites
             // ===============================
@@ -1234,6 +1247,8 @@ class PermisoController extends Controller
                 ->whereYear('fecha', $anio)
                 ->where('goce', $request->goce_sueldo)
                 ->get();
+
+            Log::info('Permisos previos del año encontrados', ['cantidad' => $permisosDelAnio->count()]);
 
             $totalMinutosUsados  = 0;
             $minutosSolicitados  = 0;
@@ -1258,6 +1273,11 @@ class PermisoController extends Controller
                 $minutosSolicitados = $request->duracion_minutos;
             }
 
+            Log::info('Cálculo de minutos', [
+                'totalMinutosUsados' => $totalMinutosUsados,
+                'minutosSolicitados' => $minutosSolicitados,
+            ]);
+
             if ($request->goce_sueldo == 1) {
                 $limiteMinutos = 5 * 480; // 5 días = 2400 minutos
                 $tipoGoce      = 'Con goce de sueldo';
@@ -1268,6 +1288,13 @@ class PermisoController extends Controller
 
             if (($totalMinutosUsados + $minutosSolicitados) > $limiteMinutos) {
                 $disponibles = $limiteMinutos - $totalMinutosUsados;
+                Log::warning('Límite excedido', [
+                    'tipoGoce'    => $tipoGoce,
+                    'limite'      => $limiteMinutos,
+                    'usados'      => $totalMinutosUsados,
+                    'solicitando' => $minutosSolicitados,
+                    'disponibles' => $disponibles,
+                ]);
                 return response()->json([
                     'success' => 0,
                     'tipo'    => 'limite_excedido',
@@ -1285,7 +1312,6 @@ class PermisoController extends Controller
 
             // ===============================
             // 🔎 VERIFICAR DUPLICADOS
-            // Regla: mismo empleado + misma condicion + solapamiento (sin importar goce)
             // ===============================
             if (!$request->forzar_guardado) {
 
@@ -1293,8 +1319,6 @@ class PermisoController extends Controller
                     ->where('condicion', $request->condicion);
 
                 if ($request->condicion == 1) {
-
-                    // Fraccionado: misma fecha + solapamiento de horas
                     $query->where('fecha_fraccionado', $fechaFraccionado)
                         ->where(function ($q) use ($request) {
                             $q->whereBetween('hora_inicio', [$request->hora_inicio, $request->hora_fin])
@@ -1304,10 +1328,7 @@ class PermisoController extends Controller
                                         ->where('hora_fin', '>=', $request->hora_fin);
                                 });
                         });
-
                 } else {
-
-                    // Completo: solapamiento de fechas
                     $query->where(function ($q) use ($fechaInicio, $fechaFin) {
                         $q->whereBetween('fecha_inicio', [$fechaInicio, $fechaFin])
                             ->orWhereBetween('fecha_fin', [$fechaInicio, $fechaFin])
@@ -1318,7 +1339,11 @@ class PermisoController extends Controller
                     });
                 }
 
+                Log::info('SQL de verificación de duplicados', ['sql' => $query->toSql(), 'bindings' => $query->getBindings()]);
+
                 $duplicados = $query->get();
+
+                Log::info('Duplicados encontrados', ['cantidad' => $duplicados->count()]);
 
                 if ($duplicados->count() > 0) {
 
@@ -1350,29 +1375,46 @@ class PermisoController extends Controller
             $unidad = PermisosUnidades::find($empleado->id_unidad);
             $cargo  = PermisosCargos::find($empleado->id_cargo);
 
-            PermisoPersonal::create([
+            Log::info('Unidad y cargo resueltos', [
+                'id_unidad' => $empleado->id_unidad ?? null,
+                'id_cargo'  => $empleado->id_cargo ?? null,
+                'unidad'    => $unidad,
+                'cargo'     => $cargo,
+            ]);
+
+            $datosGuardar = [
                 'id_empleado'       => $request->empleado_id,
                 'unidad'            => $unidad->nombre ?? null,
                 'cargo'             => $cargo->nombre ?? null,
-                'fecha'             => $fechaEntrego,       // Y-m-d ✅
+                'fecha'             => $fechaEntrego,
                 'condicion'         => $request->condicion,
-                'fecha_fraccionado' => $fechaFraccionado,   // Y-m-d ✅
+                'fecha_fraccionado' => $fechaFraccionado,
                 'goce'              => $request->goce_sueldo,
-                'fecha_inicio'      => $fechaInicio,        // Y-m-d ✅
-                'fecha_fin'         => $fechaFin,           // Y-m-d ✅
+                'fecha_inicio'      => $fechaInicio,
+                'fecha_fin'         => $fechaFin,
                 'hora_inicio'       => $request->hora_inicio,
                 'hora_fin'          => $request->hora_fin,
                 'razon'             => $request->razon,
-            ]);
+            ];
+
+            Log::info('Datos a guardar', $datosGuardar);
+
+            $nuevoPermiso = PermisoPersonal::create($datosGuardar);
+
+            Log::info('Permiso guardado exitosamente', ['id' => $nuevoPermiso->id]);
 
             return response()->json(['success' => 1]);
 
         } catch (\Exception $e) {
+            Log::error('EXCEPCIÓN en guardarPermisoPersonal', [
+                'mensaje' => $e->getMessage(),
+                'archivo' => $e->getFile(),
+                'linea'   => $e->getLine(),
+                'trace'   => $e->getTraceAsString(),
+            ]);
             return response()->json(['success' => 0, 'message' => $e->getMessage()]);
         }
     }
-
-
 
 
 

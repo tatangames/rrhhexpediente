@@ -20,7 +20,7 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Font;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-class ReportesExcelPermisoController extends Controller
+class ReportesExcelUnidadesPermisosController extends Controller
 {
     public function __construct()
     {
@@ -56,6 +56,16 @@ class ReportesExcelPermisoController extends Controller
                         ->whereDate('fecha_fin', '>=', $desde);
                 });
         })->orderByRaw('COALESCE(fecha_fraccionado, fecha_inicio)');
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    //  Helper: filtra por unidad usando la relación con empleado
+    // ─────────────────────────────────────────────────────────────
+    private function filtrarPorUnidad($query, $idUnidad)
+    {
+        return $query->when($idUnidad, function ($q) use ($idUnidad) {
+            $q->whereHas('empleado', fn($qq) => $qq->where('id_unidad', $idUnidad));
+        });
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -138,15 +148,50 @@ class ReportesExcelPermisoController extends Controller
     }
 
     // ─────────────────────────────────────────────────────────────
-    //  RUTA PRINCIPAL
+    //  Helper: escribe encabezados de columna en la fila dada
     // ─────────────────────────────────────────────────────────────
-    public function generarReportePermisoEXCEL(Request $request)
+    private function escribirEncabezados(object $sheet, array $cols, array $widths, int $fila): void
+    {
+        foreach ($cols as $idx => $col) {
+            $letra = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($idx + 1);
+            $sheet->setCellValue("{$letra}{$fila}", $col);
+            $sheet->getColumnDimension($letra)->setWidth($widths[$idx]);
+        }
+        $letraFin = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(count($cols));
+        $sheet->getRowDimension($fila)->setRowHeight(28);
+        $this->estiloHeader($sheet, "A{$fila}:{$letraFin}{$fila}");
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    //  Helper: fila de total registros al final
+    // ─────────────────────────────────────────────────────────────
+    private function filaTotales(object $sheet, string $celda, int $totalCols, int $total): void
+    {
+        $fila     = (int) filter_var($celda, FILTER_SANITIZE_NUMBER_INT);
+        $letraFin = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($totalCols);
+
+        $sheet->mergeCells("A{$fila}:{$letraFin}{$fila}");
+        $sheet->setCellValue("A{$fila}", "Total de registros: {$total}");
+        $sheet->getStyle("A{$fila}:{$letraFin}{$fila}")->applyFromArray([
+            'font'      => ['bold' => true, 'size' => 8],
+            'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFE8E8E8']],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_RIGHT],
+            'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+        ]);
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    //  RUTA PRINCIPAL
+    //  (se conserva el nombre "generarReportePermisoPDFPorUnidad"
+    //  para coincidir con la ruta 'permiso.excel.generar.unidad')
+    // ─────────────────────────────────────────────────────────────
+    public function generarReportePermisoPDFPorUnidad(Request $request)
     {
         $request->validate([
             'tipo_permiso' => 'required|integer|between:0,6',
             'fecha_desde'  => 'required|date',
             'fecha_hasta'  => 'required|date|after_or_equal:fecha_desde',
-            'id_empleado'  => 'nullable|integer',
+            'id_unidad'    => 'nullable|integer',
         ], [
             'fecha_desde.required'       => 'La fecha de inicio es requerida.',
             'fecha_hasta.required'       => 'La fecha de fin es requerida.',
@@ -156,70 +201,67 @@ class ReportesExcelPermisoController extends Controller
 
         $tipo = (int) $request->tipo_permiso;
 
-        $idEmpleado = ($request->id_empleado && $request->id_empleado != '0')
-            ? $request->id_empleado
+        $idUnidad = ($request->id_unidad && $request->id_unidad != '0')
+            ? $request->id_unidad
             : null;
 
         $desde = $request->fecha_desde;
         $hasta = $request->fecha_hasta;
 
         if ($tipo === 0) {
-            return $this->excelTodos($idEmpleado, $desde, $hasta);
+            return $this->excelTodos($idUnidad, $desde, $hasta);
         }
 
         return match ($tipo) {
-            1 => $this->excelPersonal($idEmpleado, $desde, $hasta),
-            2 => $this->excelCompensatorio($idEmpleado, $desde, $hasta),
-            3 => $this->excelEnfermedad($idEmpleado, $desde, $hasta),
-            4 => $this->excelConsultaMedica($idEmpleado, $desde, $hasta),
-            5 => $this->excelIncapacidad($idEmpleado, $desde, $hasta),
-            6 => $this->excelOtros($idEmpleado, $desde, $hasta),
+            1 => $this->excelPersonal($idUnidad, $desde, $hasta),
+            2 => $this->excelCompensatorio($idUnidad, $desde, $hasta),
+            3 => $this->excelEnfermedad($idUnidad, $desde, $hasta),
+            4 => $this->excelConsultaMedica($idUnidad, $desde, $hasta),
+            5 => $this->excelIncapacidad($idUnidad, $desde, $hasta),
+            6 => $this->excelOtros($idUnidad, $desde, $hasta),
         };
     }
 
     // ─────────────────────────────────────────────────────────────
-    //  0. TODOS LOS TIPOS (un Excel con 7 hojas)
+    //  0. TODOS LOS TIPOS (un Excel con 7 hojas) - POR UNIDAD
     // ─────────────────────────────────────────────────────────────
-    private function excelTodos($idEmpleado, $desde, $hasta): StreamedResponse
+    private function excelTodos($idUnidad, $desde, $hasta): StreamedResponse
     {
         $spreadsheet = new Spreadsheet();
         $spreadsheet->removeSheetByIndex(0); // quita la hoja vacía por defecto
 
         // ── Consultas ─────────────────────────────────────────
         $personales = $this->filtrarPorFechaPermiso(
-            PermisoPersonal::with('empleado')
-                ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado)),
+            $this->filtrarPorUnidad(PermisoPersonal::with('empleado'), $idUnidad),
             $desde, $hasta
         )->get();
 
         $compensatorios = $this->filtrarPorFechaPermiso(
-            PermisoCompensatorio::with('empleado')
-                ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado)),
+            $this->filtrarPorUnidad(PermisoCompensatorio::with('empleado'), $idUnidad),
             $desde, $hasta
         )->get();
 
         $enfermedades = $this->filtrarPorFechaPermiso(
-            PermisoEnfermedad::with('empleado')
-                ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado)),
+            $this->filtrarPorUnidad(PermisoEnfermedad::with('empleado'), $idUnidad),
             $desde, $hasta
         )->get();
 
         $consultas = $this->filtrarPorFechaPermiso(
-            PermisoConsultaMedica::with('empleado')
-                ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado)),
+            $this->filtrarPorUnidad(PermisoConsultaMedica::with('empleado'), $idUnidad),
             $desde, $hasta
         )->get();
 
-        $incapacidades = PermisoIncapacidad::with(['empleado', 'tipoIncapacidad', 'riesgo'])
-            ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
+        $incapacidades = $this->filtrarPorUnidad(
+            PermisoIncapacidad::with(['empleado', 'tipoIncapacidad', 'riesgo']),
+            $idUnidad
+        )
             ->whereDate('fecha_inicio', '<=', $hasta)
             ->whereDate('fecha_fin', '>=', $desde)
             ->orderBy('fecha_inicio')
             ->get();
 
         $otros = $this->filtrarPorFechaPermiso(
-            PermisoOtro::with('empleado')
-                ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado)),
+            $this->filtrarPorUnidad(PermisoOtro::with('empleado'), $idUnidad),
             $desde, $hasta
         )->get();
 
@@ -401,9 +443,8 @@ class ReportesExcelPermisoController extends Controller
         $shR = new \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet($spreadsheet, 'Resumen General');
         $spreadsheet->addSheet($shR);
 
-        $this->cabeceraHoja($shR, 'RESUMEN GENERAL DE PERMISOS', $desde, $hasta, 3);
+        $this->cabeceraHoja($shR, 'RESUMEN GENERAL DE PERMISOS POR UNIDAD', $desde, $hasta, 3);
 
-        // Encabezado tabla resumen
         $shR->setCellValue('A4', 'TIPO DE PERMISO');
         $shR->setCellValue('B4', 'TOTAL REGISTROS');
         $shR->setCellValue('C4', 'OBSERVACIÓN');
@@ -419,7 +460,6 @@ class ReportesExcelPermisoController extends Controller
         $shR->getColumnDimension('B')->setWidth(18);
         $shR->getColumnDimension('C')->setWidth(35);
 
-        // Filas de datos resumen
         $totalDiasIncap = $incapacidades->sum('dias');
         $totalGeneral   = count($personales) + count($compensatorios) + count($enfermedades)
             + count($consultas) + count($incapacidades) + count($otros);
@@ -450,7 +490,6 @@ class ReportesExcelPermisoController extends Controller
             $fila++;
         }
 
-        // Fila TOTAL GENERAL
         $shR->setCellValue("A{$fila}", 'TOTAL GENERAL');
         $shR->setCellValue("B{$fila}", $totalGeneral);
         $shR->setCellValue("C{$fila}", '');
@@ -463,20 +502,18 @@ class ReportesExcelPermisoController extends Controller
         ]);
         $shR->getRowDimension($fila)->setRowHeight(18);
 
-        // Activa la hoja resumen al abrir el archivo
         $spreadsheet->setActiveSheetIndexByName('Resumen General');
 
-        return $this->descargar($spreadsheet, 'Reporte_General_Permisos.xlsx');
+        return $this->descargar($spreadsheet, 'Reporte_General_Permisos_Unidad.xlsx');
     }
 
     // ─────────────────────────────────────────────────────────────
     //  1. PERMISO PERSONAL
     // ─────────────────────────────────────────────────────────────
-    private function excelPersonal($idEmpleado, $desde, $hasta): StreamedResponse
+    private function excelPersonal($idUnidad, $desde, $hasta): StreamedResponse
     {
         $registros = $this->filtrarPorFechaPermiso(
-            PermisoPersonal::with('empleado')
-                ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado)),
+            $this->filtrarPorUnidad(PermisoPersonal::with('empleado'), $idUnidad),
             $desde, $hasta
         )->get();
 
@@ -490,10 +527,6 @@ class ReportesExcelPermisoController extends Controller
         $this->cabeceraHoja($sheet, 'REPORTE DE PERMISOS PERSONALES', $desde, $hasta, count($cols));
         $this->escribirEncabezados($sheet, $cols, $widths, 4);
 
-        $porFecha     = [];
-        $totalDias    = 0;
-        $totalMinutos = 0;
-
         $fila = 5;
         foreach ($registros as $i => $p) {
             $condicion   = $p->condicion ? 'Fraccionado' : 'Día Completo';
@@ -502,33 +535,6 @@ class ReportesExcelPermisoController extends Controller
             $fechaFin    = $p->condicion ? '' : $this->fmt($p->fecha_fin);
             $horaInicio  = $p->condicion ? ($p->hora_inicio ?? '') : '';
             $horaFin     = $p->condicion ? ($p->hora_fin    ?? '') : '';
-
-            // Clave del resumen: la fecha real del permiso (no la de entrega)
-            // Si el registro no tiene ninguna de las dos fechas, se agrupa
-            // bajo una clave especial 'SIN_FECHA' para no romper el ksort.
-            $claveOriginal = $p->condicion ? $p->fecha_fraccionado : $p->fecha_inicio;
-            $clave = $claveOriginal ?? 'SIN_FECHA';
-
-            if (!isset($porFecha[$clave])) {
-                $porFecha[$clave] = ['dias' => 0, 'minutos' => 0, 'con_goce' => 0, 'sin_goce' => 0];
-            }
-            $p->goce ? $porFecha[$clave]['con_goce']++ : $porFecha[$clave]['sin_goce']++;
-
-            if (!$p->condicion) {
-                if ($p->fecha_inicio && $p->fecha_fin) {
-                    $dias = Carbon::parse($p->fecha_inicio)
-                            ->diffInDays(Carbon::parse($p->fecha_fin)) + 1;
-                    $porFecha[$clave]['dias'] += $dias;
-                    $totalDias               += $dias;
-                }
-            } else {
-                if ($p->hora_inicio && $p->hora_fin) {
-                    $mins = Carbon::parse($p->hora_inicio)
-                        ->diffInMinutes(Carbon::parse($p->hora_fin));
-                    $porFecha[$clave]['minutos'] += $mins;
-                    $totalMinutos               += $mins;
-                }
-            }
 
             $sheet->fromArray([
                 $i + 1, $p->empleado?->nombre, $p->unidad, $p->cargo,
@@ -545,112 +551,17 @@ class ReportesExcelPermisoController extends Controller
             $fila++;
         }
 
-        $fila++;
-        $letraFin = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(count($cols));
-
-        $sheet->mergeCells("A{$fila}:{$letraFin}{$fila}");
-        $sheet->setCellValue("A{$fila}", 'RESUMEN POR FECHA');
-        $sheet->getStyle("A{$fila}:{$letraFin}{$fila}")->applyFromArray([
-            'font'      => ['bold' => true, 'size' => 9, 'color' => ['argb' => 'FFFFFFFF']],
-            'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF4472C4']],
-            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
-            'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
-        ]);
-        $fila++;
-
-        $headersResumen = ['FECHA PERMISO', 'DÍAS COMPLETOS', 'TIEMPO FRACCIONADO', 'CON GOCE', 'SIN GOCE'];
-        foreach ($headersResumen as $idx => $titulo) {
-            $letra = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($idx + 1);
-            $sheet->setCellValue("{$letra}{$fila}", $titulo);
-        }
-        $sheet->getStyle("A{$fila}:E{$fila}")->applyFromArray([
-            'font'      => ['bold' => true, 'size' => 8, 'color' => ['argb' => 'FFFFFFFF']],
-            'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF8A8F97']],
-            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
-            'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
-        ]);
-        $fila++;
-
-        // Ordena por fecha (SORT_STRING evita el warning si hubiera
-        // claves no comparables) y deja 'SIN_FECHA' al final.
-        uksort($porFecha, function ($a, $b) {
-            if ($a === 'SIN_FECHA') return 1;
-            if ($b === 'SIN_FECHA') return -1;
-            return strcmp($a, $b);
-        });
-
-        $totalConGoce = 0;
-        $totalSinGoce = 0;
-
-        foreach ($porFecha as $fecha => $v) {
-            $mins        = $v['minutos'];
-            $horas       = intdiv($mins, 60);
-            $minR        = $mins % 60;
-            $tiempoTexto = $mins > 0 ? "{$mins} min ({$horas}h {$minR}m)" : '-';
-            $diasTexto   = $v['dias'] > 0 ? $v['dias'] . ' día(s)' : '-';
-
-            $totalConGoce += $v['con_goce'];
-            $totalSinGoce += $v['sin_goce'];
-
-            $fechaTexto = ($fecha !== 'SIN_FECHA' && $fecha)
-                ? Carbon::parse($fecha)->format('d-m-Y')
-                : 'Sin fecha registrada';
-
-            $sheet->setCellValue("A{$fila}", $fechaTexto);
-            $sheet->setCellValue("B{$fila}", $diasTexto);
-            $sheet->setCellValue("C{$fila}", $tiempoTexto);
-            $sheet->setCellValue("D{$fila}", $v['con_goce'] > 0 ? $v['con_goce'] : '-');
-            $sheet->setCellValue("E{$fila}", $v['sin_goce'] > 0 ? $v['sin_goce'] : '-');
-
-            $sheet->getStyle("A{$fila}:E{$fila}")->applyFromArray([
-                'font'      => ['size' => 8],
-                'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFF2F2F2']],
-                'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
-                'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
-            ]);
-            if ($v['con_goce'] > 0) {
-                $sheet->getStyle("D{$fila}")->getFont()->setBold(true)->getColor()->setARGB('FF1a7a3a');
-            }
-            if ($v['sin_goce'] > 0) {
-                $sheet->getStyle("E{$fila}")->getFont()->setBold(true)->getColor()->setARGB('FFb02020');
-            }
-            $fila++;
-        }
-
-        $totalMinsH       = intdiv($totalMinutos, 60);
-        $totalMinsR       = $totalMinutos % 60;
-        $totalTiempoTexto = $totalMinutos > 0 ? "{$totalMinutos} min ({$totalMinsH}h {$totalMinsR}m)" : '-';
-        $totalDiasTexto   = $totalDias > 0 ? "{$totalDias} día(s)" : '-';
-
-        $sheet->setCellValue("A{$fila}", 'TOTAL GENERAL');
-        $sheet->setCellValue("B{$fila}", $totalDiasTexto);
-        $sheet->setCellValue("C{$fila}", $totalTiempoTexto);
-        $sheet->setCellValue("D{$fila}", $totalConGoce > 0 ? $totalConGoce : '-');
-        $sheet->setCellValue("E{$fila}", $totalSinGoce > 0 ? $totalSinGoce : '-');
-        $sheet->getStyle("A{$fila}:E{$fila}")->applyFromArray([
-            'font'      => ['bold' => true, 'size' => 8, 'color' => ['argb' => 'FFFFFFFF']],
-            'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF4472C4']],
-            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
-            'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
-        ]);
-
-        $sheet->getColumnDimension('A')->setWidth(14);
-        $sheet->getColumnDimension('B')->setWidth(16);
-        $sheet->getColumnDimension('C')->setWidth(24);
-        $sheet->getColumnDimension('D')->setWidth(12);
-        $sheet->getColumnDimension('E')->setWidth(12);
-
-        return $this->descargar($spreadsheet, 'Reporte_Permisos_Personales.xlsx');
+        $this->filaTotales($sheet, "A{$fila}", count($cols), count($registros));
+        return $this->descargar($spreadsheet, 'Reporte_Permisos_Personales_Unidad.xlsx');
     }
 
     // ─────────────────────────────────────────────────────────────
     //  2. PERMISO COMPENSATORIO
     // ─────────────────────────────────────────────────────────────
-    private function excelCompensatorio($idEmpleado, $desde, $hasta): StreamedResponse
+    private function excelCompensatorio($idUnidad, $desde, $hasta): StreamedResponse
     {
         $registros = $this->filtrarPorFechaPermiso(
-            PermisoCompensatorio::with('empleado')
-                ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado)),
+            $this->filtrarPorUnidad(PermisoCompensatorio::with('empleado'), $idUnidad),
             $desde, $hasta
         )->get();
 
@@ -684,17 +595,16 @@ class ReportesExcelPermisoController extends Controller
         }
 
         $this->filaTotales($sheet, "A{$fila}", count($cols), count($registros));
-        return $this->descargar($spreadsheet, 'Reporte_Permisos_Compensatorios.xlsx');
+        return $this->descargar($spreadsheet, 'Reporte_Permisos_Compensatorios_Unidad.xlsx');
     }
 
     // ─────────────────────────────────────────────────────────────
     //  3. PERMISO ENFERMEDAD
     // ─────────────────────────────────────────────────────────────
-    private function excelEnfermedad($idEmpleado, $desde, $hasta): StreamedResponse
+    private function excelEnfermedad($idUnidad, $desde, $hasta): StreamedResponse
     {
         $registros = $this->filtrarPorFechaPermiso(
-            PermisoEnfermedad::with('empleado')
-                ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado)),
+            $this->filtrarPorUnidad(PermisoEnfermedad::with('empleado'), $idUnidad),
             $desde, $hasta
         )->get();
 
@@ -730,17 +640,16 @@ class ReportesExcelPermisoController extends Controller
         }
 
         $this->filaTotales($sheet, "A{$fila}", count($cols), count($registros));
-        return $this->descargar($spreadsheet, 'Reporte_Permisos_Enfermedad.xlsx');
+        return $this->descargar($spreadsheet, 'Reporte_Permisos_Enfermedad_Unidad.xlsx');
     }
 
     // ─────────────────────────────────────────────────────────────
     //  4. PERMISO CONSULTA MÉDICA
     // ─────────────────────────────────────────────────────────────
-    private function excelConsultaMedica($idEmpleado, $desde, $hasta): StreamedResponse
+    private function excelConsultaMedica($idUnidad, $desde, $hasta): StreamedResponse
     {
         $registros = $this->filtrarPorFechaPermiso(
-            PermisoConsultaMedica::with('empleado')
-                ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado)),
+            $this->filtrarPorUnidad(PermisoConsultaMedica::with('empleado'), $idUnidad),
             $desde, $hasta
         )->get();
 
@@ -776,7 +685,7 @@ class ReportesExcelPermisoController extends Controller
         }
 
         $this->filaTotales($sheet, "A{$fila}", count($cols), count($registros));
-        return $this->descargar($spreadsheet, 'Reporte_Consulta_Medica.xlsx');
+        return $this->descargar($spreadsheet, 'Reporte_Consulta_Medica_Unidad.xlsx');
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -784,10 +693,12 @@ class ReportesExcelPermisoController extends Controller
     //  (no tiene condicion/fecha_fraccionado: se filtra por
     //  solapamiento directo de fecha_inicio / fecha_fin)
     // ─────────────────────────────────────────────────────────────
-    private function excelIncapacidad($idEmpleado, $desde, $hasta): StreamedResponse
+    private function excelIncapacidad($idUnidad, $desde, $hasta): StreamedResponse
     {
-        $registros = PermisoIncapacidad::with(['empleado', 'tipoIncapacidad', 'riesgo'])
-            ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
+        $registros = $this->filtrarPorUnidad(
+            PermisoIncapacidad::with(['empleado', 'tipoIncapacidad', 'riesgo']),
+            $idUnidad
+        )
             ->whereDate('fecha_inicio', '<=', $hasta)
             ->whereDate('fecha_fin', '>=', $desde)
             ->orderBy('fecha_inicio')
@@ -835,17 +746,16 @@ class ReportesExcelPermisoController extends Controller
             'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
         ]);
 
-        return $this->descargar($spreadsheet, 'Reporte_Incapacidades.xlsx');
+        return $this->descargar($spreadsheet, 'Reporte_Incapacidades_Unidad.xlsx');
     }
 
     // ─────────────────────────────────────────────────────────────
     //  6. PERMISO OTROS
     // ─────────────────────────────────────────────────────────────
-    private function excelOtros($idEmpleado, $desde, $hasta): StreamedResponse
+    private function excelOtros($idUnidad, $desde, $hasta): StreamedResponse
     {
         $registros = $this->filtrarPorFechaPermiso(
-            PermisoOtro::with('empleado')
-                ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado)),
+            $this->filtrarPorUnidad(PermisoOtro::with('empleado'), $idUnidad),
             $desde, $hasta
         )->get();
 
@@ -879,40 +789,6 @@ class ReportesExcelPermisoController extends Controller
         }
 
         $this->filaTotales($sheet, "A{$fila}", count($cols), count($registros));
-        return $this->descargar($spreadsheet, 'Reporte_Otros_Permisos.xlsx');
+        return $this->descargar($spreadsheet, 'Reporte_Otros_Permisos_Unidad.xlsx');
     }
-
-    // ─────────────────────────────────────────────────────────────
-    //  Helper: escribe encabezados de columna en la fila dada
-    // ─────────────────────────────────────────────────────────────
-    private function escribirEncabezados(object $sheet, array $cols, array $widths, int $fila): void
-    {
-        foreach ($cols as $idx => $col) {
-            $letra = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($idx + 1);
-            $sheet->setCellValue("{$letra}{$fila}", $col);
-            $sheet->getColumnDimension($letra)->setWidth($widths[$idx]);
-        }
-        $letraFin = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(count($cols));
-        $sheet->getRowDimension($fila)->setRowHeight(28);
-        $this->estiloHeader($sheet, "A{$fila}:{$letraFin}{$fila}");
-    }
-
-    // ─────────────────────────────────────────────────────────────
-    //  Helper: fila de total registros al final
-    // ─────────────────────────────────────────────────────────────
-    private function filaTotales(object $sheet, string $celda, int $totalCols, int $total): void
-    {
-        $fila     = (int) filter_var($celda, FILTER_SANITIZE_NUMBER_INT);
-        $letraFin = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($totalCols);
-
-        $sheet->mergeCells("A{$fila}:{$letraFin}{$fila}");
-        $sheet->setCellValue("A{$fila}", "Total de registros: {$total}");
-        $sheet->getStyle("A{$fila}:{$letraFin}{$fila}")->applyFromArray([
-            'font'      => ['bold' => true, 'size' => 8],
-            'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFE8E8E8']],
-            'alignment' => ['horizontal' => Alignment::HORIZONTAL_RIGHT],
-            'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
-        ]);
-    }
-
 }
