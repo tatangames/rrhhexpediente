@@ -265,11 +265,9 @@ Route::get('/admin/reportes/general/index', [ReportesPermisoController::class,'i
 Route::post('/admin/reportes/permiso/pdf', [ReportesPermisoController::class, 'generarReportePermisoPDF'])->name('permiso.pdf.generar');
 Route::post('/admin/reportes/permiso/excel', [ReportesExcelPermisoController::class, 'generarReportePermisoEXCEL'])->name('permiso.excel.generar');
 
-
+// Generar Permiso PDF y EXCEL POR UNIDAD ---- MODULO PERMISOS  -------
 Route::post('/permisos/reportes/pdf/unidad', [ReportesPdfUnidadesPermisosController::class, 'generarReportePermisoPDFPorUnidad'])
     ->name('permiso.pdf.generar.unidad');
-
-
 Route::post('/permisos/reportes/excel/unidad', [ReportesExcelUnidadesPermisosController::class, 'generarReportePermisoPDFPorUnidad'])
     ->name('permiso.excel.generar.unidad');
 
