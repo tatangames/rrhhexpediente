@@ -16,6 +16,10 @@ return new class extends Migration
 
             $table->integer('px_firmas');
             $table->boolean('salto_pagina');
+
+            $table->string('jefe', 100)->nullable();
+            $table->string('cargo', 100)->nullable();
+            $table->string('area', 100)->nullable();
         });
     }
 

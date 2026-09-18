@@ -39,9 +39,11 @@
 
     <section class="content" style="margin-top: 15px">
         <div class="container-fluid">
+
             <div class="row justify-content-center">
 
-                <div class="col-md-7">
+                <!-- Bloque: Reporte por Empleado -->
+                <div class="col-md-6">
                     <div class="card card-secondary shadow">
                         <div class="card-header">
                             <h3 class="card-title">
@@ -51,7 +53,6 @@
 
                         <div class="card-body">
 
-                            <!-- Empleado -->
                             <div class="form-group">
                                 <label>Empleado:</label>
                                 <select class="form-control" id="select-empleado">
@@ -62,7 +63,6 @@
                                 </select>
                             </div>
 
-                            <!-- Tipo de Permiso -->
                             <div class="form-group">
                                 <label>Tipo de Permiso: <span style="color:red">*</span></label>
                                 <select class="form-control" id="select-tipopermiso">
@@ -81,7 +81,6 @@
                             <p>Busca por Fecha de uso del Permiso</p>
 
                             <div class="row">
-                                <!-- Fecha Desde -->
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label>Desde: <span style="color:red">*</span></label>
@@ -92,7 +91,6 @@
                                     </div>
                                 </div>
 
-                                <!-- Fecha Hasta -->
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label>Hasta: <span style="color:red">*</span></label>
@@ -104,7 +102,6 @@
                                 </div>
                             </div>
 
-                            <!-- Error de rango de fechas -->
                             <small class="text-danger d-none" id="error-rango">
                                 La fecha "Desde" no puede ser mayor que la fecha "Hasta".
                             </small>
@@ -131,7 +128,8 @@
                 </div>
 
 
-                <div class="col-md-7 mt-4">
+                <!-- Bloque: Reporte por Unidad -->
+                <div class="col-md-6">
                     <div class="card card-info shadow">
                         <div class="card-header">
                             <h3 class="card-title">
@@ -141,7 +139,6 @@
 
                         <div class="card-body">
 
-                            <!-- Unidad -->
                             <div class="form-group">
                                 <label>Unidad:</label>
                                 <select class="form-control" id="select-unidad">
@@ -152,7 +149,6 @@
                                 </select>
                             </div>
 
-                            <!-- Tipo de Permiso -->
                             <div class="form-group">
                                 <label>Tipo de Permiso: <span style="color:red">*</span></label>
                                 <select class="form-control" id="select-tipopermiso-unidad">
@@ -166,13 +162,11 @@
                                 </select>
                             </div>
 
-
                             <hr>
 
                             <p>Busca por Fecha de uso del Permiso</p>
 
                             <div class="row">
-                                <!-- Fecha Desde -->
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label>Desde: <span style="color:red">*</span></label>
@@ -183,7 +177,6 @@
                                     </div>
                                 </div>
 
-                                <!-- Fecha Hasta -->
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label>Hasta: <span style="color:red">*</span></label>
@@ -195,13 +188,11 @@
                                 </div>
                             </div>
 
-                            <!-- Error de rango de fechas -->
                             <small class="text-danger d-none" id="error-rango-unidad">
                                 La fecha "Desde" no puede ser mayor que la fecha "Hasta".
                             </small>
 
                         </div>
-
 
                         <div class="card-footer d-flex gap-2">
                             <button type="button" onclick="generarReportePorUnidad('pdf')"
@@ -223,19 +214,110 @@
                 </div>
 
             </div>
+
+
+            <!-- Bloque: Información General -->
+            <div class="row justify-content-center">
+                <div class="col-md-12">
+                    <div class="card card-primary shadow">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-info-circle mr-2"></i>Información General para Reportes
+                            </h3>
+                        </div>
+
+                        <form id="form-info-general">
+                            @csrf
+
+                            <div class="card-body">
+
+                                <!-- Fila 1: Px. Firmas y Salto de Página -->
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Distancia de Firmas: <span style="color:red">*</span></label>
+                                            <input type="number" min="0" class="form-control"
+                                                   name="px_firmas" id="px_firmas"
+                                                   value="{{ old('px_firmas', $infoGeneral->px_firmas ?? 0) }}" required>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="d-block">Salto de Página:</label>
+                                            <div class="custom-control custom-switch mt-2">
+                                                <input type="checkbox" class="custom-control-input"
+                                                       id="salto_pagina" name="salto_pagina" value="1"
+                                                    {{ old('salto_pagina', $infoGeneral->salto_pagina ?? false) ? 'checked' : '' }}>
+                                                <label class="custom-control-label" for="salto_pagina">Activar</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Fila 2: Jefe -->
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Jefe:</label>
+                                            <input type="text" maxlength="100" class="form-control"
+                                                   name="jefe" id="jefe"
+                                                   value="{{ old('jefe', $infoGeneral->jefe ?? '') }}">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Fila 3: Cargo -->
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Cargo:</label>
+                                            <input type="text" maxlength="100" class="form-control"
+                                                   name="cargo" id="cargo"
+                                                   value="{{ old('cargo', $infoGeneral->cargo ?? '') }}">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Fila 4: Área -->
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Área:</label>
+                                            <input type="text" maxlength="100" class="form-control"
+                                                   name="area" id="area"
+                                                   value="{{ old('area', $infoGeneral->area ?? '') }}">
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <div class="card-footer">
+                                <button type="submit" class="btn btn-primary" id="btn-guardar-info">
+                                    <i class="fas fa-save mr-2"></i>Guardar Cambios
+                                </button>
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+
+
         </div>
     </section>
-
-
-
 
 @stop
 
 @section('js')
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="{{ asset('js/toastr.min.js') }}"></script>
     <script src="{{ asset('js/select2.min.js') }}"></script>
 
     <script>
+
+        axios.defaults.headers.common['X-CSRF-TOKEN'] = '{{ csrf_token() }}';
 
         $('#select-empleado').select2({
             theme: "bootstrap-5",
@@ -318,7 +400,6 @@
             form.submit();
             document.body.removeChild(form);
         }
-
 
 
         $('#select-unidad').select2({
@@ -404,8 +485,53 @@
         }
 
 
+        // Actualizar Bloque de Información General (Firmas)
+        $('#form-info-general').on('submit', function (e) {
+            e.preventDefault();
+
+            const $btn = $('#btn-guardar-info');
+            const textoOriginal = $btn.html();
+
+            $('#form-info-general .is-invalid').removeClass('is-invalid');
+            $('#form-info-general .invalid-feedback').remove();
+
+            $btn.prop('disabled', true)
+                .html('<span class="spinner-border spinner-border-sm mr-2"></span> Guardando...');
+
+            const formData = {
+                px_firmas:    $('#px_firmas').val(),
+                salto_pagina: $('#salto_pagina').is(':checked') ? 1 : 0,
+                jefe:         $('#jefe').val(),
+                cargo:        $('#cargo').val(),
+                area:         $('#area').val(),
+            };
+
+            axios.post('{{ route("permisos.infogeneral.actualizar") }}', formData)
+                .then(function (response) {
+                    if (response.data.success) {
+                        toastr.success('Información actualizada correctamente.');
+                    }
+                })
+                .catch(function (error) {
+                    if (error.response && error.response.status === 422) {
+                        const errores = error.response.data.errors;
+
+                        Object.keys(errores).forEach(function (campo) {
+                            const $input = $('#' + campo);
+                            $input.addClass('is-invalid');
+                            $input.after('<div class="invalid-feedback d-block">' + errores[campo][0] + '</div>');
+                        });
+
+                        toastr.error('Revisa los campos, hay errores de validación.');
+                    } else {
+                        toastr.error('Ocurrió un error al actualizar la información.');
+                    }
+                })
+                .finally(function () {
+                    $btn.prop('disabled', false).html(textoOriginal);
+                });
+        });
 
     </script>
-
 
 @endsection

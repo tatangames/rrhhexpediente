@@ -261,6 +261,10 @@ Route::post('/admin/historial/personal/borrar', [HistorialPermisoController::cla
 // REPORTES - GENERAL ---- MODULO PERMISOS  -------
 Route::get('/admin/reportes/general/index', [ReportesPermisoController::class,'indexReportesGeneral'])->name('reporte.general.index');
 
+// ACTUALIZAR bLOQUE FIRMAS
+Route::post('/permisos/reportes/info-general', [ReportesPermisoController::class, 'actualizarInformacionGeneral'])
+    ->name('permisos.infogeneral.actualizar');
+
 // Generar Permiso PDF y EXCEL ---- MODULO PERMISOS  -------
 Route::post('/admin/reportes/permiso/pdf', [ReportesPermisoController::class, 'generarReportePermisoPDF'])->name('permiso.pdf.generar');
 Route::post('/admin/reportes/permiso/excel', [ReportesExcelPermisoController::class, 'generarReportePermisoEXCEL'])->name('permiso.excel.generar');
