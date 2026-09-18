@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Permiso;
 use App\Http\Controllers\Controller;
 use App\Models\PermisosEmpleados;
 use App\Models\PermisosUnidades;
+use App\Models\InformacionGeneral;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -412,23 +413,7 @@ class ReportesPdfUnidadesPermisosController extends Controller
             </tr>
         </table>";
 
-        $html .= "
-    <pagebreak>
-    <div style='margin-top:60mm; font-family:Arial,sans-serif;'>
-        <table width='100%' style='border-collapse:collapse;'>
-            <tr>
-                <td width='45%'></td>
-                <td width='38%' style='text-align:center; font-size:11px;'>
-                    __________________________________________<br>
-                    <span style='font-weight:bold; font-size: 14px'>Licda. Vanessa Elizabeth Ramos Figueroa</span><br>
-                    <span style='font-weight:normal; font-size: 14px'>Jefe de Talento Humano</span><br>
-                    <div style='border-top:1.5px solid #000; margin-top:5px;'></div>
-                    <span style='font-size:14px;'>Santa Ana Norte</span>
-                </td>
-                <td width='17%'></td>
-            </tr>
-        </table>
-    </div>";
+        $html .= $this->htmlFirma();
 
         $mpdf->WriteHTML($html);
 
@@ -508,6 +493,75 @@ class ReportesPdfUnidadesPermisosController extends Controller
     }
 
     // ─────────────────────────────────────────────────────────────
+    //  Helper: bloque de firma dinámico (desde InformacionGeneral)
+    // ─────────────────────────────────────────────────────────────
+    private function htmlFirma(): string
+    {
+        $informacionGeneral = InformacionGeneral::where('id', 1)->first();
+
+        $margenFirma = (int) ($informacionGeneral->px_firmas ?? 40);
+        $saltoPagina = (bool) ($informacionGeneral->salto_pagina ?? false);
+        $jefe        = $informacionGeneral->jefe ?? '';
+        $cargo       = $informacionGeneral->cargo ?? '';
+        $area        = $informacionGeneral->area ?? '';
+
+        // Igual que en ReportesController: usar page-break-before en el estilo del div
+        $estiloSalto = $saltoPagina ? 'page-break-before: always;' : '';
+
+        return "
+        <div style='
+            {$estiloSalto}
+            padding-top: {$margenFirma}px;
+            font-family: Arial, sans-serif;
+        '>
+
+            <table width='100%' style='border-collapse: collapse;'>
+                <tr>
+
+                    <td width='45%'></td>
+
+                    <td width='38%' style='
+                        text-align: center;
+                        font-size: 11px;
+                    '>
+
+                        __________________________________________<br>
+
+                        <span style='
+                            font-weight: bold;
+                            font-size: 14px;
+                        '>
+                            {$jefe}
+                        </span><br>
+
+                        <span style='
+                            font-weight: normal;
+                            font-size: 14px;
+                        '>
+                            {$cargo}
+                        </span><br>
+
+                        <div style='
+                            border-top: 1.5px solid #000;
+                            margin-top: 5px;
+                        '></div>
+
+                        <span style='font-size: 14px;'>
+                            {$area}
+                        </span>
+
+                    </td>
+
+                    <td width='17%'></td>
+
+                </tr>
+            </table>
+
+        </div>
+    ";
+    }
+
+    // ─────────────────────────────────────────────────────────────
     //  1. PERMISO PERSONAL
     // ─────────────────────────────────────────────────────────────
     private function pdfPersonal($idEmpleado, $desde, $hasta, $idUnidad = null)
@@ -568,6 +622,7 @@ class ReportesPdfUnidadesPermisosController extends Controller
         }
 
         $html .= "</table>" . $this->htmlTotalRegistros(count($registros));
+        $html .= $this->htmlFirma();
         $mpdf->WriteHTML($html);
         return $mpdf->Output('Reporte_Permisos_Personales.pdf', 'I');
     }
@@ -630,6 +685,7 @@ class ReportesPdfUnidadesPermisosController extends Controller
         }
 
         $html .= "</table>" . $this->htmlTotalRegistros(count($registros));
+        $html .= $this->htmlFirma();
         $mpdf->WriteHTML($html);
         return $mpdf->Output('Reporte_Permisos_Compensatorios.pdf', 'I');
     }
@@ -694,6 +750,7 @@ class ReportesPdfUnidadesPermisosController extends Controller
         }
 
         $html .= "</table>" . $this->htmlTotalRegistros(count($registros));
+        $html .= $this->htmlFirma();
         $mpdf->WriteHTML($html);
         return $mpdf->Output('Reporte_Permisos_Enfermedad.pdf', 'I');
     }
@@ -758,6 +815,7 @@ class ReportesPdfUnidadesPermisosController extends Controller
         }
 
         $html .= "</table>" . $this->htmlTotalRegistros(count($registros));
+        $html .= $this->htmlFirma();
         $mpdf->WriteHTML($html);
         return $mpdf->Output('Reporte_Consulta_Medica.pdf', 'I');
     }
@@ -838,6 +896,7 @@ class ReportesPdfUnidadesPermisosController extends Controller
                 </tr>
             </table>";
 
+        $html .= $this->htmlFirma();
         $mpdf->WriteHTML($html);
         return $mpdf->Output('Reporte_Incapacidades.pdf', 'I');
     }
@@ -900,6 +959,7 @@ class ReportesPdfUnidadesPermisosController extends Controller
         }
 
         $html .= "</table>" . $this->htmlTotalRegistros(count($registros));
+        $html .= $this->htmlFirma();
         $mpdf->WriteHTML($html);
         return $mpdf->Output('Reporte_Otros_Permisos.pdf', 'I');
     }
