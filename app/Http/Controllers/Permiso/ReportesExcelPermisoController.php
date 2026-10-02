@@ -187,30 +187,30 @@ class ReportesExcelPermisoController extends Controller
 
         // ── Consultas ─────────────────────────────────────────
         $personales = $this->filtrarPorFechaPermiso(
-            PermisoPersonal::with('empleado')
+            PermisoPersonal::with(['empleado.unidad', 'empleado.cargo'])
                 ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado)),
             $desde, $hasta
         )->get();
 
         $compensatorios = $this->filtrarPorFechaPermiso(
-            PermisoCompensatorio::with('empleado')
+            PermisoCompensatorio::with(['empleado.unidad', 'empleado.cargo'])
                 ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado)),
             $desde, $hasta
         )->get();
 
         $enfermedades = $this->filtrarPorFechaPermiso(
-            PermisoEnfermedad::with('empleado')
+            PermisoEnfermedad::with(['empleado.unidad', 'empleado.cargo'])
                 ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado)),
             $desde, $hasta
         )->get();
 
         $consultas = $this->filtrarPorFechaPermiso(
-            PermisoConsultaMedica::with('empleado')
+            PermisoConsultaMedica::with(['empleado.unidad', 'empleado.cargo'])
                 ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado)),
             $desde, $hasta
         )->get();
 
-        $incapacidades = PermisoIncapacidad::with(['empleado', 'tipoIncapacidad', 'riesgo'])
+        $incapacidades = PermisoIncapacidad::with(['empleado.unidad', 'empleado.cargo', 'tipoIncapacidad', 'riesgo'])
             ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
             ->whereDate('fecha_inicio', '<=', $hasta)
             ->whereDate('fecha_fin', '>=', $desde)
@@ -218,7 +218,7 @@ class ReportesExcelPermisoController extends Controller
             ->get();
 
         $otros = $this->filtrarPorFechaPermiso(
-            PermisoOtro::with('empleado')
+            PermisoOtro::with(['empleado.unidad', 'empleado.cargo'])
                 ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado)),
             $desde, $hasta
         )->get();
@@ -240,7 +240,7 @@ class ReportesExcelPermisoController extends Controller
             $horaInicio  = $p->condicion ? ($p->hora_inicio ?? '') : '';
             $horaFin     = $p->condicion ? ($p->hora_fin    ?? '') : '';
             $sh1->fromArray([
-                $i+1, $p->empleado?->nombre, $p->unidad, $p->cargo,
+                $i+1, $p->empleado?->nombre, $p->empleado?->unidad?->nombre, $p->empleado?->cargo?->nombre,
                 $this->fmt($p->fecha), $condicion, $goce,
                 $fechaInicio, $fechaFin, $horaInicio, $horaFin, $p->razon,
             ], null, "A{$fila}");
@@ -270,7 +270,7 @@ class ReportesExcelPermisoController extends Controller
             $horaInicio  = $p->condicion ? ($p->hora_inicio ?? '') : '';
             $horaFin     = $p->condicion ? ($p->hora_fin    ?? '') : '';
             $sh2->fromArray([
-                $i+1, $p->empleado?->nombre, $p->unidad, $p->cargo,
+                $i+1, $p->empleado?->nombre, $p->empleado?->unidad?->nombre, $p->empleado?->cargo?->nombre,
                 $this->fmt($p->fecha), $condicion,
                 $fechaInicio, $fechaFin, $horaInicio, $horaFin, $p->razon,
             ], null, "A{$fila}");
@@ -296,7 +296,7 @@ class ReportesExcelPermisoController extends Controller
             $horaInicio  = $p->condicion ? ($p->hora_inicio ?? '') : '';
             $horaFin     = $p->condicion ? ($p->hora_fin    ?? '') : '';
             $sh3->fromArray([
-                $i+1, $p->empleado?->nombre, $p->unidad, $p->cargo,
+                $i+1, $p->empleado?->nombre, $p->empleado?->unidad?->nombre, $p->empleado?->cargo?->nombre,
                 $this->fmt($p->fecha), $condicion,
                 $p->unidad_atencion, $p->especialidad, $p->condicion_medica,
                 $fechaInicio, $fechaFin, $horaInicio, $horaFin,
@@ -323,7 +323,7 @@ class ReportesExcelPermisoController extends Controller
             $horaInicio  = $p->condicion ? ($p->hora_inicio ?? '') : '';
             $horaFin     = $p->condicion ? ($p->hora_fin    ?? '') : '';
             $sh4->fromArray([
-                $i+1, $p->empleado?->nombre, $p->unidad, $p->cargo,
+                $i+1, $p->empleado?->nombre, $p->empleado?->unidad?->nombre, $p->empleado?->cargo?->nombre,
                 $this->fmt($p->fecha), $condicion,
                 $p->unidad_atencion, $p->especialidad, $p->condicion_medica,
                 $fechaInicio, $fechaFin, $horaInicio, $horaFin,
@@ -348,7 +348,7 @@ class ReportesExcelPermisoController extends Controller
                 ? 'SÍ ('.$this->fmt($p->fecha_inicio_hospitalizacion).' al '.$this->fmt($p->fecha_fin_hospitalizacion).')'
                 : 'NO';
             $sh5->fromArray([
-                $i+1, $p->empleado?->nombre, $p->unidad, $p->cargo,
+                $i+1, $p->empleado?->nombre, $p->empleado?->unidad?->nombre, $p->empleado?->cargo?->nombre,
                 $this->fmt($p->fecha),
                 $p->tipoIncapacidad?->nombre,
                 $p->riesgo?->nombre,
@@ -387,7 +387,7 @@ class ReportesExcelPermisoController extends Controller
             $horaInicio  = $p->condicion ? ($p->hora_inicio ?? '') : '';
             $horaFin     = $p->condicion ? ($p->hora_fin    ?? '') : '';
             $sh6->fromArray([
-                $i+1, $p->empleado?->nombre, $p->unidad, $p->cargo,
+                $i+1, $p->empleado?->nombre, $p->empleado?->unidad?->nombre, $p->empleado?->cargo?->nombre,
                 $this->fmt($p->fecha), $condicion,
                 $fechaInicio, $fechaFin, $horaInicio, $horaFin, $p->razon,
             ], null, "A{$fila}");
@@ -475,7 +475,7 @@ class ReportesExcelPermisoController extends Controller
     private function excelPersonal($idEmpleado, $desde, $hasta): StreamedResponse
     {
         $registros = $this->filtrarPorFechaPermiso(
-            PermisoPersonal::with('empleado')
+            PermisoPersonal::with(['empleado.unidad', 'empleado.cargo'])
                 ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado)),
             $desde, $hasta
         )->get();
@@ -531,7 +531,7 @@ class ReportesExcelPermisoController extends Controller
             }
 
             $sheet->fromArray([
-                $i + 1, $p->empleado?->nombre, $p->unidad, $p->cargo,
+                $i + 1, $p->empleado?->nombre, $p->empleado?->unidad?->nombre, $p->empleado?->cargo?->nombre,
                 $this->fmt($p->fecha), $condicion, $goce,
                 $fechaInicio, $fechaFin, $horaInicio, $horaFin, $p->razon,
             ], null, "A{$fila}");
@@ -649,7 +649,7 @@ class ReportesExcelPermisoController extends Controller
     private function excelCompensatorio($idEmpleado, $desde, $hasta): StreamedResponse
     {
         $registros = $this->filtrarPorFechaPermiso(
-            PermisoCompensatorio::with('empleado')
+            PermisoCompensatorio::with(['empleado.unidad', 'empleado.cargo'])
                 ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado)),
             $desde, $hasta
         )->get();
@@ -673,7 +673,7 @@ class ReportesExcelPermisoController extends Controller
             $horaFin     = $p->condicion ? ($p->hora_fin    ?? '') : '';
 
             $sheet->fromArray([
-                $i + 1, $p->empleado?->nombre, $p->unidad, $p->cargo,
+                $i + 1, $p->empleado?->nombre, $p->empleado?->unidad?->nombre, $p->empleado?->cargo?->nombre,
                 $this->fmt($p->fecha), $condicion,
                 $fechaInicio, $fechaFin, $horaInicio, $horaFin, $p->razon,
             ], null, "A{$fila}");
@@ -693,7 +693,7 @@ class ReportesExcelPermisoController extends Controller
     private function excelEnfermedad($idEmpleado, $desde, $hasta): StreamedResponse
     {
         $registros = $this->filtrarPorFechaPermiso(
-            PermisoEnfermedad::with('empleado')
+            PermisoEnfermedad::with(['empleado.unidad', 'empleado.cargo'])
                 ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado)),
             $desde, $hasta
         )->get();
@@ -718,7 +718,7 @@ class ReportesExcelPermisoController extends Controller
             $horaFin     = $p->condicion ? ($p->hora_fin    ?? '') : '';
 
             $sheet->fromArray([
-                $i + 1, $p->empleado?->nombre, $p->unidad, $p->cargo,
+                $i + 1, $p->empleado?->nombre, $p->empleado?->unidad?->nombre, $p->empleado?->cargo?->nombre,
                 $this->fmt($p->fecha), $condicion,
                 $p->unidad_atencion, $p->especialidad, $p->condicion_medica,
                 $fechaInicio, $fechaFin, $horaInicio, $horaFin,
@@ -739,7 +739,7 @@ class ReportesExcelPermisoController extends Controller
     private function excelConsultaMedica($idEmpleado, $desde, $hasta): StreamedResponse
     {
         $registros = $this->filtrarPorFechaPermiso(
-            PermisoConsultaMedica::with('empleado')
+            PermisoConsultaMedica::with(['empleado.unidad', 'empleado.cargo'])
                 ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado)),
             $desde, $hasta
         )->get();
@@ -764,7 +764,7 @@ class ReportesExcelPermisoController extends Controller
             $horaFin     = $p->condicion ? ($p->hora_fin    ?? '') : '';
 
             $sheet->fromArray([
-                $i + 1, $p->empleado?->nombre, $p->unidad, $p->cargo,
+                $i + 1, $p->empleado?->nombre, $p->empleado?->unidad?->nombre, $p->empleado?->cargo?->nombre,
                 $this->fmt($p->fecha), $condicion,
                 $p->unidad_atencion, $p->especialidad, $p->condicion_medica,
                 $fechaInicio, $fechaFin, $horaInicio, $horaFin,
@@ -786,7 +786,7 @@ class ReportesExcelPermisoController extends Controller
     // ─────────────────────────────────────────────────────────────
     private function excelIncapacidad($idEmpleado, $desde, $hasta): StreamedResponse
     {
-        $registros = PermisoIncapacidad::with(['empleado', 'tipoIncapacidad', 'riesgo'])
+        $registros = PermisoIncapacidad::with(['empleado.unidad', 'empleado.cargo', 'tipoIncapacidad', 'riesgo'])
             ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
             ->whereDate('fecha_inicio', '<=', $hasta)
             ->whereDate('fecha_fin', '>=', $desde)
@@ -810,7 +810,7 @@ class ReportesExcelPermisoController extends Controller
                 : 'NO';
 
             $sheet->fromArray([
-                $i + 1, $p->empleado?->nombre, $p->unidad, $p->cargo,
+                $i + 1, $p->empleado?->nombre, $p->empleado?->unidad?->nombre, $p->empleado?->cargo?->nombre,
                 $this->fmt($p->fecha),
                 $p->tipoIncapacidad?->nombre,
                 $p->riesgo?->nombre,
@@ -844,7 +844,7 @@ class ReportesExcelPermisoController extends Controller
     private function excelOtros($idEmpleado, $desde, $hasta): StreamedResponse
     {
         $registros = $this->filtrarPorFechaPermiso(
-            PermisoOtro::with('empleado')
+            PermisoOtro::with(['empleado.unidad', 'empleado.cargo'])
                 ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado)),
             $desde, $hasta
         )->get();
@@ -868,7 +868,7 @@ class ReportesExcelPermisoController extends Controller
             $horaFin     = $p->condicion ? ($p->hora_fin    ?? '') : '';
 
             $sheet->fromArray([
-                $i + 1, $p->empleado?->nombre, $p->unidad, $p->cargo,
+                $i + 1, $p->empleado?->nombre, $p->empleado?->unidad?->nombre, $p->empleado?->cargo?->nombre,
                 $this->fmt($p->fecha), $condicion,
                 $fechaInicio, $fechaFin, $horaInicio, $horaFin, $p->razon,
             ], null, "A{$fila}");

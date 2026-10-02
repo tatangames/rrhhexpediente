@@ -96,7 +96,7 @@ class ReportesPdfUnidadesPermisosController extends Controller
 
         // ── 1. PERSONALES ────────────────────────────────────────
         $personales = $this->filtrarPorFechaPermiso(
-            PermisoPersonal::with('empleado')
+            PermisoPersonal::with(['empleado.unidad', 'empleado.cargo'])
                 ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
                 ->when($idUnidad, fn($q) => $q->whereHas('empleado', fn($qq) => $qq->where('id_unidad', $idUnidad))),
             $desde, $hasta
@@ -130,7 +130,7 @@ class ReportesPdfUnidadesPermisosController extends Controller
             $bg          = $i % 2 === 0 ? '#f9f9f9' : '#fff';
             $html .= "<tr style='background:{$bg};'>
             <td align='center'>" . ($i + 1) . "</td>
-            <td>{$p->empleado->nombre}</td>" . $this->colUnidadRow($mostrarUnidad, $p->unidad) . "<td>{$p->cargo}</td>
+            <td>{$p->empleado?->nombre}</td>" . $this->colUnidadRow($mostrarUnidad, $p->empleado?->unidad?->nombre) . "<td>{$p->empleado?->cargo?->nombre}</td>
             <td align='center'>{$condicion}</td>
             <td align='center'>{$goce}</td><td align='center'>{$fechaInicio}</td>
             <td align='center'>{$fechaFin}</td><td align='center'>{$horaInicio}</td>
@@ -141,7 +141,7 @@ class ReportesPdfUnidadesPermisosController extends Controller
 
         // ── 2. COMPENSATORIOS ────────────────────────────────────
         $compensatorios = $this->filtrarPorFechaPermiso(
-            PermisoCompensatorio::with('empleado')
+            PermisoCompensatorio::with(['empleado.unidad', 'empleado.cargo'])
                 ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
                 ->when($idUnidad, fn($q) => $q->whereHas('empleado', fn($qq) => $qq->where('id_unidad', $idUnidad))),
             $desde, $hasta
@@ -173,7 +173,7 @@ class ReportesPdfUnidadesPermisosController extends Controller
             $bg          = $i % 2 === 0 ? '#f9f9f9' : '#fff';
             $html .= "<tr style='background:{$bg};'>
             <td align='center'>" . ($i + 1) . "</td>
-            <td>{$p->empleado->nombre}</td>" . $this->colUnidadRow($mostrarUnidad, $p->unidad) . "<td>{$p->cargo}</td>
+            <td>{$p->empleado?->nombre}</td>" . $this->colUnidadRow($mostrarUnidad, $p->empleado?->unidad?->nombre) . "<td>{$p->empleado?->cargo?->nombre}</td>
             <td align='center'>{$condicion}</td>
             <td align='center'>{$fechaInicio}</td><td align='center'>{$fechaFin}</td>
             <td align='center'>{$horaInicio}</td><td align='center'>{$horaFin}</td>
@@ -184,7 +184,7 @@ class ReportesPdfUnidadesPermisosController extends Controller
 
         // ── 3. ENFERMEDAD ────────────────────────────────────────
         $enfermedades = $this->filtrarPorFechaPermiso(
-            PermisoEnfermedad::with('empleado')
+            PermisoEnfermedad::with(['empleado.unidad', 'empleado.cargo'])
                 ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
                 ->when($idUnidad, fn($q) => $q->whereHas('empleado', fn($qq) => $qq->where('id_unidad', $idUnidad))),
             $desde, $hasta
@@ -218,7 +218,7 @@ class ReportesPdfUnidadesPermisosController extends Controller
             $bg          = $i % 2 === 0 ? '#f9f9f9' : '#fff';
             $html .= "<tr style='background:{$bg};'>
             <td align='center'>" . ($i + 1) . "</td>
-            <td>{$p->empleado->nombre}</td>" . $this->colUnidadRow($mostrarUnidad, $p->unidad) . "<td>{$p->cargo}</td>
+            <td>{$p->empleado?->nombre}</td>" . $this->colUnidadRow($mostrarUnidad, $p->empleado?->unidad?->nombre) . "<td>{$p->empleado?->cargo?->nombre}</td>
             <td align='center'>{$condicion}</td>
             <td>{$p->unidad_atencion}</td><td>{$p->especialidad}</td><td>{$p->condicion_medica}</td>
             <td align='center'>{$fechaInicio}</td><td align='center'>{$fechaFin}</td>
@@ -229,7 +229,7 @@ class ReportesPdfUnidadesPermisosController extends Controller
 
         // ── 4. CONSULTA MÉDICA ───────────────────────────────────
         $consultas = $this->filtrarPorFechaPermiso(
-            PermisoConsultaMedica::with('empleado')
+            PermisoConsultaMedica::with(['empleado.unidad', 'empleado.cargo'])
                 ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
                 ->when($idUnidad, fn($q) => $q->whereHas('empleado', fn($qq) => $qq->where('id_unidad', $idUnidad))),
             $desde, $hasta
@@ -263,7 +263,7 @@ class ReportesPdfUnidadesPermisosController extends Controller
             $bg          = $i % 2 === 0 ? '#f9f9f9' : '#fff';
             $html .= "<tr style='background:{$bg};'>
             <td align='center'>" . ($i + 1) . "</td>
-            <td>{$p->empleado->nombre}</td>" . $this->colUnidadRow($mostrarUnidad, $p->unidad) . "<td>{$p->cargo}</td>
+            <td>{$p->empleado?->nombre}</td>" . $this->colUnidadRow($mostrarUnidad, $p->empleado?->unidad?->nombre) . "<td>{$p->empleado?->cargo?->nombre}</td>
             <td align='center'>{$condicion}</td>
             <td>{$p->unidad_atencion}</td><td>{$p->especialidad}</td><td>{$p->condicion_medica}</td>
             <td align='center'>{$fechaInicio}</td><td align='center'>{$fechaFin}</td>
@@ -274,7 +274,7 @@ class ReportesPdfUnidadesPermisosController extends Controller
 
         // ── 5. INCAPACIDADES ─────────────────────────────────────
         // (no tiene condicion/fecha_fraccionado: solapamiento directo)
-        $incapacidades = PermisoIncapacidad::with(['empleado', 'tipoIncapacidad', 'riesgo'])
+        $incapacidades = PermisoIncapacidad::with(['empleado.unidad', 'empleado.cargo', 'tipoIncapacidad', 'riesgo'])
             ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
             ->when($idUnidad, fn($q) => $q->whereHas('empleado', fn($qq) => $qq->where('id_unidad', $idUnidad)))
             ->whereDate('fecha_inicio', '<=', $hasta)
@@ -308,7 +308,7 @@ class ReportesPdfUnidadesPermisosController extends Controller
             $bg = $i % 2 === 0 ? '#f9f9f9' : '#fff';
             $html .= "<tr style='background:{$bg};'>
             <td align='center'>" . ($i + 1) . "</td>
-            <td>{$p->empleado?->nombre}</td>" . $this->colUnidadRow($mostrarUnidad, $p->unidad) . "<td>{$p->cargo}</td>
+            <td>{$p->empleado?->nombre}</td>" . $this->colUnidadRow($mostrarUnidad, $p->empleado?->unidad?->nombre) . "<td>{$p->empleado?->cargo?->nombre}</td>
             <td>{$p->tipoIncapacidad?->nombre}</td><td>{$p->riesgo?->nombre}</td>
             <td>{$p->diagnostico}</td><td align='center'>{$p->numero}</td>
             <td align='center'>{$fmt($p->fecha_inicio)}</td>
@@ -334,7 +334,7 @@ class ReportesPdfUnidadesPermisosController extends Controller
 
         // ── 6. OTROS ─────────────────────────────────────────────
         $otros = $this->filtrarPorFechaPermiso(
-            PermisoOtro::with('empleado')
+            PermisoOtro::with(['empleado.unidad', 'empleado.cargo'])
                 ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
                 ->when($idUnidad, fn($q) => $q->whereHas('empleado', fn($qq) => $qq->where('id_unidad', $idUnidad))),
             $desde, $hasta
@@ -366,7 +366,7 @@ class ReportesPdfUnidadesPermisosController extends Controller
             $bg          = $i % 2 === 0 ? '#f9f9f9' : '#fff';
             $html .= "<tr style='background:{$bg};'>
             <td align='center'>" . ($i + 1) . "</td>
-            <td>{$p->empleado->nombre}</td>" . $this->colUnidadRow($mostrarUnidad, $p->unidad) . "<td>{$p->cargo}</td>
+            <td>{$p->empleado?->nombre}</td>" . $this->colUnidadRow($mostrarUnidad, $p->empleado?->unidad?->nombre) . "<td>{$p->empleado?->cargo?->nombre}</td>
             <td align='center'>{$condicion}</td>
             <td align='center'>{$fechaInicio}</td><td align='center'>{$fechaFin}</td>
             <td align='center'>{$horaInicio}</td><td align='center'>{$horaFin}</td>
@@ -608,7 +608,7 @@ class ReportesPdfUnidadesPermisosController extends Controller
         $mostrarUnidad = !$idUnidad;
 
         $registros = $this->filtrarPorFechaPermiso(
-            PermisoPersonal::with('empleado')
+            PermisoPersonal::with(['empleado.unidad', 'empleado.cargo'])
                 ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
                 ->when($idUnidad, fn($q) => $q->whereHas('empleado', fn($qq) => $qq->where('id_unidad', $idUnidad))),
             $desde, $hasta
@@ -650,8 +650,8 @@ class ReportesPdfUnidadesPermisosController extends Controller
             $html .= "
             <tr style='background:{$bg};'>
                 <td align='center'>" . ($i + 1) . "</td>
-                <td>{$p->empleado->nombre}</td>" . $this->colUnidadRow($mostrarUnidad, $p->unidad) . "
-                <td>{$p->cargo}</td>
+                <td>{$p->empleado?->nombre}</td>" . $this->colUnidadRow($mostrarUnidad, $p->empleado?->unidad?->nombre) . "
+                <td>{$p->empleado?->cargo?->nombre}</td>
                 <td align='center'>{$condicion}</td>
                 <td align='center'>{$goce}</td>
                 <td align='center'>{$fechaInicio}</td>
@@ -676,7 +676,7 @@ class ReportesPdfUnidadesPermisosController extends Controller
         $mostrarUnidad = !$idUnidad;
 
         $registros = $this->filtrarPorFechaPermiso(
-            PermisoCompensatorio::with('empleado')
+            PermisoCompensatorio::with(['empleado.unidad', 'empleado.cargo'])
                 ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
                 ->when($idUnidad, fn($q) => $q->whereHas('empleado', fn($qq) => $qq->where('id_unidad', $idUnidad))),
             $desde, $hasta
@@ -716,8 +716,8 @@ class ReportesPdfUnidadesPermisosController extends Controller
             $html .= "
             <tr style='background:{$bg};'>
                 <td align='center'>" . ($i + 1) . "</td>
-                <td>{$p->empleado->nombre}</td>" . $this->colUnidadRow($mostrarUnidad, $p->unidad) . "
-                <td>{$p->cargo}</td>
+                <td>{$p->empleado?->nombre}</td>" . $this->colUnidadRow($mostrarUnidad, $p->empleado?->unidad?->nombre) . "
+                <td>{$p->empleado?->cargo?->nombre}</td>
                 <td align='center'>{$condicion}</td>
                 <td align='center'>{$fechaInicio}</td>
                 <td align='center'>{$fechaFin}</td>
@@ -741,7 +741,7 @@ class ReportesPdfUnidadesPermisosController extends Controller
         $mostrarUnidad = !$idUnidad;
 
         $registros = $this->filtrarPorFechaPermiso(
-            PermisoEnfermedad::with('empleado')
+            PermisoEnfermedad::with(['empleado.unidad', 'empleado.cargo'])
                 ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
                 ->when($idUnidad, fn($q) => $q->whereHas('empleado', fn($qq) => $qq->where('id_unidad', $idUnidad))),
             $desde, $hasta
@@ -781,8 +781,8 @@ class ReportesPdfUnidadesPermisosController extends Controller
             $html .= "
             <tr style='background:{$bg};'>
                 <td align='center'>" . ($i + 1) . "</td>
-                <td>{$p->empleado->nombre}</td>" . $this->colUnidadRow($mostrarUnidad, $p->unidad) . "
-                <td>{$p->cargo}</td>
+                <td>{$p->empleado?->nombre}</td>" . $this->colUnidadRow($mostrarUnidad, $p->empleado?->unidad?->nombre) . "
+                <td>{$p->empleado?->cargo?->nombre}</td>
                 <td align='center'>{$condicion}</td>
                 <td>{$p->unidad_atencion}</td>
                 <td>{$p->especialidad}</td>
@@ -808,7 +808,7 @@ class ReportesPdfUnidadesPermisosController extends Controller
         $mostrarUnidad = !$idUnidad;
 
         $registros = $this->filtrarPorFechaPermiso(
-            PermisoConsultaMedica::with('empleado')
+            PermisoConsultaMedica::with(['empleado.unidad', 'empleado.cargo'])
                 ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
                 ->when($idUnidad, fn($q) => $q->whereHas('empleado', fn($qq) => $qq->where('id_unidad', $idUnidad))),
             $desde, $hasta
@@ -848,8 +848,8 @@ class ReportesPdfUnidadesPermisosController extends Controller
             $html .= "
             <tr style='background:{$bg};'>
                 <td align='center'>" . ($i + 1) . "</td>
-                <td>{$p->empleado->nombre}</td>" . $this->colUnidadRow($mostrarUnidad, $p->unidad) . "
-                <td>{$p->cargo}</td>
+                <td>{$p->empleado?->nombre}</td>" . $this->colUnidadRow($mostrarUnidad, $p->empleado?->unidad?->nombre) . "
+                <td>{$p->empleado?->cargo?->nombre}</td>
                 <td align='center'>{$condicion}</td>
                 <td>{$p->unidad_atencion}</td>
                 <td>{$p->especialidad}</td>
@@ -876,7 +876,7 @@ class ReportesPdfUnidadesPermisosController extends Controller
     {
         $mostrarUnidad = !$idUnidad;
 
-        $registros = PermisoIncapacidad::with(['empleado', 'tipoIncapacidad', 'riesgo'])
+        $registros = PermisoIncapacidad::with(['empleado.unidad', 'empleado.cargo', 'tipoIncapacidad', 'riesgo'])
             ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
             ->when($idUnidad, fn($q) => $q->whereHas('empleado', fn($qq) => $qq->where('id_unidad', $idUnidad)))
             ->whereDate('fecha_inicio', '<=', $hasta)
@@ -916,8 +916,8 @@ class ReportesPdfUnidadesPermisosController extends Controller
             $html .= "
             <tr style='background:{$bg};'>
                 <td align='center'>" . ($i + 1) . "</td>
-                <td>{$p->empleado?->nombre}</td>" . $this->colUnidadRow($mostrarUnidad, $p->unidad) . "
-                <td>{$p->cargo}</td>
+                <td>{$p->empleado?->nombre}</td>" . $this->colUnidadRow($mostrarUnidad, $p->empleado?->unidad?->nombre) . "
+                <td>{$p->empleado?->cargo?->nombre}</td>
                 <td>{$p->tipoIncapacidad?->nombre}</td>
                 <td>{$p->riesgo?->nombre}</td>
                 <td>{$p->diagnostico}</td>
@@ -958,7 +958,7 @@ class ReportesPdfUnidadesPermisosController extends Controller
         $mostrarUnidad = !$idUnidad;
 
         $registros = $this->filtrarPorFechaPermiso(
-            PermisoOtro::with('empleado')
+            PermisoOtro::with(['empleado.unidad', 'empleado.cargo'])
                 ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
                 ->when($idUnidad, fn($q) => $q->whereHas('empleado', fn($qq) => $qq->where('id_unidad', $idUnidad))),
             $desde, $hasta
@@ -998,8 +998,8 @@ class ReportesPdfUnidadesPermisosController extends Controller
             $html .= "
             <tr style='background:{$bg};'>
                 <td align='center'>" . ($i + 1) . "</td>
-                <td>{$p->empleado->nombre}</td>" . $this->colUnidadRow($mostrarUnidad, $p->unidad) . "
-                <td>{$p->cargo}</td>
+                <td>{$p->empleado?->nombre}</td>" . $this->colUnidadRow($mostrarUnidad, $p->empleado?->unidad?->nombre) . "
+                <td>{$p->empleado?->cargo?->nombre}</td>
                 <td align='center'>{$condicion}</td>
                 <td align='center'>{$fechaInicio}</td>
                 <td align='center'>{$fechaFin}</td>
