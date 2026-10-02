@@ -166,7 +166,8 @@ Route::post('/admin/permisos/unidad/nuevo', [ConfigPermisoController::class,'nue
 Route::post('/admin/permisos/unidad/informacion', [ConfigPermisoController::class,'informacionUnidadPermisos']);
 Route::post('/admin/permisos/unidad/editar', [ConfigPermisoController::class,'actualizarUnidadPermisos']);
 
-
+Route::post('/admin/permisos/unidad/empleados', [ConfigPermisoController::class, 'empleadosUnidadPermisos']);
+Route::post('/admin/permisos/unidad/borrar',    [ConfigPermisoController::class, 'borrarUnidadPermisos']);
 
 
 // EMPLEADOS

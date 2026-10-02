@@ -358,8 +358,7 @@ class ConfigPermisoController extends Controller
 
     public function indexUnidadPermisos()
     {
-        $temaPredeterminado =  $this->getTemaPredeterminado();
-        return view('backend.permisos.config.unidad.vistaunidad', compact('temaPredeterminado'));
+        return view('backend.permisos.config.unidad.vistaunidad');
     }
 
     public function tablaUnidadPermisos()
@@ -435,6 +434,106 @@ class ConfigPermisoController extends Controller
 
 
 
+    // Devuelve los empleados de la unidad y las demás unidades (posibles destinos)
+    public function empleadosUnidadPermisos(Request $request)
+    {
+        $regla = array(
+            'id' => 'required'
+        );
+
+        $validar = Validator::make($request->all(), $regla);
+
+        if ($validar->fails()) {
+            return ['success' => 0];
+        }
+
+        $unidad = PermisosUnidades::where('id', $request->id)->first();
+
+        if (!$unidad) {
+            return ['success' => 0];
+        }
+
+        $empleados = DB::table('permisos_empleados as e')
+            ->join('permisos_cargos as c', 'c.id', '=', 'e.id_cargo')
+            ->where('e.id_unidad', $unidad->id)
+            ->orderBy('e.nombre', 'ASC')
+            ->select('e.id', 'e.nombre', 'c.nombre as cargo')
+            ->get();
+
+        $unidades = PermisosUnidades::where('id', '!=', $unidad->id)
+            ->orderBy('nombre', 'ASC')
+            ->get(['id', 'nombre']);
+
+        return [
+            'success'   => 1,
+            'unidad'    => $unidad,
+            'empleados' => $empleados,
+            'unidades'  => $unidades,
+        ];
+    }
+
+// Traslada los empleados a las unidades elegidas y borra la unidad
+// success: 1 = ok, 2 = traslado incompleto/inválido, 0 = datos inválidos, 99 = error
+    public function borrarUnidadPermisos(Request $request)
+    {
+        $regla = array(
+            'id' => 'required'
+        );
+
+        $validar = Validator::make($request->all(), $regla);
+
+        if ($validar->fails()) {
+            return ['success' => 0];
+        }
+
+        // Formato: { id_empleado: id_unidad_destino }
+        $traslados = $request->input('traslados', []);
+
+        if (!is_array($traslados)) {
+            $traslados = [];
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $unidad = PermisosUnidades::where('id', $request->id)->lockForUpdate()->first();
+
+            if (!$unidad) {
+                DB::rollback();
+                return ['success' => 0];
+            }
+
+            // Empleados que HOY pertenecen a la unidad (por si cambió desde que se abrió el modal)
+            $empleados = PermisosEmpleados::where('id_unidad', $unidad->id)->lockForUpdate()->get();
+
+            // Cada empleado debe traer un destino válido y distinto a la unidad que se borra
+            foreach ($empleados as $emp) {
+                $destino = $traslados[$emp->id] ?? null;
+
+                if (!$destino
+                    || (int) $destino === (int) $unidad->id
+                    || !PermisosUnidades::where('id', $destino)->exists()) {
+                    DB::rollback();
+                    return ['success' => 2];
+                }
+            }
+
+            foreach ($empleados as $emp) {
+                PermisosEmpleados::where('id', $emp->id)->update([
+                    'id_unidad' => $traslados[$emp->id],
+                ]);
+            }
+
+            $unidad->delete();
+
+            DB::commit();
+            return ['success' => 1];
+        } catch (\Throwable $e) {
+            Log::info('error ' . $e);
+            DB::rollback();
+            return ['success' => 99];
+        }
+    }
 
 
 

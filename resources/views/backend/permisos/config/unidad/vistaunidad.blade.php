@@ -157,6 +157,60 @@
             </div>
         </div>
     </div>
+
+    <!-- modal borrar (con traslado de empleados) -->
+    <div class="modal fade" id="modalBorrar">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Borrar Unidad</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="id-borrar">
+
+                    <p>Unidad a borrar: <strong id="nombre-borrar"></strong></p>
+
+                    <div id="bloque-sin-empleados" class="alert alert-success" style="display: none;">
+                        Esta unidad no tiene empleados asignados. Se puede borrar directamente.
+                    </div>
+
+                    <div id="bloque-con-empleados" style="display: none;">
+                        <div class="alert alert-warning">
+                            Estos empleados pertenecen a esta unidad. Indique a qué unidad se trasladará cada uno
+                            antes de borrarla.
+                        </div>
+
+                        <div class="form-group">
+                            <label>Mover todos a:</label>
+                            <select id="todos-destino" class="form-control form-control-sm"></select>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-sm">
+                                <thead>
+                                <tr>
+                                    <th style="width: 40%">Empleado</th>
+                                    <th style="width: 25%">Cargo</th>
+                                    <th style="width: 35%">Nueva unidad</th>
+                                </tr>
+                                </thead>
+                                <tbody id="tbody-borrar"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
+                    <button type="button"
+                            class="btn btn-danger btn-sm" onclick="borrar()">Trasladar y borrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 @stop
 
 
@@ -325,29 +379,169 @@
                     closeLoading();
                 });
         }
+
+        // =================== BORRAR UNIDAD (CON TRASLADO) ===================
+
+        // Unidades disponibles como destino (todas menos la que se borra)
+        var unidadesDestino = [];
+
+        function crearOpcionesSelect(select) {
+            select.innerHTML = '';
+            select.add(new Option('-- Seleccione --', ''));
+            unidadesDestino.forEach(function (u) {
+                select.add(new Option(u.nombre, u.id));
+            });
+        }
+
+        function modalBorrar(id) {
+            openLoading();
+
+            axios.post(urlAdmin + '/admin/permisos/unidad/empleados', {
+                'id': id
+            })
+                .then((response) => {
+                    closeLoading();
+
+                    if (response.data.success !== 1) {
+                        toastr.error('Información no encontrada');
+                        return;
+                    }
+
+                    var empleados = response.data.empleados;
+                    unidadesDestino = response.data.unidades;
+
+                    if (empleados.length > 0 && unidadesDestino.length === 0) {
+                        toastr.error('No hay otra unidad a donde trasladar los empleados. Cree una primero.');
+                        return;
+                    }
+
+                    $('#id-borrar').val(id);
+                    $('#nombre-borrar').text(response.data.unidad.nombre);
+
+                    var tbody = document.getElementById('tbody-borrar');
+                    tbody.innerHTML = '';
+
+                    if (empleados.length === 0) {
+                        $('#bloque-con-empleados').hide();
+                        $('#bloque-sin-empleados').show();
+                    } else {
+                        $('#bloque-sin-empleados').hide();
+                        $('#bloque-con-empleados').show();
+
+                        crearOpcionesSelect(document.getElementById('todos-destino'));
+
+                        empleados.forEach(function (emp) {
+                            var tr = document.createElement('tr');
+                            tr.setAttribute('data-id', emp.id);
+
+                            var tdNombre = document.createElement('td');
+                            tdNombre.textContent = emp.nombre;
+
+                            var tdCargo = document.createElement('td');
+                            tdCargo.textContent = emp.cargo;
+
+                            var tdSelect = document.createElement('td');
+                            var select = document.createElement('select');
+                            select.className = 'form-control form-control-sm select-destino';
+                            crearOpcionesSelect(select);
+                            tdSelect.appendChild(select);
+
+                            tr.appendChild(tdNombre);
+                            tr.appendChild(tdCargo);
+                            tr.appendChild(tdSelect);
+                            tbody.appendChild(tr);
+                        });
+                    }
+
+                    $('#modalBorrar').modal('show');
+                })
+                .catch((error) => {
+                    closeLoading();
+                    toastr.error('Información no encontrada');
+                });
+        }
+
+        // "Mover todos a": copia la unidad elegida a todos los empleados
+        $(document).on('change', '#todos-destino', function () {
+            var valor = this.value;
+            if (valor === '') {
+                return;
+            }
+            $('#tbody-borrar .select-destino').val(valor);
+        });
+
+        function borrar() {
+            var id = document.getElementById('id-borrar').value;
+            var nombre = document.getElementById('nombre-borrar').textContent;
+
+            // Armar traslados { id_empleado: id_unidad_destino }
+            var traslados = {};
+            var faltante = false;
+
+            $('#tbody-borrar tr').each(function () {
+                var idEmpleado = this.getAttribute('data-id');
+                var destino = $(this).find('.select-destino').val();
+
+                if (!destino) {
+                    faltante = true;
+                    return false;
+                }
+                traslados[idEmpleado] = destino;
+            });
+
+            if (faltante) {
+                toastr.error('Seleccione la unidad destino de cada empleado');
+                return;
+            }
+
+            var total = Object.keys(traslados).length;
+            var texto = total > 0
+                ? 'Se trasladarán ' + total + ' empleado(s) y se borrará la unidad "' + nombre + '". Esta acción no se puede deshacer.'
+                : 'Se borrará la unidad "' + nombre + '". Esta acción no se puede deshacer.';
+
+            Swal.fire({
+                title: '¿Borrar unidad?',
+                text: texto,
+                type: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonText: 'Cancelar',
+                confirmButtonText: 'Sí, borrar'
+            }).then((result) => {
+                if (result.value) {
+                    enviarBorrar(id, traslados);
+                }
+            });
+        }
+
+        function enviarBorrar(id, traslados) {
+            openLoading();
+
+            axios.post(urlAdmin + '/admin/permisos/unidad/borrar', {
+                'id': id,
+                'traslados': traslados
+            })
+                .then((response) => {
+                    closeLoading();
+
+                    if (response.data.success === 1) {
+                        toastr.success('Unidad borrada correctamente');
+                        $('#modalBorrar').modal('hide');
+                        recargar();
+                    } else if (response.data.success === 2) {
+                        // La lista de empleados cambió o hay un destino inválido: recargar el modal
+                        toastr.error('La lista de empleados cambió, revise los traslados');
+                        modalBorrar(id);
+                    } else {
+                        toastr.error('Error al borrar');
+                    }
+                })
+                .catch((error) => {
+                    closeLoading();
+                    toastr.error('Error al borrar');
+                });
+        }
     </script>
 
 
 @endsection
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
