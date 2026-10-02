@@ -482,18 +482,6 @@ return [
         ],
 
 
-
-
-        [
-            'text'  => 'Reportes',
-            'icon'  => 'fas fa-file-alt',
-            'route' => 'reporte.general.index',
-            'can'   => 'sidebar.permisos',
-        ],
-
-
-
-
         [
             'text'    => 'Evaluación',
             'icon'    => 'fas fa-pen-alt',
@@ -526,20 +514,8 @@ return [
                     'route' => 'admin.dependencia.evaluacion.index',
                     'can'   => 'sidebar.evaluacion',
                 ],
-
-
-
-
-
             ],
         ],
-
-
-
-
-
-
-
 
 
         [
@@ -590,6 +566,15 @@ return [
         ],
 
 
+
+
+
+        [
+            'text'  => 'Reportes',
+            'icon'  => 'fas fa-file-alt',
+            'route' => 'reporte.general.index',
+            'can'   => 'sidebar.permisos',
+        ],
 
 
 

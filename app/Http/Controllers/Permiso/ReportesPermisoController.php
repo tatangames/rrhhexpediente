@@ -118,7 +118,7 @@ class ReportesPermisoController extends Controller
         $html = $this->htmlCabecera('REPORTE GENERAL DE PERMISOS', $desde, $hasta);
 
         // ── 1. PERSONALES ────────────────────────────────────────
-        $personales = PermisoPersonal::with('empleado')
+        $personales = PermisoPersonal::with(['empleado.unidad', 'empleado.cargo'])
             ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
             ->where(function ($q) use ($desde, $hasta) {
                 $q->where(function ($q2) use ($desde, $hasta) {
@@ -163,7 +163,7 @@ class ReportesPermisoController extends Controller
             $bg          = $i % 2 === 0 ? '#f9f9f9' : '#fff';
             $html .= "<tr style='background:{$bg};'>
             <td align='center'>" . ($i + 1) . "</td>
-            <td>{$p->empleado->nombre}</td><td>{$p->unidad}</td><td>{$p->cargo}</td>
+            <td>{$p->empleado?->nombre}</td><td>{$p->empleado?->unidad?->nombre}</td><td>{$p->empleado?->cargo?->nombre}</td>
             <td align='center'>{$condicion}</td>
             <td align='center'>{$goce}</td><td align='center'>{$fechaInicio}</td>
             <td align='center'>{$fechaFin}</td><td align='center'>{$horaInicio}</td>
@@ -173,7 +173,7 @@ class ReportesPermisoController extends Controller
         $html .= "</table>" . $this->htmlTotalRegistros(count($personales));
 
         // ── 2. COMPENSATORIOS ────────────────────────────────────
-        $compensatorios = PermisoCompensatorio::with('empleado')
+        $compensatorios = PermisoCompensatorio::with(['empleado.unidad', 'empleado.cargo'])
             ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
             ->where(function ($q) use ($desde, $hasta) {
                 $q->where(function ($q2) use ($desde, $hasta) {
@@ -216,7 +216,7 @@ class ReportesPermisoController extends Controller
             $bg          = $i % 2 === 0 ? '#f9f9f9' : '#fff';
             $html .= "<tr style='background:{$bg};'>
             <td align='center'>" . ($i + 1) . "</td>
-            <td>{$p->empleado->nombre}</td><td>{$p->unidad}</td><td>{$p->cargo}</td>
+            <td>{$p->empleado?->nombre}</td><td>{$p->empleado?->unidad?->nombre}</td><td>{$p->empleado?->cargo?->nombre}</td>
             <td align='center'>{$condicion}</td>
             <td align='center'>{$fechaInicio}</td><td align='center'>{$fechaFin}</td>
             <td align='center'>{$horaInicio}</td><td align='center'>{$horaFin}</td>
@@ -226,7 +226,7 @@ class ReportesPermisoController extends Controller
         $html .= "</table>" . $this->htmlTotalRegistros(count($compensatorios));
 
         // ── 3. ENFERMEDAD ────────────────────────────────────────
-        $enfermedades = PermisoEnfermedad::with('empleado')
+        $enfermedades = PermisoEnfermedad::with(['empleado.unidad', 'empleado.cargo'])
             ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
             ->where(function ($q) use ($desde, $hasta) {
                 $q->where(function ($q2) use ($desde, $hasta) {
@@ -271,7 +271,7 @@ class ReportesPermisoController extends Controller
             $bg          = $i % 2 === 0 ? '#f9f9f9' : '#fff';
             $html .= "<tr style='background:{$bg};'>
             <td align='center'>" . ($i + 1) . "</td>
-            <td>{$p->empleado->nombre}</td><td>{$p->unidad}</td><td>{$p->cargo}</td>
+            <td>{$p->empleado?->nombre}</td><td>{$p->empleado?->unidad?->nombre}</td><td>{$p->empleado?->cargo?->nombre}</td>
             <td align='center'>{$condicion}</td>
             <td>{$p->unidad_atencion}</td><td>{$p->especialidad}</td><td>{$p->condicion_medica}</td>
             <td align='center'>{$fechaInicio}</td><td align='center'>{$fechaFin}</td>
@@ -281,7 +281,7 @@ class ReportesPermisoController extends Controller
         $html .= "</table>" . $this->htmlTotalRegistros(count($enfermedades));
 
         // ── 4. CONSULTA MÉDICA ───────────────────────────────────
-        $consultas = PermisoConsultaMedica::with('empleado')
+        $consultas = PermisoConsultaMedica::with(['empleado.unidad', 'empleado.cargo'])
             ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
             ->where(function ($q) use ($desde, $hasta) {
                 $q->where(function ($q2) use ($desde, $hasta) {
@@ -326,7 +326,7 @@ class ReportesPermisoController extends Controller
             $bg          = $i % 2 === 0 ? '#f9f9f9' : '#fff';
             $html .= "<tr style='background:{$bg};'>
             <td align='center'>" . ($i + 1) . "</td>
-            <td>{$p->empleado->nombre}</td><td>{$p->unidad}</td><td>{$p->cargo}</td>
+            <td>{$p->empleado?->nombre}</td><td>{$p->empleado?->unidad?->nombre}</td><td>{$p->empleado?->cargo?->nombre}</td>
             <td align='center'>{$condicion}</td>
             <td>{$p->unidad_atencion}</td><td>{$p->especialidad}</td><td>{$p->condicion_medica}</td>
             <td align='center'>{$fechaInicio}</td><td align='center'>{$fechaFin}</td>
@@ -336,7 +336,7 @@ class ReportesPermisoController extends Controller
         $html .= "</table>" . $this->htmlTotalRegistros(count($consultas));
 
         // ── 5. INCAPACIDADES ─────────────────────────────────────
-        $incapacidades = PermisoIncapacidad::with(['empleado', 'tipoIncapacidad', 'riesgo'])
+        $incapacidades = PermisoIncapacidad::with(['empleado.unidad', 'empleado.cargo', 'tipoIncapacidad', 'riesgo'])
             ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
             ->whereDate('fecha_inicio', '<=', $hasta)
             ->whereDate('fecha_fin', '>=', $desde)
@@ -369,7 +369,7 @@ class ReportesPermisoController extends Controller
             $bg = $i % 2 === 0 ? '#f9f9f9' : '#fff';
             $html .= "<tr style='background:{$bg};'>
             <td align='center'>" . ($i + 1) . "</td>
-            <td>{$p->empleado?->nombre}</td><td>{$p->unidad}</td><td>{$p->cargo}</td>
+            <td>{$p->empleado?->nombre}</td><td>{$p->empleado?->unidad?->nombre}</td><td>{$p->empleado?->cargo?->nombre}</td>
             <td>{$p->tipoIncapacidad?->nombre}</td><td>{$p->riesgo?->nombre}</td>
             <td>{$p->diagnostico}</td><td align='center'>{$p->numero}</td>
             <td align='center'>{$fmt($p->fecha_inicio)}</td>
@@ -394,7 +394,7 @@ class ReportesPermisoController extends Controller
         </table>";
 
         // ── 6. OTROS ─────────────────────────────────────────────
-        $otros = PermisoOtro::with('empleado')
+        $otros = PermisoOtro::with(['empleado.unidad', 'empleado.cargo'])
             ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
             ->where(function ($q) use ($desde, $hasta) {
                 $q->where(function ($q2) use ($desde, $hasta) {
@@ -437,7 +437,7 @@ class ReportesPermisoController extends Controller
             $bg          = $i % 2 === 0 ? '#f9f9f9' : '#fff';
             $html .= "<tr style='background:{$bg};'>
             <td align='center'>" . ($i + 1) . "</td>
-            <td>{$p->empleado->nombre}</td><td>{$p->unidad}</td><td>{$p->cargo}</td>
+            <td>{$p->empleado?->nombre}</td><td>{$p->empleado?->unidad?->nombre}</td><td>{$p->empleado?->cargo?->nombre}</td>
             <td align='center'>{$condicion}</td>
             <td align='center'>{$fechaInicio}</td><td align='center'>{$fechaFin}</td>
             <td align='center'>{$horaInicio}</td><td align='center'>{$horaFin}</td>
@@ -641,7 +641,7 @@ class ReportesPermisoController extends Controller
     // ─────────────────────────────────────────────────────────────
     private function pdfPersonal($idEmpleado, $desde, $hasta)
     {
-        $registros = PermisoPersonal::with('empleado')
+        $registros = PermisoPersonal::with(['empleado.unidad', 'empleado.cargo'])
             ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
             ->where(function ($q) use ($desde, $hasta) {
                 // Fraccionado: la fecha del permiso cae dentro del rango
@@ -698,9 +698,9 @@ class ReportesPermisoController extends Controller
             $html .= "
         <tr style='background:{$bg};'>
             <td align='center'>" . ($i + 1) . "</td>
-            <td>{$p->empleado->nombre}</td>
-            <td>{$p->unidad}</td>
-            <td>{$p->cargo}</td>
+            <td>{$p->empleado?->nombre}</td>
+            <td>{$p->empleado?->unidad?->nombre}</td>
+            <td>{$p->empleado?->cargo?->nombre}</td>
             <td align='center'>{$condicion}</td>
             <td align='center'>{$goce}</td>
             <td align='center'>{$fechaInicio}</td>
@@ -723,7 +723,7 @@ class ReportesPermisoController extends Controller
     // ─────────────────────────────────────────────────────────────
     private function pdfCompensatorio($idEmpleado, $desde, $hasta)
     {
-        $registros = PermisoCompensatorio::with('empleado')
+        $registros = PermisoCompensatorio::with(['empleado.unidad', 'empleado.cargo'])
             ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
             ->where(function ($q) use ($desde, $hasta) {
                 // Fraccionado: la fecha del permiso cae dentro del rango
@@ -778,9 +778,9 @@ class ReportesPermisoController extends Controller
             $html .= "
         <tr style='background:{$bg};'>
             <td align='center'>" . ($i + 1) . "</td>
-            <td>{$p->empleado->nombre}</td>
-            <td>{$p->unidad}</td>
-            <td>{$p->cargo}</td>
+            <td>{$p->empleado?->nombre}</td>
+            <td>{$p->empleado?->unidad?->nombre}</td>
+            <td>{$p->empleado?->cargo?->nombre}</td>
             <td align='center'>{$condicion}</td>
             <td align='center'>{$fechaInicio}</td>
             <td align='center'>{$fechaFin}</td>
@@ -801,7 +801,7 @@ class ReportesPermisoController extends Controller
     // ─────────────────────────────────────────────────────────────
     private function pdfEnfermedad($idEmpleado, $desde, $hasta)
     {
-        $registros = PermisoEnfermedad::with('empleado')
+        $registros = PermisoEnfermedad::with(['empleado.unidad', 'empleado.cargo'])
             ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
             ->where(function ($q) use ($desde, $hasta) {
                 $q->where(function ($q2) use ($desde, $hasta) {
@@ -856,9 +856,9 @@ class ReportesPermisoController extends Controller
             $html .= "
         <tr style='background:{$bg};'>
             <td align='center'>" . ($i + 1) . "</td>
-            <td>{$p->empleado->nombre}</td>
-            <td>{$p->unidad}</td>
-            <td>{$p->cargo}</td>
+            <td>{$p->empleado?->nombre}</td>
+            <td>{$p->empleado?->unidad?->nombre}</td>
+            <td>{$p->empleado?->cargo?->nombre}</td>
             <td align='center'>{$condicion}</td>
             <td>{$p->unidad_atencion}</td>
             <td>{$p->especialidad}</td>
@@ -881,7 +881,7 @@ class ReportesPermisoController extends Controller
     // ─────────────────────────────────────────────────────────────
     private function pdfConsultaMedica($idEmpleado, $desde, $hasta)
     {
-        $registros = PermisoConsultaMedica::with('empleado')
+        $registros = PermisoConsultaMedica::with(['empleado.unidad', 'empleado.cargo'])
             ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
             ->where(function ($q) use ($desde, $hasta) {
                 $q->where(function ($q2) use ($desde, $hasta) {
@@ -936,9 +936,9 @@ class ReportesPermisoController extends Controller
             $html .= "
         <tr style='background:{$bg};'>
             <td align='center'>" . ($i + 1) . "</td>
-            <td>{$p->empleado->nombre}</td>
-            <td>{$p->unidad}</td>
-            <td>{$p->cargo}</td>
+            <td>{$p->empleado?->nombre}</td>
+            <td>{$p->empleado?->unidad?->nombre}</td>
+            <td>{$p->empleado?->cargo?->nombre}</td>
             <td align='center'>{$condicion}</td>
             <td>{$p->unidad_atencion}</td>
             <td>{$p->especialidad}</td>
@@ -961,7 +961,7 @@ class ReportesPermisoController extends Controller
     // ─────────────────────────────────────────────────────────────
     private function pdfIncapacidad($idEmpleado, $desde, $hasta)
     {
-        $registros = PermisoIncapacidad::with(['empleado', 'tipoIncapacidad', 'riesgo'])
+        $registros = PermisoIncapacidad::with(['empleado.unidad', 'empleado.cargo', 'tipoIncapacidad', 'riesgo'])
             ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
             ->whereDate('fecha_inicio', '<=', $hasta)
             ->whereDate('fecha_fin', '>=', $desde)
@@ -1000,8 +1000,8 @@ class ReportesPermisoController extends Controller
         <tr style='background:{$bg};'>
             <td align='center'>" . ($i + 1) . "</td>
             <td>{$p->empleado?->nombre}</td>
-            <td>{$p->unidad}</td>
-            <td>{$p->cargo}</td>
+            <td>{$p->empleado?->unidad?->nombre}</td>
+            <td>{$p->empleado?->cargo?->nombre}</td>
             <td>{$p->tipoIncapacidad?->nombre}</td>
             <td>{$p->riesgo?->nombre}</td>
             <td>{$p->diagnostico}</td>
@@ -1039,7 +1039,7 @@ class ReportesPermisoController extends Controller
     // ─────────────────────────────────────────────────────────────
     private function pdfOtros($idEmpleado, $desde, $hasta)
     {
-        $registros = PermisoOtro::with('empleado')
+        $registros = PermisoOtro::with(['empleado.unidad', 'empleado.cargo'])
             ->when($idEmpleado, fn($q) => $q->where('id_empleado', $idEmpleado))
             ->where(function ($q) use ($desde, $hasta) {
                 $q->where(function ($q2) use ($desde, $hasta) {
@@ -1092,9 +1092,9 @@ class ReportesPermisoController extends Controller
             $html .= "
         <tr style='background:{$bg};'>
             <td align='center'>" . ($i + 1) . "</td>
-            <td>{$p->empleado->nombre}</td>
-            <td>{$p->unidad}</td>
-            <td>{$p->cargo}</td>
+            <td>{$p->empleado?->nombre}</td>
+            <td>{$p->empleado?->unidad?->nombre}</td>
+            <td>{$p->empleado?->cargo?->nombre}</td>
             <td align='center'>{$condicion}</td>
             <td align='center'>{$fechaInicio}</td>
             <td align='center'>{$fechaFin}</td>
