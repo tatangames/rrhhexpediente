@@ -191,6 +191,54 @@
             </div>
         </div>
     </div>
+
+    <!-- modal borrar -->
+    <div class="modal fade" id="modalBorrar">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Borrar Empleado</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="id-borrar">
+
+                    <p>
+                        Se borrará a <strong id="nombre-borrar"></strong>
+                        <span class="text-muted" id="detalle-borrar"></span>
+                    </p>
+
+                    <div id="bloque-sin-permisos" style="display:none">
+                        <div class="alert alert-info mb-0">
+                            Este empleado no tiene permisos registrados. Se puede borrar directamente.
+                        </div>
+                    </div>
+
+                    <div id="bloque-con-permisos" style="display:none">
+                        <p class="mb-1">Información relacionada que se trasladará:</p>
+                        <table class="table table-sm table-bordered" style="max-width: 420px;">
+                            <tbody id="tbody-resumen-borrar"></tbody>
+                        </table>
+
+                        <div class="form-group">
+                            <label>Trasladar toda la información a: <span style="color: red">*</span></label>
+                            <br>
+                            <select class="form-control" id="select-destino-borrar" style="width:100%"></select>
+                            <small class="text-muted">Puedes buscar por nombre, unidad o cargo.</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="borrar()">
+                        <i class="fas fa-trash"></i> Trasladar y borrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 @stop
 
 
@@ -425,6 +473,132 @@
                 .catch((error) => {
                     toastr.error('Error al actualizar');
                     closeLoading();
+                });
+        }
+
+        // ===================== BORRAR EMPLEADO =====================
+        var totalPermisosBorrar = 0;
+
+        function modalBorrar(id) {
+            openLoading();
+
+            if ($('#select-destino-borrar').hasClass('select2-hidden-accessible')) {
+                $('#select-destino-borrar').select2('destroy');
+            }
+            $('#select-destino-borrar').empty();
+            $('#tbody-resumen-borrar').empty();
+
+            axios.post(urlAdmin + '/admin/empleados/resumen-borrar', {'id': id})
+                .then((response) => {
+                    closeLoading();
+
+                    if (response.data.success !== 1) {
+                        toastr.error('Información no encontrada');
+                        return;
+                    }
+
+                    var emp = response.data.empleado;
+                    totalPermisosBorrar = response.data.total;
+
+                    $('#id-borrar').val(emp.id);
+                    $('#nombre-borrar').text(emp.nombre);
+                    $('#detalle-borrar').text('(' + (emp.unidad || 'Sin unidad') + ' - ' + (emp.cargo || 'Sin cargo') + ')');
+
+                    if (totalPermisosBorrar === 0) {
+                        $('#bloque-sin-permisos').show();
+                        $('#bloque-con-permisos').hide();
+                    } else {
+                        $('#bloque-sin-permisos').hide();
+                        $('#bloque-con-permisos').show();
+
+                        $.each(response.data.resumen, function (i, fila) {
+                            var tr = $('<tr>');
+                            tr.append($('<td>').text(fila.tipo));
+                            tr.append($('<td class="text-center">').text(fila.total));
+                            $('#tbody-resumen-borrar').append(tr);
+                        });
+                        $('#tbody-resumen-borrar').append(
+                            $('<tr class="font-weight-bold">')
+                                .append($('<td>').text('TOTAL'))
+                                .append($('<td class="text-center">').text(totalPermisosBorrar))
+                        );
+
+                        // opción vacía para el placeholder
+                        $('#select-destino-borrar').append($('<option>').val('').text(''));
+                        $.each(response.data.otros, function (i, o) {
+                            var texto = o.nombre + ' — ' + (o.unidad || 'Sin unidad') + ' — ' + (o.cargo || 'Sin cargo');
+                            $('#select-destino-borrar').append($('<option>').val(o.id).text(texto));
+                        });
+
+                        $('#select-destino-borrar').select2({
+                            theme: 'bootstrap-5',
+                            dropdownParent: $('#modalBorrar'),
+                            placeholder: 'Busque y seleccione el empleado destino',
+                            allowClear: true,
+                            width: '100%'
+                        });
+                    }
+
+                    $('#modalBorrar').modal('show');
+                })
+                .catch((error) => {
+                    closeLoading();
+                    toastr.error('Información no encontrada');
+                });
+        }
+
+        function borrar() {
+            var id = $('#id-borrar').val();
+            var destino = $('#select-destino-borrar').val();
+
+            if (totalPermisosBorrar > 0 && !destino) {
+                toastr.error('Seleccione el empleado destino');
+                return;
+            }
+
+            var texto = totalPermisosBorrar > 0
+                ? 'Se trasladarán ' + totalPermisosBorrar + ' registro(s) al empleado seleccionado y se borrará este empleado.'
+                : 'Se borrará este empleado.';
+
+            Swal.fire({
+                title: '¿Borrar empleado?',
+                text: texto,
+                type: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, borrar',
+                cancelButtonText: 'Cancelar'
+            }).then(function (result) {
+                if (result.value) {
+                    enviarBorrar(id, destino);
+                }
+            });
+        }
+
+        function enviarBorrar(id, destino) {
+            openLoading();
+
+            axios.post(urlAdmin + '/admin/empleados/borrar', {
+                'id': id,
+                'id_destino': destino || null
+            })
+                .then((response) => {
+                    closeLoading();
+
+                    if (response.data.success === 1) {
+                        toastr.success('Empleado borrado correctamente');
+                        $('#modalBorrar').modal('hide');
+                        recargar();
+                    } else if (response.data.success === 2) {
+                        toastr.error('Seleccione un empleado destino válido');
+                    } else {
+                        toastr.error('Error al borrar');
+                    }
+                })
+                .catch((error) => {
+                    closeLoading();
+                    toastr.error('Error al borrar');
                 });
         }
     </script>

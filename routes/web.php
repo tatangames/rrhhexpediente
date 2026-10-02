@@ -177,6 +177,10 @@ Route::post('/admin/empleados/nuevo', [ConfigPermisoController::class,'nuevoEmpl
 Route::post('/admin/empleados/informacion', [ConfigPermisoController::class,'informacionEmpleados']);
 Route::post('/admin/empleados/editar', [ConfigPermisoController::class,'actualizarEmpleados']);
 
+Route::post('/admin/empleados/resumen-borrar', [ConfigPermisoController::class,'resumenBorrarEmpleados']);
+Route::post('/admin/empleados/borrar', [ConfigPermisoController::class,'borrarEmpleados']);
+
+
 // BUSCAR EMPLEADO ---- MODULO PERMISOS  -------
 Route::get('/admin/empleados/buscar', [PermisoController::class, 'buscarPorNombre']);
 

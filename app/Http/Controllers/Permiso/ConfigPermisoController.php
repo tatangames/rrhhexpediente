@@ -4,6 +4,12 @@ namespace App\Http\Controllers\Permiso;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cargo;
+use App\Models\PermisoCompensatorio;
+use App\Models\PermisoConsultaMedica;
+use App\Models\PermisoEnfermedad;
+use App\Models\PermisoIncapacidad;
+use App\Models\PermisoOtro;
+use App\Models\PermisoPersonal;
 use App\Models\PermisoRiesgo;
 use App\Models\PermisosCargos;
 use App\Models\PermisosEmpleados;
@@ -546,12 +552,10 @@ class ConfigPermisoController extends Controller
 
     public function indexEmpleados()
     {
-        $temaPredeterminado = $this->getTemaPredeterminado();
-
         $arrayCargo = PermisosCargos::orderBy('nombre', 'ASC')->get();
         $arrayUnidad = PermisosUnidades::orderBy('nombre', 'ASC')->get();
 
-        return view('backend.permisos.empleados.vistaempleados', compact('temaPredeterminado', 'arrayCargo', 'arrayUnidad'));
+        return view('backend.permisos.empleados.vistaempleados', compact('arrayCargo', 'arrayUnidad'));
     }
 
     public function tablaEmpleados()
@@ -647,6 +651,126 @@ class ConfigPermisoController extends Controller
 
 
 
+
+    // Tablas de permisos que tienen id_empleado
+    private function modelosPermisosEmpleado(): array
+    {
+        return [
+            'Personales'      => PermisoPersonal::class,
+            'Compensatorios'  => PermisoCompensatorio::class,
+            'Enfermedad'      => PermisoEnfermedad::class,
+            'Consulta médica' => PermisoConsultaMedica::class,
+            'Incapacidades'   => PermisoIncapacidad::class,
+            'Otros permisos'  => PermisoOtro::class,
+        ];
+    }
+
+    // Devuelve el resumen de permisos del empleado y la lista de posibles destinos
+    public function resumenBorrarEmpleados(Request $request)
+    {
+        $validar = Validator::make($request->all(), ['id' => 'required']);
+
+        if ($validar->fails()) {
+            return ['success' => 0];
+        }
+
+        $empleado = PermisosEmpleados::with(['unidad', 'cargo'])->find($request->id);
+
+        if (!$empleado) {
+            return ['success' => 0];
+        }
+
+        $resumen = [];
+        $total   = 0;
+
+        foreach ($this->modelosPermisosEmpleado() as $tipo => $modelo) {
+            $cantidad = $modelo::where('id_empleado', $empleado->id)->count();
+            $total   += $cantidad;
+            $resumen[] = ['tipo' => $tipo, 'total' => $cantidad];
+        }
+
+        $otros = PermisosEmpleados::with(['unidad', 'cargo'])
+            ->where('id', '!=', $empleado->id)
+            ->orderBy('nombre', 'ASC')
+            ->get()
+            ->map(fn($e) => [
+                'id'     => $e->id,
+                'nombre' => $e->nombre,
+                'unidad' => $e->unidad?->nombre,
+                'cargo'  => $e->cargo?->nombre,
+            ]);
+
+        return [
+            'success'  => 1,
+            'empleado' => [
+                'id'     => $empleado->id,
+                'nombre' => $empleado->nombre,
+                'unidad' => $empleado->unidad?->nombre,
+                'cargo'  => $empleado->cargo?->nombre,
+            ],
+            'resumen'  => $resumen,
+            'total'    => $total,
+            'otros'    => $otros,
+        ];
+    }
+
+    // Traslada todos los permisos al empleado destino y borra al empleado
+    // success: 1 = ok, 2 = destino inválido, 0 = datos inválidos, 99 = error
+    public function borrarEmpleados(Request $request)
+    {
+        $validar = Validator::make($request->all(), ['id' => 'required']);
+
+        if ($validar->fails()) {
+            return ['success' => 0];
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $origen = PermisosEmpleados::where('id', $request->id)->lockForUpdate()->first();
+
+            if (!$origen) {
+                DB::rollback();
+                return ['success' => 0];
+            }
+
+            // ¿Tiene permisos hoy? (por si cambió desde que se abrió el modal)
+            $total = 0;
+            foreach ($this->modelosPermisosEmpleado() as $modelo) {
+                $total += $modelo::where('id_empleado', $origen->id)->count();
+            }
+
+            if ($total > 0) {
+                $idDestino = $request->id_destino;
+
+                if (!$idDestino || (int) $idDestino === (int) $origen->id) {
+                    DB::rollback();
+                    return ['success' => 2];
+                }
+
+                $destino = PermisosEmpleados::where('id', $idDestino)->lockForUpdate()->first();
+
+                if (!$destino) {
+                    DB::rollback();
+                    return ['success' => 2];
+                }
+
+                foreach ($this->modelosPermisosEmpleado() as $modelo) {
+                    $modelo::where('id_empleado', $origen->id)
+                        ->update(['id_empleado' => $destino->id]);
+                }
+            }
+
+            $origen->delete();
+
+            DB::commit();
+            return ['success' => 1];
+        } catch (\Throwable $e) {
+            Log::info('error ' . $e);
+            DB::rollback();
+            return ['success' => 99];
+        }
+    }
 
 
 
