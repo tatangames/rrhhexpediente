@@ -309,10 +309,13 @@ class JefeEvaluacionController extends Controller
                 $marcado = in_array((int) $detalle->id, $seleccionados, true);
                 $marca = $marcado ? 'X' : '&nbsp;';
 
+                // Si no lleva X, el % sale en 0
+                $puntosMostrar = $marcado ? $fmtPuntos($detalle->puntos) : '0';
+
                 $html .= '<tr>'
                     . '<td>' . e($detalle->nombre) . '</td>'
                     . '<td align="center" style="font-weight:bold;">' . $marca . '</td>'
-                    . '<td align="center">' . $fmtPuntos($detalle->puntos) . '</td>'
+                    . '<td align="center">' . $puntosMostrar . '</td>'
                     . '</tr>';
             }
 
@@ -348,7 +351,7 @@ class JefeEvaluacionController extends Controller
         <td style="font-weight: bold">' . $fechaEvaluacion . '</td>
     </tr>
 </table>
-<br><br><br><br><br><br><br>';
+<br><br><br><br><br><br><br><br><br>';
 
         // PROPUESTAS DE MEJORA
         $html .= '
