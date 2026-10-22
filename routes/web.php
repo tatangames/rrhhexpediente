@@ -21,6 +21,7 @@ use App\Http\Controllers\Permiso\ReportesExcelPermisoController;
 
 use App\Http\Controllers\Permiso\ReportesPdfUnidadesPermisosController;
 use App\Http\Controllers\Permiso\ReportesExcelUnidadesPermisosController;
+use App\Http\Controllers\Evaluacion\EvaluacionConfigController;
 
 
 
@@ -292,30 +293,30 @@ Route::post('/permisos/reportes/excel/unidad', [ReportesExcelUnidadesPermisosCon
 // *-***************************************************************************************
 
 // === CARGO EMPLEADO - EVALUACION === ---- MODULO EVALUACION  -------
-Route::get('/admin/cargo-evaluacion/index', [EvaluacionController::class,'vistaCargoEvaluacion'])->name('admin.cargo.evaluacion.index');
-Route::get('/admin/cargo-evaluacion/tabla', [EvaluacionController::class,'tablaCargoEvaluacion']);
-Route::post('/admin/cargo-evaluacion/nuevo', [EvaluacionController::class,'nuevoCargoEvaluacion']);
-Route::post('/admin/cargo-evaluacion/informacion', [EvaluacionController::class,'infoCargoEvaluacion']);
-Route::post('/admin/cargo-evaluacion/editar', [EvaluacionController::class,'actualizarCargoEvaluacion']);
-Route::post('/admin/cargo-evaluacion/borrar', [EvaluacionController::class,'borrarCargoEvaluacion']);
+Route::get('/admin/cargo-evaluacion/index', [EvaluacionConfigController::class,'vistaCargoEvaluacion'])->name('admin.cargo.evaluacion.index');
+Route::get('/admin/cargo-evaluacion/tabla', [EvaluacionConfigController::class,'tablaCargoEvaluacion']);
+Route::post('/admin/cargo-evaluacion/nuevo', [EvaluacionConfigController::class,'nuevoCargoEvaluacion']);
+Route::post('/admin/cargo-evaluacion/informacion', [EvaluacionConfigController::class,'infoCargoEvaluacion']);
+Route::post('/admin/cargo-evaluacion/editar', [EvaluacionConfigController::class,'actualizarCargoEvaluacion']);
+Route::post('/admin/cargo-evaluacion/borrar', [EvaluacionConfigController::class,'borrarCargoEvaluacion']);
 
 
 // === UNIDAD - EVALUACION === ---- MODULO EVALUACION  -------
-Route::get('/admin/unidad-evaluacion/index', [EvaluacionController::class,'indexUnidadEvaluacion'])->name('admin.unidad.evaluacion.index');
-Route::get('/admin/unidad-evaluacion/tabla', [EvaluacionController::class,'tablaUnidadEvaluacion']);
-Route::post('/admin/unidad-evaluacion/nuevo', [EvaluacionController::class,'nuevoUnidadEvaluacion']);
-Route::post('/admin/unidad-evaluacion/informacion', [EvaluacionController::class,'informacionUnidadEvaluacion']);
-Route::post('/admin/unidad-evaluacion/editar', [EvaluacionController::class,'actualizarUnidadEvaluacion']);
-Route::post('/admin/unidad-evaluacion/borrar', [EvaluacionController::class,'borrarUnidadEvaluacion']);
+Route::get('/admin/unidad-evaluacion/index', [EvaluacionConfigController::class,'indexUnidadEvaluacion'])->name('admin.unidad.evaluacion.index');
+Route::get('/admin/unidad-evaluacion/tabla', [EvaluacionConfigController::class,'tablaUnidadEvaluacion']);
+Route::post('/admin/unidad-evaluacion/nuevo', [EvaluacionConfigController::class,'nuevoUnidadEvaluacion']);
+Route::post('/admin/unidad-evaluacion/informacion', [EvaluacionConfigController::class,'informacionUnidadEvaluacion']);
+Route::post('/admin/unidad-evaluacion/editar', [EvaluacionConfigController::class,'actualizarUnidadEvaluacion']);
+Route::post('/admin/unidad-evaluacion/borrar', [EvaluacionConfigController::class,'borrarUnidadEvaluacion']);
 
 
 // === DEPENDENCIA JERARQUICA- EVALUACION === ---- MODULO EVALUACION  -------
-Route::get('/admin/dependencia-evaluacion/index', [EvaluacionController::class,'indexDependenciaEvaluacion'])->name('admin.dependencia.evaluacion.index');
-Route::get('/admin/dependencia-evaluacion/tabla', [EvaluacionController::class,'tablaDependenciaEvaluacion']);
-Route::post('/admin/dependencia-evaluacion/nuevo', [EvaluacionController::class,'nuevoDependenciaEvaluacion']);
-Route::post('/admin/dependencia-evaluacion/informacion', [EvaluacionController::class,'informacionDependenciaEvaluacion']);
-Route::post('/admin/dependencia-evaluacion/editar', [EvaluacionController::class,'actualizarDependenciaEvaluacion']);
-Route::post('/admin/dependencia-evaluacion/borrar', [EvaluacionController::class,'borrarDependenciaEvaluacion']);
+Route::get('/admin/dependencia-evaluacion/index', [EvaluacionConfigController::class,'indexDependenciaEvaluacion'])->name('admin.dependencia.evaluacion.index');
+Route::get('/admin/dependencia-evaluacion/tabla', [EvaluacionConfigController::class,'tablaDependenciaEvaluacion']);
+Route::post('/admin/dependencia-evaluacion/nuevo', [EvaluacionConfigController::class,'nuevoDependenciaEvaluacion']);
+Route::post('/admin/dependencia-evaluacion/informacion', [EvaluacionConfigController::class,'informacionDependenciaEvaluacion']);
+Route::post('/admin/dependencia-evaluacion/editar', [EvaluacionConfigController::class,'actualizarDependenciaEvaluacion']);
+Route::post('/admin/dependencia-evaluacion/borrar', [EvaluacionConfigController::class,'borrarDependenciaEvaluacion']);
 
 
 
