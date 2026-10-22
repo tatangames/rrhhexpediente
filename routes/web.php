@@ -291,24 +291,6 @@ Route::post('/permisos/reportes/excel/unidad', [ReportesExcelUnidadesPermisosCon
 // ============================ MODULO EVALUACION ==========================================
 // *-***************************************************************************************
 
-
-// EVALUACION - REGISTRO ---- MODULO EVALUACION  -------
-Route::get('/admin/evaluacion/index', [EvaluacionController::class,'indexEvaluacion'])->name('evaluacion.index');
-Route::get('/admin/evaluacion/tabla', [EvaluacionController::class,'tablaEvaluacion']);
-Route::post('/admin/evaluacion/nuevo', [EvaluacionController::class,'nuevaEvaluacion']);
-Route::post('/admin/evaluacion/informacion', [EvaluacionController::class,'informacionEvaluacion']);
-Route::post('/admin/evaluacion/editar', [EvaluacionController::class,'editarEvaluacion']);
-Route::post('/admin/evaluacion/borrar', [EvaluacionController::class,'borrarEvaluacion']);
-
-
-// EVALUACION - REGISTRO ---- MODULO EVALUACION  -------
-Route::get('/admin/evaluacion-detalle/index/{id}', [EvaluacionController::class,'indexEvaluacionDetalle']);
-Route::get('/admin/evaluacion-detalle/tabla/{id}', [EvaluacionController::class,'tablaEvaluacionDetalle']);
-Route::post('/admin/evaluacion-detalle/nuevo', [EvaluacionController::class,'nuevaEvaluacionDetalle']);
-Route::post('/admin/evaluacion-detalle/informacion', [EvaluacionController::class,'informacionEvaluacionDetalle']);
-Route::post('/admin/evaluacion-detalle/editar', [EvaluacionController::class,'editarEvaluacionDetalle']);
-Route::post('/admin/evaluacion-detalle/borrar', [EvaluacionController::class,'borrarEvaluacionDetalle']);
-
 // === CARGO EMPLEADO - EVALUACION === ---- MODULO EVALUACION  -------
 Route::get('/admin/cargo-evaluacion/index', [EvaluacionController::class,'vistaCargoEvaluacion'])->name('admin.cargo.evaluacion.index');
 Route::get('/admin/cargo-evaluacion/tabla', [EvaluacionController::class,'tablaCargoEvaluacion']);
@@ -340,8 +322,41 @@ Route::post('/admin/dependencia-evaluacion/borrar', [EvaluacionController::class
 
 
 
+
+
+Route::get('/admin/evaluacion/titulo/registrar', [EvaluacionController::class,'indexRegistrarTituloEvaluacion'])->name('evaluacion.titulo.registrar');
+Route::post('/admin/evaluacion/titulo/nuevo', [EvaluacionController::class,'nuevaTituloEvaluacion']);
+
+
+Route::get('/admin/evaluacion/titulo/listado/index', [EvaluacionController::class,'indexListadoTitulo'])->name('evaluacion.titulo.listado.index');
+Route::get('/admin/evaluacion/titulo/listado/tabla/{idtipo}', [EvaluacionController::class,'tablaListadoTitulo']);
+Route::post('/admin/evaluacion/titulo/listado/informacion', [EvaluacionController::class,'informacionListadoTitulo']);
+Route::post('/admin/evaluacion/titulo/listado/editar', [EvaluacionController::class,'editarListadoTitulo']);
+Route::post('/admin/evaluacion/titulo/listado/borrar', [EvaluacionController::class,'borrarListadoTitulo']);
+Route::post('/admin/evaluacion/titulo/listado/posicion', [EvaluacionController::class,'posicionListadoTitulo']);
+
+
+Route::get('/admin/evaluacion/titulo/detalle/index/{id}', [EvaluacionController::class,'indexDetalleEvaluacion'])->name('evaluacion.titulo.detalle.index');
+Route::get('/admin/evaluacion/titulo/detalle/tabla/{id}', [EvaluacionController::class,'tablaDetalleEvaluacion']);
+Route::post('/admin/evaluacion/titulo/detalle/nuevo', [EvaluacionController::class,'nuevoDetalleEvaluacion']);
+Route::post('/admin/evaluacion/titulo/detalle/informacion', [EvaluacionController::class,'informacionDetalleEvaluacion']);
+Route::post('/admin/evaluacion/titulo/detalle/editar', [EvaluacionController::class,'editarDetalleEvaluacion']);
+Route::post('/admin/evaluacion/titulo/detalle/borrar', [EvaluacionController::class,'borrarDetalleEvaluacion']);
+Route::post('/admin/evaluacion/titulo/detalle/posicion', [EvaluacionController::class,'posicionDetalleEvaluacion']);
+
+
+
+
+
+
+
+
+
+
+
 // VISTA PUBLICA PARA LLENAR LA EVALUACION ---- MODULO EVALUACION  -------
-Route::get('/evaluacion/empleado', [JefeEvaluacionController::class,'indexLlenarEvaluacion']);
+Route::get('/evaluacion/niveldireccion', [JefeEvaluacionController::class,'indexLlenarEvaluacionNivelDireccion']);
+
 // Guardar evaluación
-Route::post('/evaluacion/generar/pdf', [JefeEvaluacionController::class, 'registrarEvaluacion'])->name('evaluacion.registrar');
+Route::post('/evaluacion/pdf/desempeno', [JefeEvaluacionController::class, 'pdfFichaDesempeno'])->name('evaluacion.pdf.desempeno');
 

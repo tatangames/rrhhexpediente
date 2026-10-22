@@ -13,14 +13,12 @@ return new class extends Migration
     {
         Schema::create('evaluacion_detalle', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('evaluacion_id')
-                ->constrained('evaluacion')
+            $table->foreignId('id_evaluacion_titulo')
+                ->constrained('evaluacion_titulo')
                 ->onDelete('cascade'); // <-- importante
 
             $table->text('nombre')->nullable();
-
-
-            $table->integer('puntos');
+            $table->decimal('puntos', 10,2);
 
             $table->integer('posicion');
         });

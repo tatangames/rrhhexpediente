@@ -15,10 +15,6 @@ class EvaluacionDetalle extends Model
     public $timestamps = false;
 
 
-    protected $fillable = ['evaluacion_id', 'nombre', 'puntos', 'posicion'];
+    protected $fillable = ['id_evaluacion_titulo', 'nombre', 'puntos', 'posicion'];
 
-    public function evaluacion()
-    {
-        return $this->belongsTo(Evaluacion::class, 'evaluacion_id');
-    }
 }

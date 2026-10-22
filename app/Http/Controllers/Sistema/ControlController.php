@@ -32,7 +32,7 @@ class ControlController extends Controller
         }
 
         if ($user->hasRole('evaluacion')) {
-            return redirect()->route('evaluacion.index');
+            return redirect()->route('evaluacion.titulo.registrar');
         }
 
 

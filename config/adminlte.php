@@ -488,9 +488,15 @@ return [
             'can'   => 'sidebar.evaluacion',
             'submenu' => [
                 [
-                    'text'  => 'Datos Generales',
+                    'text'  => 'Registrar Criterio',
                     'icon'  => 'fas fa-file-alt',
-                    'route' => 'evaluacion.index',
+                    'route' => 'evaluacion.titulo.registrar',
+                    'can'   => 'sidebar.evaluacion',
+                ],
+                [
+                    'text'  => 'Historial',
+                    'icon'  => 'fas fa-file-alt',
+                    'route' => 'evaluacion.titulo.listado.index',
                     'can'   => 'sidebar.evaluacion',
                 ],
 

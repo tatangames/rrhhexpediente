@@ -118,7 +118,6 @@
 
         .section-body { padding: 28px; }
 
-        /* Grid principal 1 columna */
         .form-grid {
             display: grid;
             grid-template-columns: 1fr;
@@ -126,7 +125,6 @@
         }
         .form-grid .full-width { grid-column: 1; }
 
-        /* Subgrid de 1 columna para puesto/unidad/dependencia */
         .form-grid-3col {
             display: grid;
             grid-template-columns: 1fr;
@@ -339,27 +337,45 @@
             border-bottom: 1px solid var(--cream-dark);
             cursor: pointer;
             transition: background 0.15s;
+            text-transform: none;
+            letter-spacing: normal;
+            font-weight: 400;
+            color: var(--text);
+            font-size: 13.5px;
         }
         .opcion-item:last-child { border-bottom: none; }
         .opcion-item:hover { background: rgba(201,151,58,0.05); }
         .opcion-item.selected { background: rgba(201,151,58,0.07); }
         .opcion-item.selected .opcion-nombre { color: var(--navy); font-weight: 500; }
 
-        .opcion-item input[type="radio"] {
+        /* Checkbox */
+        .opcion-item input[type="checkbox"] {
             appearance: none;
             -webkit-appearance: none;
             width: 18px;
             height: 18px;
             border: 2px solid var(--border);
-            border-radius: 50%;
+            border-radius: 3px;
             flex-shrink: 0;
             cursor: pointer;
             transition: all 0.15s;
+            position: relative;
+            background: var(--white);
         }
-        .opcion-item input[type="radio"]:checked {
+        .opcion-item input[type="checkbox"]:checked {
             border-color: var(--gold);
             background: var(--gold);
-            box-shadow: inset 0 0 0 3px var(--white);
+        }
+        .opcion-item input[type="checkbox"]:checked::after {
+            content: '';
+            position: absolute;
+            left: 4px;
+            top: 0px;
+            width: 5px;
+            height: 10px;
+            border: solid var(--white);
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
         }
 
         .opcion-nombre { font-size: 13.5px; color: var(--text); flex: 1; line-height: 1.4; }
@@ -374,16 +390,51 @@
             letter-spacing: 0.5px;
         }
 
-        .evaluacion-bloque.error .bloque-header { border-left: 3px solid var(--error); }
-        .bloque-error-msg {
-            display: none;
-            font-size: 11px;
-            color: var(--error);
-            padding: 6px 20px;
-            background: rgba(185,64,64,0.05);
-            border-top: 1px solid rgba(185,64,64,0.15);
+        /* Subtotal por bloque */
+        .bloque-subtotal {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            background: var(--cream);
+            border-top: 1px solid var(--border);
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--text-muted);
         }
-        .evaluacion-bloque.error .bloque-error-msg { display: block; }
+        .bloque-subtotal .subtotal-valor {
+            background: var(--navy);
+            color: var(--gold-light);
+            padding: 3px 12px;
+            border-radius: 2px;
+            font-size: 13px;
+            min-width: 56px;
+            text-align: center;
+        }
+
+        /* Total general flotante */
+        .total-general-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            margin-top: 24px;
+            background: var(--navy);
+            border-bottom: 3px solid var(--gold);
+            border-radius: 4px;
+            color: var(--white);
+            font-weight: 600;
+            font-size: 14px;
+            letter-spacing: 0.5px;
+        }
+        .total-general-bar .total-valor {
+            font-family: 'Playfair Display', serif;
+            font-size: 22px;
+            color: var(--gold-light);
+        }
 
         /* Botón */
         .btn-submit {
@@ -415,7 +466,6 @@
         .btn-submit:active { transform: translateY(0); }
         .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
-        /* Vacío */
         .empty-state {
             text-align: center;
             padding: 50px 20px;
@@ -495,17 +545,14 @@
 <div class="top-bar"></div>
 
 <header class="page-header">
-    {{-- ── Logo ── --}}
     <img src="{{ asset('images/logosantaananorte_blaco.png') }}"
          alt="Logo Santa Ana"
          class="header-logo">
 
     <div class="header-badge">TALENTO HUMANO</div>
-    <h1>FICHA DE EVALUACION DE DESEMPEÑO</h1>
-    <p>Complete todos los campos y seleccione una opción por cada criterio</p>
+    <h1>FICHA DE EVALUACION DE DESEMPEÑO NIVEL DIRECCIÓN</h1>
+    <p>Complete todos los campos y marque los indicadores que el trabajador cumple</p>
 </header>
-
-
 
 <div class="main-container">
 
@@ -526,7 +573,6 @@
                     <span class="field-error" id="err-nombre">Este campo es requerido.</span>
                 </div>
 
-                {{-- Fila de 3 selects: Puesto | Unidad | Dependencia --}}
                 <div class="form-group full-width">
                     <div class="form-grid-3col">
 
@@ -550,7 +596,7 @@
                                         @foreach($arrayCargos as $cargo)
                                             <div class="select-option"
                                                  data-value="{{ $cargo->nombre }}"
-                                                 onclick="selectOption('puesto', '{{ addslashes($cargo->nombre) }}')">
+                                                 onclick="selectOption('puesto', this.dataset.value)">
                                                 {{ $cargo->nombre }}
                                             </div>
                                         @endforeach
@@ -582,7 +628,7 @@
                                         @foreach($arrayUnidades as $unidad)
                                             <div class="select-option"
                                                  data-value="{{ $unidad->nombre }}"
-                                                 onclick="selectOption('unidad', '{{ addslashes($unidad->nombre) }}')">
+                                                 onclick="selectOption('unidad', this.dataset.value)">
                                                 {{ $unidad->nombre }}
                                             </div>
                                         @endforeach
@@ -614,7 +660,7 @@
                                         @foreach($arrayDependencias as $dep)
                                             <div class="select-option"
                                                  data-value="{{ $dep->nombre }}"
-                                                 onclick="selectOption('dependencia', '{{ addslashes($dep->nombre) }}')">
+                                                 onclick="selectOption('dependencia', this.dataset.value)">
                                                 {{ $dep->nombre }}
                                             </div>
                                         @endforeach
@@ -649,9 +695,9 @@
                             <line x1="8" y1="2" x2="8" y2="6"/>
                             <line x1="3" y1="10" x2="21" y2="10"/>
                         </svg>
-                        De Julio-Diciembre 2025
+                        De Enero-Octubre 2026
                     </div>
-                    <input type="hidden" name="periodo" value="De Julio-Diciembre 2025">
+                    <input type="hidden" name="periodo" value="De Enero-Octubre 2026">
                 </div>
 
             </div>
@@ -671,8 +717,7 @@
                 <line x1="12" y1="8" x2="12" y2="12"/>
                 <line x1="12" y1="16" x2="12.01" y2="16"/>
             </svg>
-            <span>Indicaciones: Marque con una "X" el grado que mejor define la posición del empleado:
-            <strong>1- Deficiente, 2- Regular, 3- Bueno, 4- Muy Bueno y 5- Excelente</strong></span>
+            <span>Indicaciones: Marque con una "X" los indicadores que el trabajador cumple, según el desempeño de sus labores. Puede marcar varios por factor.</span>
         </div>
 
         <div class="section-body">
@@ -702,22 +747,29 @@
                         <div class="opciones-lista">
                             @foreach($evaluacion->detalles as $detalle)
                                 <label class="opcion-item"
-                                       id="opcion-{{ $evaluacion->id }}-{{ $detalle->id }}"
-                                       onclick="marcarSeleccionado({{ $evaluacion->id }}, {{ $detalle->id }})">
-                                    <input type="radio"
-                                           name="evaluacion_{{ $evaluacion->id }}"
+                                       id="opcion-{{ $evaluacion->id }}-{{ $detalle->id }}">
+                                    <input type="checkbox"
+                                           name="evaluacion_{{ $evaluacion->id }}[]"
                                            value="{{ $detalle->id }}"
-                                           data-puntos="{{ $detalle->puntos }}"
+                                           data-puntos="{{ (float) $detalle->puntos }}"
                                            data-eval="{{ $evaluacion->id }}"
                                            onchange="seleccionarOpcion(this)">
                                     <span class="opcion-nombre">{{ $detalle->nombre }}</span>
-                                    <span class="opcion-puntos">{{ $detalle->puntos }} pts</span>
+                                    <span class="opcion-puntos">{{ rtrim(rtrim(number_format($detalle->puntos, 2, '.', ''), '0'), '.') }} %</span>
                                 </label>
                             @endforeach
                         </div>
-                        <div class="bloque-error-msg">Por favor seleccione una opción.</div>
+                        <div class="bloque-subtotal">
+                            Total
+                            <span class="subtotal-valor" id="subtotal-{{ $evaluacion->id }}">0</span>
+                        </div>
                     </div>
                 @endforeach
+
+                <div class="total-general-bar">
+                    <span>TOTAL GENERAL</span>
+                    <span class="total-valor" id="total-general">0</span>
+                </div>
             @endif
 
         </div>
@@ -735,10 +787,14 @@
 <div class="toast-container" id="toast-container"></div>
 
 <script>
-    var CSRF_TOKEN   = '{{ csrf_token() }}';
-    var URL_REGISTRAR = '{{ route("evaluacion.registrar") }}';
-    var respuestas   = {};
-    var evaluacionIds = @json($evaluaciones->pluck('id'));
+    var CSRF_TOKEN    = '{{ csrf_token() }}';
+    var URL_REGISTRAR = '{{ route("evaluacion.pdf.desempeno") }}';
+    var respuestas    = {};   // { evalId: [ {detalle_id, puntos}, ... ] }
+    var evaluacionIds = @json($evaluaciones->pluck('id')->values());
+
+    function fmt(n) {
+        return parseFloat(n.toFixed(2)).toString();
+    }
 
     /* ════════════════════════════════
        CUSTOM SELECT CON BUSCADOR
@@ -781,12 +837,10 @@
         trigger.classList.remove('error');
         document.getElementById('err-' + id).classList.remove('visible');
 
-        // Marcar opción activa
         document.querySelectorAll('#options-' + id + ' .select-option').forEach(function(opt) {
             opt.classList.toggle('selected', opt.dataset.value === value);
         });
 
-        // Limpiar buscador
         var search = document.querySelector('#dropdown-' + id + ' .select-search');
         if (search) {
             search.value = '';
@@ -809,7 +863,6 @@
         if (noResults) noResults.style.display = visible === 0 ? 'block' : 'none';
     }
 
-    // Cerrar al click fuera
     document.addEventListener('click', function(e) {
         if (!openSelect) return;
         var wrapper = document.getElementById('wrap-' + openSelect);
@@ -819,23 +872,37 @@
     });
 
     /* ════════════════════════════════
-       EVALUACIÓN — RADIO BUTTONS
+       EVALUACIÓN — CHECKBOXES (MÚLTIPLE)
     ════════════════════════════════ */
-    function seleccionarOpcion(radio) {
-        var evalId    = radio.dataset.eval;
-        var puntos    = parseInt(radio.dataset.puntos);
-        var detalleId = radio.value;
-        respuestas[evalId] = { detalle_id: detalleId, puntos: puntos };
-        document.getElementById('bloque-' + evalId).classList.remove('error');
+    function seleccionarOpcion(checkbox) {
+        var evalId = checkbox.dataset.eval;
+        var bloque = document.getElementById('bloque-' + evalId);
+
+        var marcados = [];
+        var subtotal = 0;
+
+        bloque.querySelectorAll('input[type="checkbox"]').forEach(function(cb) {
+            var item = cb.closest('.opcion-item');
+            item.classList.toggle('selected', cb.checked);
+            if (cb.checked) {
+                var p = parseFloat(cb.dataset.puntos) || 0;
+                subtotal += p;
+                marcados.push({ detalle_id: cb.value, puntos: p });
+            }
+        });
+
+        respuestas[evalId] = marcados;
+        document.getElementById('subtotal-' + evalId).textContent = fmt(subtotal);
+        actualizarTotalGeneral();
     }
 
-    function marcarSeleccionado(evalId, detalleId) {
-        var bloque = document.getElementById('bloque-' + evalId);
-        bloque.querySelectorAll('.opcion-item').forEach(function(item) {
-            item.classList.remove('selected');
+    function actualizarTotalGeneral() {
+        var total = 0;
+        Object.keys(respuestas).forEach(function(evalId) {
+            respuestas[evalId].forEach(function(r) { total += r.puntos; });
         });
-        var opcion = document.getElementById('opcion-' + evalId + '-' + detalleId);
-        if (opcion) opcion.classList.add('selected');
+        var el = document.getElementById('total-general');
+        if (el) el.textContent = fmt(total);
     }
 
     /* ════════════════════════════════
@@ -844,10 +911,9 @@
     function enviarEvaluacion() {
         var valido = true;
 
-        // Validar input texto
         var inputCampos = [
             { id: 'nombre_completo', err: 'err-nombre' },
-            { id: 'jefe_inmediato',  err: 'err-jefe'   },
+            { id: 'jefe_inmediato',  err: 'err-jefe'   }
         ];
         inputCampos.forEach(function(c) {
             var el  = document.getElementById(c.id);
@@ -862,7 +928,6 @@
             }
         });
 
-        // Validar selects
         var selectCampos = ['puesto', 'unidad', 'dependencia'];
         selectCampos.forEach(function(id) {
             var val     = document.getElementById('val-' + id).value;
@@ -878,23 +943,13 @@
             }
         });
 
-        // Validar criterios de evaluación
-        evaluacionIds.forEach(function(id) {
-            if (!respuestas[id]) {
-                document.getElementById('bloque-' + id).classList.add('error');
-                valido = false;
-            }
-        });
-
         if (!valido) {
             showToast('Por favor complete todos los campos requeridos.', 'error');
-            // Scroll al primer error
             var firstError = document.querySelector('.error, .form-control.error');
             if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
             return;
         }
 
-        // Construir y enviar formulario
         var form = document.createElement('form');
         form.method = 'POST';
         form.action = URL_REGISTRAR;
@@ -903,13 +958,13 @@
         csrf.type = 'hidden'; csrf.name = '_token'; csrf.value = CSRF_TOKEN;
         form.appendChild(csrf);
 
-        var respuestasArr = [];
-        Object.keys(respuestas).forEach(function(evalId) {
-            respuestasArr.push({
-                evaluacion_id: parseInt(evalId),
-                detalle_id:    parseInt(respuestas[evalId].detalle_id),
-                puntos:        respuestas[evalId].puntos
-            });
+        // Se envían TODOS los factores, con sus indicadores marcados (puede ser lista vacía)
+        var respuestasArr = evaluacionIds.map(function(id) {
+            var marcados = respuestas[id] || [];
+            return {
+                evaluacion_id: parseInt(id),
+                detalle_ids:   marcados.map(function(r) { return parseInt(r.detalle_id); })
+            };
         });
 
         var camposEnviar = {
@@ -918,7 +973,7 @@
             unidad:          document.getElementById('val-unidad').value,
             dependencia:     document.getElementById('val-dependencia').value,
             jefe_inmediato:  document.getElementById('jefe_inmediato').value.trim(),
-            periodo:         'De Julio-Diciembre 2025',
+            periodo:         'De Enero-Octubre 2026',
             respuestas:      JSON.stringify(respuestasArr)
         };
 

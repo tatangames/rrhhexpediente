@@ -7,12 +7,14 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * MODULO EVALUACION
+     * TITULOS DE LA AVALUACION AFILIADOS A UN TIPO
      */
     public function up(): void
     {
-        Schema::create('evaluacion', function (Blueprint $table) {
+        Schema::create('evaluacion_titulo', function (Blueprint $table) {
             $table->id();
+
+            $table->foreignId('id_evaluacion_tipo')->constrained('evaluacion_tipo');
 
             $table->text('nombre');
             $table->text('descripcion')->nullable();
@@ -28,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('evaluacion');
+        Schema::dropIfExists('evaluacion_titulo');
     }
 };
