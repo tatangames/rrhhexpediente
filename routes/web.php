@@ -350,13 +350,20 @@ Route::post('/admin/evaluacion/titulo/detalle/posicion', [EvaluacionController::
 
 
 
+// EVALUACION: NIVEL DIRECCION  -------
+Route::get('/evaluacion/niveldireccion', [JefeEvaluacionController::class,'indexEvaluacionNivelDireccion']);
+
+// EVALUACION: NIVEL TECNICO -------
+Route::get('/evaluacion/niveltecnico', [JefeEvaluacionController::class,'indexEvaluacionNivelTecnico']);
+
+// EVALUACION: NIVEL SOPORTE ADMINISTRATIVO -------
+Route::get('/evaluacion/nivelsoportetecnico', [JefeEvaluacionController::class,'indexEvaluacionNivelSoporteAdministrativo']);
+
+// EVALUACION: NIVEL OPERATIVO -------
+Route::get('/evaluacion/niveloperativo', [JefeEvaluacionController::class,'indexEvaluacionNivelOperativo']);
 
 
+// NIVEL DIRECCION
+Route::post('/evaluacion/pdf/niveldireccion', [JefeEvaluacionController::class, 'pdfFichaEvaluacion'])->name('evaluacion.pdf.ficha');
 
-
-// VISTA PUBLICA PARA LLENAR LA EVALUACION ---- MODULO EVALUACION  -------
-Route::get('/evaluacion/niveldireccion', [JefeEvaluacionController::class,'indexLlenarEvaluacionNivelDireccion']);
-
-// Guardar evaluación
-Route::post('/evaluacion/pdf/desempeno', [JefeEvaluacionController::class, 'pdfFichaDesempeno'])->name('evaluacion.pdf.desempeno');
 

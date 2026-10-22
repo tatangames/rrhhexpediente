@@ -16,7 +16,7 @@ class JefeEvaluacionController extends Controller
 
     // FICHA DE EVALUACION DE DESEMPEÑO NIVEL DIRECCION
 
-    public function indexLlenarEvaluacionNivelDireccion()
+    public function indexEvaluacionNivelDireccion()
     {
 
         $arrayUnidades = EvaluacionUnidad::orderBy('nombre', 'ASC')->get();
@@ -26,12 +26,82 @@ class JefeEvaluacionController extends Controller
         $evaluaciones = EvaluacionTitulo::with(['detalles' => function ($q) {
             $q->orderBy('posicion');
         }])
-            ->where('id_evaluacion_tipo', 1)
+            ->where('id_evaluacion_tipo', 1) // NIVEL DIRECCION
             ->where('estado', true)
             ->orderBy('posicion')
             ->get();
 
-        return view('frontend.evaluacion.vistadesempeno', compact(
+        return view('frontend.evaluacion.vistaniveldireccion', compact(
+            'evaluaciones',
+            'arrayDependencias',
+            'arrayCargos',
+            'arrayUnidades'
+        ));
+    }
+
+    public function indexEvaluacionNivelTecnico()
+    {
+
+        $arrayUnidades = EvaluacionUnidad::orderBy('nombre', 'ASC')->get();
+        $arrayCargos = EvaluacionCargo::orderBy('nombre', 'ASC')->get();
+        $arrayDependencias = EvaluacionDependencias::orderBy('nombre', 'ASC')->get();
+
+        $evaluaciones = EvaluacionTitulo::with(['detalles' => function ($q) {
+            $q->orderBy('posicion');
+        }])
+            ->where('id_evaluacion_tipo', 2) // NIVEL TECNICO
+            ->where('estado', true)
+            ->orderBy('posicion')
+            ->get();
+
+        return view('frontend.evaluacion.vistaniveltecnico', compact(
+            'evaluaciones',
+            'arrayDependencias',
+            'arrayCargos',
+            'arrayUnidades'
+        ));
+    }
+
+    public function indexEvaluacionNivelSoporteAdministrativo()
+    {
+
+        $arrayUnidades = EvaluacionUnidad::orderBy('nombre', 'ASC')->get();
+        $arrayCargos = EvaluacionCargo::orderBy('nombre', 'ASC')->get();
+        $arrayDependencias = EvaluacionDependencias::orderBy('nombre', 'ASC')->get();
+
+        $evaluaciones = EvaluacionTitulo::with(['detalles' => function ($q) {
+            $q->orderBy('posicion');
+        }])
+            ->where('id_evaluacion_tipo', 3) // NIVEL SOPORTE ADMINISTRATIVO
+            ->where('estado', true)
+            ->orderBy('posicion')
+            ->get();
+
+        return view('frontend.evaluacion.vistanivelsoporteadministrativo', compact(
+            'evaluaciones',
+            'arrayDependencias',
+            'arrayCargos',
+            'arrayUnidades'
+        ));
+    }
+
+
+    public function indexEvaluacionNivelOperativo()
+    {
+
+        $arrayUnidades = EvaluacionUnidad::orderBy('nombre', 'ASC')->get();
+        $arrayCargos = EvaluacionCargo::orderBy('nombre', 'ASC')->get();
+        $arrayDependencias = EvaluacionDependencias::orderBy('nombre', 'ASC')->get();
+
+        $evaluaciones = EvaluacionTitulo::with(['detalles' => function ($q) {
+            $q->orderBy('posicion');
+        }])
+            ->where('id_evaluacion_tipo', 4) // NIVEL OPERATIVO
+            ->where('estado', true)
+            ->orderBy('posicion')
+            ->get();
+
+        return view('frontend.evaluacion.vistaniveloperativo', compact(
             'evaluaciones',
             'arrayDependencias',
             'arrayCargos',
@@ -42,8 +112,24 @@ class JefeEvaluacionController extends Controller
 
 
 
-    public function pdfFichaDesempeno(Request $request)
+    public function pdfFichaEvaluacion(Request $request)
     {
+        // Tipo de evaluación y su título
+        $titulosPorTipo = [
+            1 => 'FICHA DE EVALUACION DE DESEMPEÑO NIVEL DIRECCIÓN',
+            2 => 'FICHA DE EVALUACION DE DESEMPEÑO NIVEL TÉCNICO',
+            3 => 'FICHA DE EVALUACION DE DESEMPEÑO NIVEL SOPORTE ADMINISTRATIVO',
+            4 => 'FICHA DE EVALUACION DE DESEMPEÑO NIVEL OPERATIVO',
+        ];
+
+        $tipo = (int) $request->tipo;
+
+        if (!isset($titulosPorTipo[$tipo])) {
+            abort(400, 'Tipo de evaluación no válido.');
+        }
+
+        $tituloFicha = $titulosPorTipo[$tipo];
+
         $respuestas = json_decode($request->respuestas, true) ?? [];
 
         if (empty($respuestas)) {
@@ -58,9 +144,9 @@ class JefeEvaluacionController extends Controller
             ->unique()
             ->values();
 
-        // Solo factores del tipo 1 (nivel dirección) y activos
+        // Solo factores del tipo recibido y activos
         $factores = EvaluacionTitulo::whereIn('id', $evaluacionIds)
-            ->where('id_evaluacion_tipo', 1)
+            ->where('id_evaluacion_tipo', $tipo)
             ->where('estado', true)
             ->orderBy('posicion')
             ->with(['detalles' => function ($q) {
@@ -101,14 +187,16 @@ class JefeEvaluacionController extends Controller
 
         $totalGeneralFormateado = $fmtPuntos($totalGeneral);
 
-        // Calificación según tabla
-        if ($totalGeneral <= 20) {
+        // Calificación según tabla (se redondea para evitar huecos entre rangos, ej. 20.5)
+        $totalRedondeado = round($totalGeneral);
+
+        if ($totalRedondeado <= 20) {
             $calificacion = 'DEFICIENTE';
-        } elseif ($totalGeneral <= 40) {
+        } elseif ($totalRedondeado <= 40) {
             $calificacion = 'REGULAR';
-        } elseif ($totalGeneral <= 60) {
+        } elseif ($totalRedondeado <= 60) {
             $calificacion = 'BUENO';
-        } elseif ($totalGeneral <= 80) {
+        } elseif ($totalRedondeado <= 80) {
             $calificacion = 'MUY BUENO';
         } else {
             $calificacion = 'EXCELENTE';
@@ -138,53 +226,53 @@ class JefeEvaluacionController extends Controller
         $periodo = e($request->periodo);
 
         $html = "
-       <table width='100%' style='border-collapse:collapse; font-family: Arial, sans-serif;'>
-        <tr>
-            <td style='width:25%; border:0.8px solid #000; padding:6px 8px;'>
-                <table width='100%'>
-                    <tr>
-                        <td style='width:30%; text-align:left;'>
-                            <img src='{$logoalcaldia}' style='height:38px'>
-                        </td>
-                        <td style='width:70%; text-align:left; color:#104e8c; font-size:13px; font-weight:bold; line-height:1.3;'>
-                            SANTA ANA NORTE<br>EL SALVADOR
-                        </td>
-                    </tr>
-                </table>
-            </td>
-            <td style='width:50%; border-top:0.8px solid #000; border-bottom:0.8px solid #000; padding:6px 8px; text-align:center; font-size:15px; font-weight:bold;'>
-                FICHA DE EVALUACION DE DESEMPEÑO NIVEL DIRECCIÓN<br>
-            </td>
-            <td style='width:25%; border:0.8px solid #000; padding:0; vertical-align:top;'>
-                <table width='100%' style='font-size:10px;'>
-                    <tr>
-                        <td width='40%' style='border-right:0.8px solid #000; border-bottom:0.8px solid #000; padding:4px 6px;'><strong>Código:</strong></td>
-                        <td width='60%' style='border-bottom:0.8px solid #000; padding:4px 6px; text-align:center; font-weight: bold'>TALE-001-FICH</td>
-                    </tr>
-                    <tr>
-                        <td style='border-right:0.8px solid #000; border-bottom:0.8px solid #000; padding:4px 6px;'><strong>Versión:</strong></td>
-                        <td style='border-bottom:0.8px solid #000; padding:4px 6px; text-align:center; font-weight: bold'>002</td>
-                    </tr>
-                    <tr>
-                        <td style='border-right:0.8px solid #000; padding:4px 6px;'><strong>Fecha de vigencia:</strong></td>
-                        <td style='padding:4px 6px; text-align:center; font-weight: bold'>22/10/2025</td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
-    <br>";
+   <table width='100%' style='border-collapse:collapse; font-family: Arial, sans-serif;'>
+    <tr>
+        <td style='width:25%; border:0.8px solid #000; padding:6px 8px;'>
+            <table width='100%'>
+                <tr>
+                    <td style='width:30%; text-align:left;'>
+                        <img src='{$logoalcaldia}' style='height:38px'>
+                    </td>
+                    <td style='width:70%; text-align:left; color:#104e8c; font-size:13px; font-weight:bold; line-height:1.3;'>
+                        SANTA ANA NORTE<br>EL SALVADOR
+                    </td>
+                </tr>
+            </table>
+        </td>
+        <td style='width:50%; border-top:0.8px solid #000; border-bottom:0.8px solid #000; padding:6px 8px; text-align:center; font-size:15px; font-weight:bold;'>
+            {$tituloFicha}<br>
+        </td>
+        <td style='width:25%; border:0.8px solid #000; padding:0; vertical-align:top;'>
+            <table width='100%' style='font-size:10px;'>
+                <tr>
+                    <td width='40%' style='border-right:0.8px solid #000; border-bottom:0.8px solid #000; padding:4px 6px;'><strong>Código:</strong></td>
+                    <td width='60%' style='border-bottom:0.8px solid #000; padding:4px 6px; text-align:center; font-weight: bold'>TALE-001-FICH</td>
+                </tr>
+                <tr>
+                    <td style='border-right:0.8px solid #000; border-bottom:0.8px solid #000; padding:4px 6px;'><strong>Versión:</strong></td>
+                    <td style='border-bottom:0.8px solid #000; padding:4px 6px; text-align:center; font-weight: bold'>002</td>
+                </tr>
+                <tr>
+                    <td style='border-right:0.8px solid #000; padding:4px 6px;'><strong>Fecha de vigencia:</strong></td>
+                    <td style='padding:4px 6px; text-align:center; font-weight: bold'>22/10/2025</td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+<br>";
 
         // SECCION I
         $html .= "
-<p style='font-weight:bold;font-size:12px;text-align:center;'>I.- DATOS DE IDENTIFICACION</p>
-<table width='100%' border='1' cellpadding='5' style='border-collapse:collapse;font-size:9px;'>
-    <tr><td width='30%'><strong>NOMBRE COMPLETO:</strong></td><td width='70%'>{$nombreCompleto}</td></tr>
-    <tr><td width='30%'><strong>PUESTO:</strong></td><td width='70%'>{$puesto}</td></tr>
-    <tr><td width='30%'><strong>UNIDAD:</strong></td><td width='70%'>{$unidad}</td></tr>
-    <tr><td width='30%'><strong>DEPENDENCIA:</strong></td><td width='70%'>{$dependencia}</td></tr>
-    <tr><td width='30%'><strong>JEFE INMEDIATO:</strong></td><td width='70%'>{$jefeInmediato}</td></tr>
-    <tr><td width='30%'><strong>PERIODO:</strong></td><td width='70%'>{$periodo}</td></tr>
+<p style='font-weight:bold;font-size:14px;text-align:center;'>I.- DATOS DE IDENTIFICACION</p>
+<table width='100%' border='1' cellpadding='5' style='border-collapse:collapse;font-size:13px;'>
+<tr><td width='30%'><strong>NOMBRE COMPLETO:</strong></td><td width='70%'>{$nombreCompleto}</td></tr>
+<tr><td width='30%'><strong>PUESTO:</strong></td><td width='70%'>{$puesto}</td></tr>
+<tr><td width='30%'><strong>UNIDAD:</strong></td><td width='70%'>{$unidad}</td></tr>
+<tr><td width='30%'><strong>DEPENDENCIA:</strong></td><td width='70%'>{$dependencia}</td></tr>
+<tr><td width='30%'><strong>JEFE INMEDIATO:</strong></td><td width='70%'>{$jefeInmediato}</td></tr>
+<tr><td width='30%'><strong>PERIODO:</strong></td><td width='70%'>{$periodo}</td></tr>
 </table><br>";
 
         // SECCION II - encabezado
@@ -203,11 +291,11 @@ class JefeEvaluacionController extends Controller
                 . '</p>';
 
             if ($factor->descripcion) {
-                $html .= '<p style="font-family:Arial,Helvetica,sans-serif;font-size:10px;text-align:justify;margin:0 0 8px 0;">'
+                $html .= '<p style="font-family:Arial,Helvetica,sans-serif;font-size:14px;text-align:justify;margin:0 0 8px 0;">'
                     . e($factor->descripcion) . '</p>';
             }
 
-            $html .= '<table width="100%" border="1" cellpadding="3" style="border-collapse:collapse;font-family:Arial,Helvetica,sans-serif;font-size:10px;">';
+            $html .= '<table width="100%" border="1" cellpadding="3" style="border-collapse:collapse;font-family:Arial,Helvetica,sans-serif;font-size:14px;">';
 
             // Encabezado
             $html .= '<tr>'
@@ -239,98 +327,92 @@ class JefeEvaluacionController extends Controller
 
         // TOTAL Y CALIFICACION GENERAL (resultado)
         $html .= '
-    <br>
-    <table width="60%" border="1" cellpadding="6" style="border-collapse:collapse;font-size:12px;margin:auto;">
-        <tr style="font-weight:bold;">
-            <td width="60%">TOTAL</td>
-            <td width="40%" align="center">' . $totalGeneralFormateado . '</td>
-        </tr>
-        <tr style="font-weight:bold;">
-            <td>CALIFICACION GENERAL</td>
-            <td align="center">' . $calificacion . '</td>
-        </tr>
-    </table>
-    <br>';
+<br>
+<table width="60%" border="1" cellpadding="6" style="border-collapse:collapse;font-size:12px;margin:auto;">
+    <tr style="font-weight:bold;">
+        <td width="60%" style="font-weight: bold">TOTAL</td>
+        <td width="40%" align="center">' . $totalGeneralFormateado . '</td>
+    </tr>
+    <tr style="font-weight:bold;">
+        <td style="font-weight: bold">CALIFICACION GENERAL</td>
+        <td align="center">' . $calificacion . '</td>
+    </tr>
+</table>
+<br>';
 
         // FECHA DE EVALUACION
         $html .= '
-    <table width="100%" border="1" cellpadding="5" style="border-collapse:collapse;font-size:9px;">
-        <tr>
-            <td width="42%"><strong>FECHA DE EVALUACION</strong></td>
-            <td style="font-weight: bold">' . $fechaEvaluacion . '</td>
-        </tr>
-    </table>
-    <br><br><br>';
+<table width="100%" border="1" cellpadding="5" style="border-collapse:collapse;font-size:14px;">
+    <tr>
+        <td width="42%"><strong>FECHA DE EVALUACION</strong></td>
+        <td style="font-weight: bold">' . $fechaEvaluacion . '</td>
+    </tr>
+</table>
+<br><br><br><br><br><br><br>';
 
         // PROPUESTAS DE MEJORA
         $html .= '
-    <p style="font-size:9px;font-weight:bold;margin:4px 0 2px 0;">PROPUESTAS DE MEJORA:</p>
-    <table width="100%" style="border-collapse:collapse;">
-        <tr><td style="border-bottom:0.6px solid #000;height:25px;"></td></tr>
-        <tr><td style="border-bottom:0.6px solid #000;height:25px;"></td></tr>
-        <tr><td style="border-bottom:0.6px solid #000;height:25px;"></td></tr>
-        <tr><td style="border-bottom:0.6px solid #000;height:25px;"></td></tr>
-    </table>';
-
-        // FIRMA EVALUADOR
-        $html .= '
-    <table width="100%" style="margin-top:50px;">
-        <tr>
-            <td width="50%"></td>
-            <td width="50%" align="center" style="font-size:12px;">
-                F.________________________________<br><br>Evaluador
-            </td>
-        </tr>
-    </table>
-    <br>';
-
-        // COMENTARIOS
-        $html .= '
-    <p style="font-size:9px;font-weight:bold;margin:4px 0 2px 0;">COMENTARIOS</p>
-    <table width="100%" style="border-collapse:collapse;">
-        <tr><td style="border-bottom:0.6px solid #000;height:25px;"></td></tr>
-        <tr><td style="border-bottom:0.6px solid #000;height:25px;"></td></tr>
-        <tr><td style="border-bottom:0.6px solid #000;height:25px;"></td></tr>
-        <tr><td style="border-bottom:0.6px solid #000;height:25px;"></td></tr>
-    </table>';
+<p style="font-size:14px;font-weight:bold;margin:4px 0 2px 0;">PROPUESTAS DE MEJORA:</p>
+<table width="100%" style="border-collapse:collapse;">
+    <tr><td style="border-bottom:0.6px solid #000;height:25px;"></td></tr>
+    <tr><td style="border-bottom:0.6px solid #000;height:25px;"></td></tr>
+    <tr><td style="border-bottom:0.6px solid #000;height:25px;"></td></tr>
+    <tr><td style="border-bottom:0.6px solid #000;height:25px;"></td></tr>
+</table>';
 
         // FIRMA EVALUADO
         $html .= '
-    <table width="100%" style="margin-top:50px;">
-        <tr>
-            <td width="50%"></td>
-            <td width="50%" align="center" style="font-size:12px;">
-                F.________________________________<br><br>Evaluado
-            </td>
-        </tr>
-    </table>
-    <br><br>';
+<table width="100%" style="margin-top:50px;">
+    <tr>
+        <td width="50%"></td>
+        <td width="50%" align="center" style="font-size:14px;">
+            F.________________________________<br><br>Evaluador
+        </td>
+    </tr>
+</table>
+<br>';
 
-        // ESPACIO RESERVADO PARA RECURSOS HUMANOS
+        // COMENTARIOS
         $html .= '
-        <p style="text-align:center;font-weight:bold;font-size:10px;">ESPACIO RESERVADO PARA RECURSOS HUMANOS</p>
-        <table width="70%" border="1" cellpadding="6" style="border-collapse:collapse;font-size:9px;margin:auto;">
-            <tr style="font-weight:bold;text-align:center;">
-                <td width="34%">FECHA DE RECEPCION</td>
-                <td width="33%">REVISADO POR:</td>
-                <td width="33%">FECHA DE PROCESADO</td>
-            </tr>
-            <tr style="height:45px;">
-                <td style="height:45px;">&nbsp;</td>
-                <td style="height:45px;">&nbsp;</td>
-                <td style="height:45px;">&nbsp;</td>
-            </tr>
-        </table>
-        <br>';
+<p style="font-size:14px;font-weight:bold;margin:4px 0 2px 0;">COMENTARIOS</p>
+<table width="100%" style="border-collapse:collapse;">
+    <tr><td style="border-bottom:0.6px solid #000;height:25px;"></td></tr>
+    <tr><td style="border-bottom:0.6px solid #000;height:25px;"></td></tr>
+    <tr><td style="border-bottom:0.6px solid #000;height:25px;"></td></tr>
+    <tr><td style="border-bottom:0.6px solid #000;height:25px;"></td></tr>
+</table>';
+
+        // FIRMA EVALUADO
+        $html .= '
+<table width="100%" style="margin-top:50px;">
+    <tr>
+        <td width="50%"></td>
+        <td width="50%" align="center" style="font-size:14px;">
+            F.________________________________<br><br>Evaluado
+        </td>
+    </tr>
+</table>
+<br><br>';
+
+        // ESPACIO RESERVADO PARA RECURSOS HUMANOS (sin <br> al final)
+        $html .= '
+    <p style="text-align:center;font-weight:bold;font-size:14px;">ESPACIO RESERVADO PARA RECURSOS HUMANOS</p>
+    <table width="85%" border="1" cellpadding="6" style="border-collapse:collapse;font-size:14px;margin:auto;">
+        <tr style="font-weight:bold;text-align:center;">
+            <td width="34%">FECHA DE RECEPCION</td>
+            <td width="33%">REVISADO POR:</td>
+            <td width="33%">FECHA DE PROCESADO</td>
+        </tr>
+        <tr style="height:45px;">
+            <td style="height:45px;">&nbsp;</td>
+            <td style="height:45px;">&nbsp;</td>
+            <td style="height:45px;">&nbsp;</td>
+        </tr>
+    </table>';
 
         $mpdf->WriteHTML($html);
         return $mpdf->Output('Evaluacion.pdf', 'I');
     }
-
-
-
-
-
 
 
 

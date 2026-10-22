@@ -287,10 +287,26 @@
             border: 1.5px solid var(--border);
             border-radius: 4px;
             overflow: hidden;
-            transition: box-shadow 0.2s;
+            transition: box-shadow 0.2s, border-color 0.2s;
         }
         .evaluacion-bloque:last-child { margin-bottom: 0; }
         .evaluacion-bloque:hover { box-shadow: var(--shadow); }
+
+        /* Bloque sin ninguna opción marcada */
+        .evaluacion-bloque.sin-seleccion {
+            border-color: var(--error);
+            box-shadow: 0 0 0 3px rgba(185,64,64,0.1);
+        }
+        .bloque-error {
+            display: none;
+            padding: 8px 20px;
+            background: rgba(185,64,64,0.08);
+            border-top: 1px solid rgba(185,64,64,0.25);
+            color: var(--error);
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .evaluacion-bloque.sin-seleccion .bloque-error { display: block; }
 
         .bloque-header {
             display: flex;
@@ -550,7 +566,7 @@
          class="header-logo">
 
     <div class="header-badge">TALENTO HUMANO</div>
-    <h1>FICHA DE EVALUACION DE DESEMPEÑO NIVEL DIRECCIÓN</h1>
+    <h1>FICHA DE EVALUACION DE DESEMPEÑO NIVEL SOPORTE ADMINISTRATIVO</h1>
     <p>Complete todos los campos y marque los indicadores que el trabajador cumple</p>
 </header>
 
@@ -717,7 +733,7 @@
                 <line x1="12" y1="8" x2="12" y2="12"/>
                 <line x1="12" y1="16" x2="12.01" y2="16"/>
             </svg>
-            <span>Indicaciones: Marque con una "X" los indicadores que el trabajador cumple, según el desempeño de sus labores. Puede marcar varios por factor.</span>
+            <span>Indicaciones: Marque con una "X" los indicadores que el trabajador cumple, según el desempeño de sus labores. Puede marcar varios por factor, pero debe marcar al menos uno en cada factor.</span>
         </div>
 
         <div class="section-body">
@@ -759,6 +775,7 @@
                                 </label>
                             @endforeach
                         </div>
+                        <div class="bloque-error">Debe marcar al menos un indicador en este factor.</div>
                         <div class="bloque-subtotal">
                             Total
                             <span class="subtotal-valor" id="subtotal-{{ $evaluacion->id }}">0</span>
@@ -788,7 +805,7 @@
 
 <script>
     var CSRF_TOKEN    = '{{ csrf_token() }}';
-    var URL_REGISTRAR = '{{ route("evaluacion.pdf.desempeno") }}';
+    var URL_REGISTRAR = '{{ route("evaluacion.pdf.ficha") }}';
     var respuestas    = {};   // { evalId: [ {detalle_id, puntos}, ... ] }
     var evaluacionIds = @json($evaluaciones->pluck('id')->values());
 
@@ -892,6 +909,12 @@
         });
 
         respuestas[evalId] = marcados;
+
+        // Si ya marcó al menos uno, se quita el error del bloque
+        if (marcados.length > 0) {
+            bloque.classList.remove('sin-seleccion');
+        }
+
         document.getElementById('subtotal-' + evalId).textContent = fmt(subtotal);
         actualizarTotalGeneral();
     }
@@ -943,9 +966,31 @@
             }
         });
 
+        // Mínimo: al menos un indicador marcado en cada factor
+        var factoresSinMarcar = 0;
+        evaluacionIds.forEach(function(id) {
+            var marcados = respuestas[id] || [];
+            var bloque   = document.getElementById('bloque-' + id);
+            if (marcados.length === 0) {
+                bloque.classList.add('sin-seleccion');
+                factoresSinMarcar++;
+            } else {
+                bloque.classList.remove('sin-seleccion');
+            }
+        });
+
+        if (factoresSinMarcar > 0) {
+            valido = false;
+        }
+
         if (!valido) {
-            showToast('Por favor complete todos los campos requeridos.', 'error');
-            var firstError = document.querySelector('.error, .form-control.error');
+            var mensaje = 'Por favor complete todos los campos requeridos.';
+            if (factoresSinMarcar > 0) {
+                mensaje += ' Faltan factores sin ningún indicador marcado (' + factoresSinMarcar + ').';
+            }
+            showToast(mensaje, 'error');
+
+            var firstError = document.querySelector('.form-control.error, .custom-select-trigger.error, .evaluacion-bloque.sin-seleccion');
             if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
             return;
         }
@@ -958,7 +1003,6 @@
         csrf.type = 'hidden'; csrf.name = '_token'; csrf.value = CSRF_TOKEN;
         form.appendChild(csrf);
 
-        // Se envían TODOS los factores, con sus indicadores marcados (puede ser lista vacía)
         var respuestasArr = evaluacionIds.map(function(id) {
             var marcados = respuestas[id] || [];
             return {
@@ -968,6 +1012,7 @@
         });
 
         var camposEnviar = {
+            tipo:            3,   // 1 = Dirección | 2 = Técnico | 3 = Soporte Administrativo | 4 = Operativo
             nombre_completo: document.getElementById('nombre_completo').value.trim(),
             puesto:          document.getElementById('val-puesto').value,
             unidad:          document.getElementById('val-unidad').value,
