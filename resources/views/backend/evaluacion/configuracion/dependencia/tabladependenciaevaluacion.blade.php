@@ -6,7 +6,7 @@
     </tr>
     </thead>
     <tbody>
-    @foreach($arrayDependecias as $dato)
+    @foreach($arrayDependencias as $dato)
         <tr>
             <td>{{ $dato->nombre }}</td>
 
